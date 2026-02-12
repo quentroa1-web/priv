@@ -1,0 +1,44 @@
+const mongoose = require('mongoose');
+
+const ReviewSchema = new mongoose.Schema({
+  ad: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Ad',
+    required: true
+  },
+  reviewer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  rating: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5
+  },
+  categories: {
+    service: Number,
+    punctuality: Number,
+    communication: Number,
+    hygiene: Number
+  },
+  comment: {
+    type: String,
+    required: true
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  response: {
+    content: String,
+    createdAt: Date
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('Review', ReviewSchema);

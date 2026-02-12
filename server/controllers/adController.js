@@ -1,0 +1,332 @@
+const Ad = require('../models/Ad');
+const User = require('../models/User');
+const { saveBase64Image } = require('../utils/fileHandler');
+const logger = require('../utils/logger');
+
+// @desc    Get all ads
+// @route   GET /api/ads
+// @access  Public
+exports.getAds = async (req, res) => {
+  try {
+    let query = { isActive: true };
+
+    // Filter by category (sex)
+    if (req.query.category) {
+      query.category = req.query.category;
+    }
+
+    // Filter by location
+    if (req.query.department) {
+      query['location.department'] = req.query.department;
+    }
+    if (req.query.city) {
+      query['location.city'] = req.query.city;
+    }
+
+    // Filter by age range
+    if (req.query.minAge || req.query.maxAge) {
+      query.age = {};
+      if (req.query.minAge) query.age.$gte = parseInt(req.query.minAge);
+      if (req.query.maxAge) query.age.$lte = parseInt(req.query.maxAge);
+    }
+
+    // Filter by plan (for VIP section)
+    if (req.query.plan) {
+      query.plan = req.query.plan;
+    }
+
+    const ads = await Ad.find(query)
+      .populate({
+        path: 'user',
+        select: 'name avatar lastSeen role priceList verified',
+        options: { virtuals: true }
+      })
+      .sort({ priority: -1, lastBumpDate: -1, createdAt: -1 }); // VIP/Diamond first, then Boosted, then newest
+
+    res.status(200).json({
+      success: true,
+      count: ads.length,
+      data: ads
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Get single ad
+// @route   GET /api/ads/:id
+// @access  Public
+exports.getAd = async (req, res) => {
+  try {
+    const ad = await Ad.findById(req.params.id).populate('user', 'name avatar bio role priceList verified wallet');
+
+    if (!ad) {
+      return res.status(404).json({ success: false, error: 'Ad not found' });
+    }
+
+    // Increment views
+    ad.views += 1;
+    await ad.save();
+
+    res.status(200).json({
+      success: true,
+      data: ad
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Create new ad
+// @route   POST /api/ads
+// @access  Private (Announcer only)
+exports.createAd = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+
+    // Check if premium has expired
+    if (user.premium && user.premiumUntil && new Date() > new Date(user.premiumUntil)) {
+      user.premium = false;
+      user.premiumPlan = 'none';
+      await user.save();
+    }
+
+    // Check user's premium status and ad count
+    const adCount = await Ad.countDocuments({ user: userId });
+
+    // Limits based on plan
+    let limit = 1;
+    if (user.premiumPlan === 'gold') limit = 3;
+    if (user.premiumPlan === 'diamond') limit = 100; // Unlimited
+
+    if (adCount >= limit) {
+      return res.status(400).json({
+        success: false,
+        error: `Has alcanzado el límite de anuncios (${limit}) para tu plan ${user.premiumPlan}. Mejora tu plan para publicar más.`
+      });
+    }
+
+    // Determine priority based on plan
+    let priority = 1;
+    let plan = 'free';
+
+    if (user.premiumPlan === 'gold') {
+      priority = 2;
+      plan = 'gold';
+    } else if (user.premiumPlan === 'diamond') {
+      priority = 3;
+      plan = 'diamond';
+    }
+
+    // Process Photos: Convert Base64 to Files (Cloudinary or Local)
+    let processedPhotos = [];
+    if (req.body.photos && Array.isArray(req.body.photos)) {
+      processedPhotos = await Promise.all(req.body.photos.map(async (photo, index) => {
+        try {
+          const url = await saveBase64Image(photo.url || photo, 'ads');
+          return {
+            url,
+            isMain: photo.isMain || index === 0
+          };
+        } catch (err) {
+          logger('error', `Error saving photo for user ${userId}: ${err.message}`);
+          return photo; // Keep original if error
+        }
+      }));
+    }
+
+    const adData = {
+      ...req.body,
+      photos: processedPhotos,
+      user: userId,
+      isVerified: false,
+      isActive: true,
+      plan: plan,
+      priority: priority,
+      lastBumpDate: Date.now()
+    };
+
+    const ad = await Ad.create(adData);
+    logger('activity', `Nuevo anuncio creado por el usuario ${userId}: ${ad.title}`);
+
+    res.status(201).json({
+      success: true,
+      data: ad
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Update ad
+// @route   PUT /api/ads/:id
+// @access  Private (Owner or Admin)
+exports.updateAd = async (req, res) => {
+  try {
+    let ad = await Ad.findById(req.params.id);
+
+    if (!ad) {
+      return res.status(404).json({ success: false, error: 'Ad not found' });
+    }
+
+    // Make sure user is ad owner or admin
+    if (ad.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, error: 'Not authorized to update this ad' });
+    }
+
+    // Protected fields that shouldn't be updated by owner directly
+    const updates = { ...req.body };
+    delete updates.user;
+    delete updates.plan;
+    delete updates.priority;
+    delete updates.lastBumpDate;
+    delete updates.isVerified;
+    delete updates.views;
+
+    // Process Photos if updated
+    if (updates.photos && Array.isArray(updates.photos)) {
+      updates.photos = await Promise.all(updates.photos.map(async (photo, index) => {
+        try {
+          // If it's already a URL (local or cloudinary), don't re-save
+          const photoUrl = typeof photo === 'string' ? photo : (photo.url || '');
+          if (photoUrl.startsWith('/uploads') || photoUrl.startsWith('http')) {
+            return typeof photo === 'string' ? { url: photo, isMain: index === 0 } : photo;
+          }
+
+          const url = await saveBase64Image(photoUrl, 'ads');
+          return {
+            url,
+            isMain: photo.isMain || index === 0
+          };
+        } catch (err) {
+          logger('error', `Error updating photo for ad ${ad._id}: ${err.message}`);
+          return photo;
+        }
+      }));
+    }
+
+    ad = await Ad.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: ad
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Delete ad
+// @route   DELETE /api/ads/:id
+// @access  Private (Owner or Admin)
+exports.deleteAd = async (req, res) => {
+  try {
+    const ad = await Ad.findById(req.params.id);
+
+    if (!ad) {
+      return res.status(404).json({ success: false, error: 'Ad not found' });
+    }
+
+    // Make sure user is ad owner or admin
+    if (ad.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, error: 'Not authorized to delete this ad' });
+    }
+
+    await ad.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Get my ads (for logged in announcer)
+// @route   GET /api/ads/myads
+// @access  Private
+exports.getMyAds = async (req, res) => {
+  try {
+    const ads = await Ad.find({ user: req.user.id }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: ads.length,
+      data: ads
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// @desc    Boost Ad (Pay with coins)
+// @route   POST /api/ads/:id/boost
+// @access  Private
+exports.boostAd = async (req, res) => {
+  try {
+    const BOOST_COST = 100; // Fixed: Match with paymentController
+    const ad = await Ad.findById(req.params.id);
+    const user = await User.findById(req.user.id);
+
+    if (!ad) {
+      return res.status(404).json({ success: false, error: 'Ad not found' });
+    }
+
+    if (ad.user.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(401).json({ success: false, error: 'Not authorized' });
+    }
+
+    // Ensure wallet exists
+    if (!user.wallet) {
+      user.wallet = { coins: 0 };
+    }
+
+    if (user.wallet.coins < BOOST_COST) {
+      return res.status(400).json({ success: false, error: `Saldo insuficiente. Necesitas ${BOOST_COST} monedas.` });
+    }
+
+    // Deduct coins
+    user.wallet.coins -= BOOST_COST;
+    await user.save();
+
+    // Update Ad
+    ad.lastBumpDate = Date.now();
+
+    // Apply Boost (12 hours)
+    const boostExpires = new Date();
+    boostExpires.setHours(boostExpires.getHours() + 12);
+    ad.boostedUntil = boostExpires;
+    ad.isBoosted = true;
+
+    await ad.save();
+
+    // Create Transaction Record
+    const Transaction = require('../models/Transaction');
+    await Transaction.create({
+      user: user._id,
+      type: 'spend',
+      amount: BOOST_COST,
+      currency: 'COINS',
+      status: 'completed',
+      description: `Boost Ad: ${ad.title}`,
+      metadata: { adId: ad._id }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        coins: user.wallet.coins,
+        lastBumpDate: ad.lastBumpDate,
+        message: '¡Anuncio impulsado al topo de la lista!'
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};

@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* Custom scrollbar para paneles de filtros */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #f9a8d4;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #f472b6;
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #f9a8d4 transparent;
+}
+
+/* Animations for Holographic Effect */
+@keyframes holo-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes holo-glint {
+  0% {
+    transform: translateX(-100%) skewX(-20deg);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateX(200%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+.animate-holo {
+  background: linear-gradient(-45deg,
+      #e8d1ff,
+      #d1d8ff,
+      #ffcce0,
+      #ffdecc,
+      #e8d1ff) !important;
+  background-size: 400% 400% !important;
+  animation: holo-shimmer 5s ease infinite !important;
+  position: relative;
+}
+
+.holo-glint-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(105deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0) 25%,
+      rgba(255, 255, 255, 0.5) 50%,
+      rgba(255, 255, 255, 0) 75%,
+      transparent 100%) !important;
+  animation: holo-glint 3s infinite linear !important;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes gold-shine {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gold-text {
+  background: linear-gradient(90deg,
+      #b8860b 0%,
+      #fbbf24 25%,
+      #fff7ed 50%,
+      #fbbf24 75%,
+      #b8860b 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: gold-shine 3s linear infinite;
+  filter: drop-shadow(0 0 1px rgba(184, 134, 11, 0.3));
+  font-weight: 900 !important;
+}
+
+/* Fix for mobile address bar and viewport height */
+.h-full-dynamic {
+  height: 100vh;
+  height: 100dvh;
+}

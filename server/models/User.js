@@ -1,0 +1,142 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please add a name'],
+    trim: true,
+    maxlength: [50, 'Name cannot be more than 50 characters']
+  },
+  displayName: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Display name cannot be more than 50 characters']
+  },
+  gender: {
+    type: String,
+    enum: ['woman', 'man', 'transgender', 'gigolo', 'other'],
+    required: [true, 'Please select a gender']
+  },
+  age: {
+    type: Number,
+    min: [18, 'Must be at least 18 years old'],
+    required: [true, 'Please enter your age']
+  },
+  email: {
+    type: String,
+    required: [true, 'Please add an email'],
+    unique: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Please add a valid email'
+    ]
+  },
+  role: {
+    type: String,
+    enum: ['user', 'announcer', 'admin'],
+    default: 'user'
+  },
+  password: {
+    type: String,
+    required: [true, 'Please add a password'],
+    minlength: 8,
+    select: false
+  },
+  phone: String,
+  avatar: String,
+  bio: String,
+  languages: [String],
+  location: {
+    type: mongoose.Schema.Types.Mixed
+  },
+  lastSeen: {
+    type: Date,
+    default: Date.now
+  },
+  verified: {
+    type: Boolean,
+    default: false
+  },
+  idVerified: {
+    type: Boolean,
+    default: false
+  },
+  photoVerified: {
+    type: Boolean,
+    default: false
+  },
+  status: {
+    type: String,
+    enum: ['active', 'banned'],
+    default: 'active'
+  },
+  premium: {
+    type: Boolean,
+    default: false
+  },
+  premiumPlan: {
+    type: String,
+    enum: ['none', 'gold', 'diamond'],
+    default: 'none'
+  },
+  premiumUntil: Date,
+  wallet: {
+    coins: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
+  },
+  verificationRequests: {
+    idProof: String,
+    photoProof: String,
+    status: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none'
+    },
+    requestedAt: Date,
+    reviewedAt: Date,
+    rejectionReason: String
+  },
+  priceList: [{
+    label: String,
+    price: Number,
+    description: String
+  }],
+  paymentMethods: [{
+    type: { type: String },
+    details: String
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for isOnline based on lastSeen (active in last 5 minutes)
+UserSchema.virtual('isOnline').get(function () {
+  if (!this.lastSeen) return false;
+  // 5 minutes threshold
+  return new Date() - new Date(this.lastSeen) < 5 * 60 * 1000;
+});
+
+// Encrypt password using bcrypt
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Match user entered password to hashed password in database
+UserSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+module.exports = mongoose.model('User', UserSchema);

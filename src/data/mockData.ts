@@ -1,0 +1,151 @@
+import { User } from '../types';
+
+export const mockUsers: User[] = [
+  {
+    id: '1',
+    name: 'Sofia M.',
+    age: 25,
+    location: 'Madrid Centro',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+    verified: true,
+    photoVerified: true,
+    idVerified: true,
+    premium: true,
+    isVip: true,
+    rating: 4.8,
+    reviewCount: 127,
+    online: true,
+    description: 'Profesional verificada con más de 3 años de experiencia. Perfil 100% real y verificado.',
+    images: [
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop'
+    ],
+    services: ['Masajes', 'Encuentros', 'Videollamadas'],
+    price: '150€',
+    availability: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'],
+    responseTime: '< 5 min',
+    memberSince: '2021'
+  },
+  {
+    id: '2',
+    name: 'Carolina R.',
+    age: 28,
+    location: 'Barcelona, Eixample',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop',
+    verified: true,
+    photoVerified: true,
+    idVerified: true,
+    premium: true,
+    isVip: true,
+    rating: 4.9,
+    reviewCount: 203,
+    online: true,
+    description: 'Perfil premium verificado. Atención personalizada y discreta.',
+    images: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=400&fit=crop'
+    ],
+    services: ['Masajes', 'Spa', 'Terapia'],
+    price: '200€',
+    availability: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+    responseTime: '< 3 min',
+    memberSince: '2020'
+  },
+  {
+    id: '3',
+    name: 'Valentina L.',
+    age: 23,
+    location: 'Valencia Centro',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop',
+    verified: true,
+    photoVerified: true,
+    idVerified: false,
+    premium: false,
+    rating: 4.6,
+    reviewCount: 89,
+    online: false,
+    lastSeen: 'Hace 2 horas',
+    description: 'Perfil con fotos verificadas. Disponibilidad flexible.',
+    images: [
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=400&fit=crop'
+    ],
+    services: ['Encuentros', 'Videollamadas'],
+    price: '80€',
+    availability: ['Vie', 'Sáb', 'Dom'],
+    responseTime: '< 15 min',
+    memberSince: '2022'
+  },
+  {
+    id: '4',
+    name: 'Isabella P.',
+    age: 27,
+    location: 'Sevilla',
+    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=400&fit=crop',
+    verified: true,
+    photoVerified: true,
+    idVerified: true,
+    premium: true,
+    rating: 4.7,
+    reviewCount: 156,
+    online: true,
+    description: 'Verificación completa. Máxima discreción y profesionalidad.',
+    images: [
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop'
+    ],
+    services: ['Masajes', 'Encuentros', 'Eventos'],
+    price: '250€',
+    availability: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    responseTime: '< 5 min',
+    memberSince: '2021'
+  },
+  {
+    id: '5',
+    name: 'Lucia G.',
+    age: 26,
+    location: 'Málaga',
+    avatar: 'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?w=400&h=400&fit=crop',
+    verified: true,
+    photoVerified: true,
+    idVerified: false,
+    premium: false,
+    rating: 4.5,
+    reviewCount: 67,
+    online: true,
+    description: 'Perfil verificado con fotos reales. Buenas reseñas.',
+    images: [
+      'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?w=400&h=400&fit=crop'
+    ],
+    services: ['Masajes', 'Videollamadas'],
+    price: '70€',
+    availability: ['Sáb', 'Dom'],
+    responseTime: '< 10 min',
+    memberSince: '2023'
+  },
+  {
+    id: '6',
+    name: 'Camila N.',
+    age: 24,
+    location: 'Bilbao',
+    avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&h=400&fit=crop',
+    verified: true,
+    photoVerified: true,
+    idVerified: true,
+    premium: true,
+    isVip: true,
+    rating: 4.9,
+    reviewCount: 178,
+    online: false,
+    lastSeen: 'Hace 30 min',
+    description: 'Premium con todas las verificaciones. Excelentes valoraciones.',
+    images: [
+      'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop'
+    ],
+    services: ['Masajes', 'Encuentros', 'Spa', 'Eventos'],
+    price: '180€',
+    availability: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'],
+    responseTime: '< 5 min',
+    memberSince: '2020'
+  }
+];
