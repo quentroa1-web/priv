@@ -7,6 +7,10 @@ import { FilterPanel } from './components/FilterPanel';
 import { UserCard } from './components/UserCard';
 import { UserDetailModal } from './components/UserDetailModal';
 import { StoreModal } from './components/wallet/StoreModal';
+import { COLOMBIA_LOCATIONS } from './data/colombiaLocations';
+import { User } from './types';
+import { TrendingUp, Shield, Loader2, Search, Heart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // Lazy load heavy components
 const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
@@ -18,9 +22,6 @@ const Messaging = lazy(() => import('./components/messaging/Messaging').then(mod
 const Reviews = lazy(() => import('./components/reviews/Reviews').then(module => ({ default: module.Reviews })));
 const PremiumInfo = lazy(() => import('./components/PremiumInfo').then(module => ({ default: module.PremiumInfo })));
 const WalletView = lazy(() => import('./components/wallet/WalletView').then(module => ({ default: module.WalletView })));
-import { User } from './types';
-import { TrendingUp, Shield, Loader2, Search, Heart } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'premium-info' | 'wallet';
 
@@ -111,47 +112,57 @@ function AppContent() {
       try {
         setLoading(true);
         const res = await getAds();
-        const mappedAds = res.data.data.map((ad: any) => ({
-          ...ad,
-          id: ad._id,
-          uid: ad.user?._id || ad.user,
-          name: ad.title,
-          displayName: ad.title,
-          gender: ad.category,
-          location: `${ad.location.city}, ${ad.location.department}`,
-          avatar: ad.photos.find((p: any) => p.isMain)?.url || ad.photos[0]?.url || '',
-          photoURL: ad.photos.find((p: any) => p.isMain)?.url || ad.photos[0]?.url || '',
-          images: ad.photos.map((p: any) => p.url),
-          gallery: ad.photos.map((p: any) => p.url),
-          bio: ad.description,
-          description: ad.description,
-          price: `$${ad.pricing.basePrice.toLocaleString()}`,
-          services: [...(ad.services || []), ...(ad.customServices || [])],
-          availability: (ad.availability?.days || []).map((d: string) => {
-            const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
-            return map[d] || d;
-          }),
-          rating: 5.0,
-          reviewCount: 0,
-          memberSince: new Date(ad.createdAt).toLocaleDateString(),
-          responseTime: '15 min',
-          premium: ad.plan === 'premium' || ad.plan === 'vip' || ad.plan === 'gold' || ad.plan === 'diamond',
-          premiumPlan: ad.plan,
-          priority: ad.priority,
-          lastBumpDate: ad.lastBumpDate,
-          attendsTo: (ad.attendsTo || []).map((a: string) => {
-            const map: any = { 'hombres': 'Hombres', 'mujeres': 'Mujeres', 'parejas': 'Parejas', 'todos': 'Todos' };
-            return map[a] || a;
-          }),
-          placeType: Array.isArray(ad.location?.placeType) ? ad.location.placeType : [ad.location?.placeType].filter(Boolean),
-          priceList: ad.user?.priceList || [],
-          role: ad.user?.role || 'announcer',
-          verified: ad.isVerified || ad.user?.verified,
-          idVerified: ad.isVerified || ad.user?.verified,
-          photoVerified: ad.isVerified || ad.user?.verified,
-          online: ad.user?.isOnline,
-          isOnline: ad.user?.isOnline,
-        }));
+        const mappedAds = res.data.data.map((ad: any) => {
+          // Normalize gender for filtering
+          let gender = ad.category?.toLowerCase();
+          if (gender === 'mujer') gender = 'woman';
+          if (gender === 'hombre') gender = 'man';
+          if (gender === 'trans') gender = 'transgender';
+
+          return {
+            ...ad,
+            id: ad._id,
+            uid: ad.user?._id || ad.user,
+            name: ad.title,
+            displayName: ad.title,
+            gender: gender, // Use normalized gender
+            age: ad.age, // Ensure age is mapped
+            location: `${ad.location.city}, ${ad.location.department}`,
+            locationData: ad.location, // Store raw location data for precise filtering
+            avatar: ad.photos.find((p: any) => p.isMain)?.url || ad.photos[0]?.url || '',
+            photoURL: ad.photos.find((p: any) => p.isMain)?.url || ad.photos[0]?.url || '',
+            images: ad.photos.map((p: any) => p.url),
+            gallery: ad.photos.map((p: any) => p.url),
+            bio: ad.description,
+            description: ad.description,
+            price: `$${ad.pricing.basePrice.toLocaleString()}`,
+            services: [...(ad.services || []), ...(ad.customServices || [])],
+            availability: (ad.availability?.days || []).map((d: string) => {
+              const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
+              return map[d] || d;
+            }),
+            rating: 5.0,
+            reviewCount: 0,
+            memberSince: new Date(ad.createdAt).toLocaleDateString(),
+            responseTime: '15 min',
+            premium: ad.plan === 'premium' || ad.plan === 'vip' || ad.plan === 'gold' || ad.plan === 'diamond',
+            premiumPlan: ad.plan,
+            priority: ad.priority,
+            lastBumpDate: ad.lastBumpDate,
+            attendsTo: (ad.attendsTo || []).map((a: string) => {
+              const map: any = { 'hombres': 'Hombres', 'mujeres': 'Mujeres', 'parejas': 'Parejas', 'todos': 'Todos' };
+              return map[a] || a;
+            }),
+            placeType: Array.isArray(ad.location?.placeType) ? ad.location.placeType : [ad.location?.placeType].filter(Boolean),
+            priceList: ad.user?.priceList || [],
+            role: ad.user?.role || 'announcer',
+            verified: ad.isVerified || ad.user?.verified,
+            idVerified: ad.isVerified || ad.user?.verified,
+            photoVerified: ad.isVerified || ad.user?.verified,
+            online: ad.user?.isOnline,
+            isOnline: ad.user?.isOnline,
+          };
+        });
 
         setAds(mappedAds);
       } catch (error) {
@@ -206,7 +217,9 @@ function AppContent() {
         u.displayName?.toLowerCase().includes(kw) ||
         u.bio?.toLowerCase().includes(kw) ||
         u.description?.toLowerCase().includes(kw) ||
-        u.location?.toLowerCase().includes(kw);
+        u.location?.toLowerCase().includes(kw) ||
+        u.locationData?.neighborhood?.toLowerCase().includes(kw) ||
+        u.locationData?.specificZone?.toLowerCase().includes(kw);
       if (!match) return false;
     }
 
@@ -218,16 +231,51 @@ function AppContent() {
 
     // Location Filter
     if (searchFilters.departamento && searchFilters.departamento !== 'all') {
-      const deptoId = searchFilters.departamento.toLowerCase();
-      const match = u.location?.toLowerCase().includes(deptoId) ||
-        u.location?.toLowerCase().includes(deptoId.replace(/_/g, ' '));
-      if (!match) return false;
+      const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
+      // Compare by name if found, otherwise simple includes
+      if (depto && u.locationData?.department) {
+        if (u.locationData.department !== depto.name) return false;
+      } else {
+        // Fallback to string includes if exact data missing
+        const deptoId = searchFilters.departamento.toLowerCase();
+        const match = u.location?.toLowerCase().includes(deptoId) ||
+          u.location?.toLowerCase().includes(deptoId.replace(/_/g, ' '));
+        if (!match) return false;
+      }
     }
+
     if (searchFilters.ciudad && searchFilters.ciudad !== 'all') {
-      const ciudadId = searchFilters.ciudad.toLowerCase();
-      const match = u.location?.toLowerCase().includes(ciudadId) ||
-        u.location?.toLowerCase().includes(ciudadId.replace(/_/g, ' '));
-      if (!match) return false;
+      // Find the city name
+      let cityName = '';
+      if (searchFilters.departamento) {
+        const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
+        const city = depto?.ciudades.find(c => c.id === searchFilters.ciudad);
+        if (city) cityName = city.name;
+      }
+
+      if (cityName && u.locationData?.city) {
+        if (u.locationData.city !== cityName) return false;
+      } else {
+        const ciudadId = searchFilters.ciudad.toLowerCase();
+        const match = u.location?.toLowerCase().includes(ciudadId) ||
+          u.location?.toLowerCase().includes(ciudadId.replace(/_/g, ' '));
+        if (!match) return false;
+      }
+    }
+
+    if (searchFilters.barrio && searchFilters.barrio !== 'all') {
+      // Find the barrio name
+      let barrioName = '';
+      if (searchFilters.departamento && searchFilters.ciudad) {
+        const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
+        const city = depto?.ciudades.find(c => c.id === searchFilters.ciudad);
+        const barrio = city?.barrios.find(b => b.id === searchFilters.barrio);
+        if (barrio) barrioName = barrio.name;
+      }
+
+      if (barrioName && u.locationData?.neighborhood) {
+        if (u.locationData.neighborhood !== barrioName) return false;
+      }
     }
 
     // Age Filter

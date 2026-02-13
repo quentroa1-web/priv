@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' :
 
 
 // Create axios instance with auth header
-const api = axios.create({
+const api: any = axios.create({
     baseURL: API_URL,
     headers: {
         'Content-Type': 'application/json'
@@ -12,14 +12,15 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(
-    (config) => {
+    (config: any) => {
         const token = localStorage.getItem('token');
         if (token) {
+            config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => Promise.reject(error)
+    (error: any) => Promise.reject(error)
 );
 
 export const getWallet = () => api.get('/payment/wallet');

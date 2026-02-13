@@ -6,6 +6,13 @@ export interface User {
   displayName?: string;
   age?: number;
   location?: string;
+  locationData?: {
+    department?: string;
+    city?: string;
+    neighborhood?: string;
+    specificZone?: string;
+    placeType?: string[];
+  };
   avatar?: string;
   photoURL?: string;
   verified?: boolean;

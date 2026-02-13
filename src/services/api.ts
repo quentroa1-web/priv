@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api');
 
-const api = axios.create({
+const api: any = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -10,9 +10,10 @@ const api = axios.create({
 });
 
 // Add token to requests
-api.interceptors.request.use((config) => {
+api.interceptors.request.use((config: any) => {
   const token = localStorage.getItem('token');
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -20,8 +21,8 @@ api.interceptors.request.use((config) => {
 
 // Handle errors
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  (response: any) => response,
+  (error: any) => {
     const isAuthRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
     if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem('token');
@@ -58,30 +59,24 @@ export const updatePaymentMethods = (methods: any[]) =>
   api.put('/auth/updatedetails', { paymentMethods: methods });
 
 export const uploadAvatar = (formData: FormData) => {
-  const token = localStorage.getItem('token');
-  return axios.post(`${API_URL}/upload/profile`, formData, {
+  return api.post('/upload/profile', formData, {
     headers: {
-      'Authorization': `Bearer ${token}`,
       'Content-Type': 'multipart/form-data'
     }
   });
 };
 
 export const requestVerification = (formData: FormData) => {
-  const token = localStorage.getItem('token');
-  return axios.post(`${API_URL}/users/verify`, formData, {
+  return api.post('/users/verify', formData, {
     headers: {
-      'Authorization': `Bearer ${token}`,
       'Content-Type': 'multipart/form-data'
     }
   });
 };
 
 export const uploadImages = (formData: FormData) => {
-  const token = localStorage.getItem('token');
-  return axios.post(`${API_URL}/upload/multiple`, formData, {
+  return api.post('/upload/multiple', formData, {
     headers: {
-      'Authorization': `Bearer ${token}`,
       'Content-Type': 'multipart/form-data'
     }
   });

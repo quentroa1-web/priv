@@ -30,7 +30,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const parsed = JSON.parse(savedUser);
       setUser(parsed);
       // Verify token is still valid
-      getMe().then((res) => {
+      getMe().then((res: any) => {
         setUser(res.data.user);
         localStorage.setItem('user', JSON.stringify(res.data.user));
       }).catch(() => logout());
