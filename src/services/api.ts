@@ -58,6 +58,14 @@ export const deleteAccount = () =>
 export const updatePaymentMethods = (methods: any[]) =>
   api.put('/auth/updatedetails', { paymentMethods: methods });
 
+export const uploadProof = (formData: FormData) => {
+  return api.post('/upload/proof', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+};
+
 export const uploadAvatar = (formData: FormData) => {
   return api.post('/upload/profile', formData, {
     headers: {
@@ -149,6 +157,7 @@ export const apiService = {
   getMe,
   updateProfile,
   uploadAvatar,
+  uploadProof,
   uploadImages,
   getAds,
   getAd,

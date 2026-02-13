@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Message = require('../models/Message');
+const Ad = require('../models/Ad'); // Ensure Ad model is imported
 const stripe = null; // Stripe removed
 const packages = {
     'coins_100': { coins: 100, amount: 12000, type: 'deposit', currency: 'COP' },
@@ -57,6 +58,28 @@ exports.submitPaymentProof = async (req, res, next) => {
             return res.status(400).json({ success: false, error: 'Paquete inválido' });
         }
 
+        // Prevent duplicate submissions with same reference ID for this user
+        if (referenceId) {
+            const existing = await Transaction.findOne({
+                user: req.user.id,
+                referenceId: referenceId,
+                status: 'pending' // Only check pending to allow resubmission if rejected
+            });
+
+            if (existing) {
+                return res.status(400).json({ success: false, error: 'Ya existe una solicitud pendiente con esta referencia.' });
+            }
+
+            // Also check if reference was used in a completed transaction (replay attack)
+            const usedRef = await Transaction.findOne({
+                referenceId: referenceId,
+                status: 'completed'
+            });
+            if (usedRef) {
+                return res.status(400).json({ success: false, error: 'Esta referencia ya ha sido utilizada.' });
+            }
+        }
+
         // Create Pending Transaction
         const transaction = await Transaction.create({
             user: req.user.id,
@@ -108,27 +131,34 @@ exports.transferCoins = async (req, res, next) => {
         const coinsToTransfer = parseInt(amount);
         if (isNaN(coinsToTransfer) || coinsToTransfer <= 0) return res.status(400).json({ success: false, error: 'Invalid amount' });
 
-        const sender = await User.findById(req.user.id);
+        // Atomic update for sender: Decrement coins ONLY if balance is sufficient
+        const sender = await User.findOneAndUpdate(
+            { _id: req.user.id, 'wallet.coins': { $gte: coinsToTransfer } },
+            { $inc: { 'wallet.coins': -coinsToTransfer } },
+            { new: true }
+        );
+
+        if (!sender) {
+            return res.status(400).json({ success: false, error: 'Insufficient funds' });
+        }
+
         const recipient = await User.findById(recipientId);
-
-        if (!recipient) return res.status(404).json({ success: false, error: 'Recipient not found' });
-
-        // Ensure wallets exist
-        if (!sender.wallet) sender.wallet = { coins: 0 };
-        if (!recipient.wallet) recipient.wallet = { coins: 0 };
-
-        if (sender.wallet.coins < coinsToTransfer) return res.status(400).json({ success: false, error: 'Insufficient funds' });
-
-        // Decrease Sender
-        sender.wallet.coins -= coinsToTransfer;
-        await sender.save();
+        if (!recipient) {
+            // Refund sender if recipient not found (though this is rare)
+            await User.findByIdAndUpdate(req.user.id, { $inc: { 'wallet.coins': coinsToTransfer } });
+            return res.status(404).json({ success: false, error: 'Recipient not found' });
+        }
 
         // Increase Recipient (Apply commission if needed)
         const commission = Math.floor(coinsToTransfer * 0.20); // 20% commission
         const finalAmount = coinsToTransfer - commission;
 
-        recipient.wallet.coins += finalAmount;
-        await recipient.save();
+        // Atomic update for recipient
+        await User.findByIdAndUpdate(recipientId, {
+            $inc: { 'wallet.coins': finalAmount },
+            // Ensure wallet exists handled via schema default usually, but good to be safe
+            $setOnInsert: { 'wallet.coins': finalAmount }
+        }, { upsert: false }); // Don't upsert user, assume exists
 
         // If messageId provided and it's a valid ObjectId, unlock it
         const mongoose = require('mongoose');
@@ -161,19 +191,12 @@ exports.transferCoins = async (req, res, next) => {
 
         // Send holographic system notifications directly into their private chat
         try {
-            // 1. Message from Sender to Recipient (The "Verified Receipt" the advertiser sees)
             await Message.create({
                 sender: sender._id,
                 recipient: recipient._id,
                 content: `💎 [TRANSACCIÓN VERIFICADA]\nHe pagado ${coinsToTransfer} monedas por tu servicio.\nConcepto: ${reason || 'Servicio'}\nID de Operación: ${Date.now().toString().slice(-8)}`,
                 isSystem: true
             });
-
-            // 2. Also keep a copy for the system log or notifications if preferred, 
-            // but for now, making it appear in their chat is what the user wants.
-            // We can also send a duplicate from a "System Admin" if we want it to look like a bot intervention.
-            // Let's use the systemAdmin as the sender BUT it won't appear in the {sender, recipient} chat.
-            // If the user wants it "in the chat with the advertiser", the partners must be sender/recipient.
         } catch (msgErr) {
             console.error('Error sending holographic notifications:', msgErr);
         }
@@ -208,60 +231,67 @@ exports.withdraw = async (req, res) => {
             return res.status(400).json({ success: false, error: `El retiro mínimo es de ${MIN_WITHDRAWAL} monedas` });
         }
 
-        const user = await User.findById(req.user.id);
-        if (!user) {
-            return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
-        }
-
-        if (user.role !== 'announcer' && user.role !== 'admin') {
-            return res.status(403).json({ success: false, error: 'Solo los anunciantes pueden retirar dinero' });
-        }
-
-        // Ensure wallet exists
-        if (!user.wallet) {
-            user.wallet = { coins: 0 };
-        }
-
-        if (user.wallet.coins < coinsToWithdraw) {
-            return res.status(400).json({ success: false, error: 'Saldo insuficiente' });
-        }
-
         if (!targetAccount || targetAccount.trim() === '') {
             return res.status(400).json({ success: false, error: 'Debe proporcionar una cuenta de destino' });
+        }
+
+        // Atomic Deduction: Check role and balance in one go
+        const user = await User.findOneAndUpdate(
+            {
+                _id: req.user.id,
+                $or: [{ role: 'announcer' }, { role: 'admin' }],
+                'wallet.coins': { $gte: coinsToWithdraw }
+            },
+            { $inc: { 'wallet.coins': -coinsToWithdraw } },
+            { new: true }
+        );
+
+        if (!user) {
+            // Check why it failed (role or balance)
+            const checkUser = await User.findById(req.user.id);
+            if (!checkUser) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+            if (checkUser.role !== 'announcer' && checkUser.role !== 'admin') {
+                return res.status(403).json({ success: false, error: 'Solo los anunciantes pueden retirar dinero' });
+            }
+            if (!checkUser.wallet || checkUser.wallet.coins < coinsToWithdraw) {
+                return res.status(400).json({ success: false, error: 'Saldo insuficiente' });
+            }
+            return res.status(500).json({ success: false, error: 'Error al procesar el retiro' });
         }
 
         // 1 Coin = 80 COP (Payout Rate)
         const amountCop = coinsToWithdraw * 80;
 
         // Create Withdrawal Transaction (Pending)
-        const transaction = await Transaction.create({
-            user: user._id,
-            type: 'withdrawal',
-            amount: amountCop,
-            coinsAmount: coinsToWithdraw,
-            currency: 'COP',
-            status: 'pending',
-            description: `Solicitud de retiro a cuenta: ${targetAccount}`,
-            bankName: targetAccount || 'Retiro manual'
-        });
+        try {
+            const transaction = await Transaction.create({
+                user: user._id,
+                type: 'withdrawal',
+                amount: amountCop,
+                coinsAmount: coinsToWithdraw,
+                currency: 'COP',
+                status: 'pending',
+                description: `Solicitud de retiro a cuenta: ${targetAccount}`,
+                bankName: targetAccount || 'Retiro manual'
+            });
 
-        // Deduct coins immediately (reserve them)
-        user.wallet.coins -= coinsToWithdraw;
-        await user.save();
-
-        res.status(200).json({
-            success: true,
-            data: transaction,
-            newBalance: user.wallet.coins
-        });
+            res.status(200).json({
+                success: true,
+                data: transaction,
+                newBalance: user.wallet.coins
+            });
+        } catch (txError) {
+            // If transaction creation fails, we MUST refund the coins!
+            console.error('Transaction creation failed, refunding coins:', txError);
+            await User.findByIdAndUpdate(user._id, { $inc: { 'wallet.coins': coinsToWithdraw } });
+            res.status(500).json({ success: false, error: 'Error al crear la transacción, los fondos han sido devueltos.' });
+        }
 
     } catch (error) {
         console.error('Withdrawal Error:', error);
-        const isDevelopment = process.env.NODE_ENV !== 'production';
         res.status(500).json({
             success: false,
-            error: 'Error al procesar el retiro',
-            ...(isDevelopment && { details: error.message })
+            error: 'Error al procesar el retiro'
         });
     }
 };
@@ -280,32 +310,41 @@ exports.buySubscriptionWithCoins = async (req, res) => {
         const cost = planRates[planId];
         if (!cost) return res.status(400).json({ success: false, error: 'Plan inválido' });
 
+        // 1. Fetch user to check current plan status
         const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-        // Ensure wallet exists
-        if (!user.wallet) {
-            user.wallet = { coins: 0 };
+        let newExpiryDate = new Date();
+        // If already has this plan and it's active, extend it
+        if (user.premium && user.premiumPlan === planId && user.premiumUntil > new Date()) {
+            newExpiryDate = new Date(user.premiumUntil);
+            newExpiryDate.setDate(newExpiryDate.getDate() + 30);
+        } else {
+            // New plan or expired, start from now + 30 days
+            newExpiryDate.setDate(newExpiryDate.getDate() + 30);
         }
 
-        if (user.wallet.coins < cost) {
+        // 2. Atomic Deduction and Update
+        const updatedUser = await User.findOneAndUpdate(
+            { _id: req.user.id, 'wallet.coins': { $gte: cost } },
+            {
+                $inc: { 'wallet.coins': -cost },
+                $set: {
+                    premium: true,
+                    premiumPlan: planId,
+                    premiumUntil: newExpiryDate
+                }
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) {
             return res.status(400).json({ success: false, error: 'Monedas insuficientes. Necesitas ' + cost + ' monedas.' });
         }
 
-        // Deduct coins
-        user.wallet.coins -= cost;
-        user.premium = true;
-        user.premiumPlan = planId;
-
-        // Set expiry (30 days from now)
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 30);
-        user.premiumUntil = expiryDate;
-
-        await user.save();
-
         // Log transaction
         await Transaction.create({
-            user: user._id,
+            user: updatedUser._id,
             type: 'spend',
             amount: cost,
             currency: 'COINS',
@@ -316,7 +355,7 @@ exports.buySubscriptionWithCoins = async (req, res) => {
         res.status(200).json({
             success: true,
             message: `Plan ${planId} activado correctamente`,
-            newBalance: user.wallet.coins
+            newBalance: updatedUser.wallet.coins
         });
 
     } catch (error) {
@@ -333,31 +372,31 @@ exports.boostAdWithCoins = async (req, res) => {
         const { adId } = req.body;
         const BOOST_COST = 100; // 100 coins = $10.000 COP for 12 hours
 
-        const user = await User.findById(req.user.id);
-
-        // Ensure wallet exists
-        if (!user.wallet) {
-            user.wallet = { coins: 0 };
-        }
-
-        if (user.wallet.coins < BOOST_COST) {
-            return res.status(400).json({ success: false, error: 'Necesitas 100 monedas para un boost de 12 horas' });
-        }
-
-        // Find the ad and verify ownership
-        const Ad = require('../models/Ad'); // Assuming Ad model exists
         const ad = await Ad.findById(adId);
-        if (!ad || ad.user.toString() !== user._id.toString()) {
+        if (!ad) return res.status(404).json({ success: false, error: 'Anuncio no encontrado' });
+        if (ad.user.toString() !== req.user.id) {
             return res.status(403).json({ success: false, error: 'No tienes permiso sobre este anuncio' });
         }
 
-        // Deduct coins
-        user.wallet.coins -= BOOST_COST;
-        await user.save();
+        // Atomic Deduction
+        const user = await User.findOneAndUpdate(
+            { _id: req.user.id, 'wallet.coins': { $gte: BOOST_COST } },
+            { $inc: { 'wallet.coins': -BOOST_COST } },
+            { new: true }
+        );
 
-        // Apply Boost (12 hours)
-        const boostExpires = new Date();
-        boostExpires.setHours(boostExpires.getHours() + 12);
+        if (!user) {
+            return res.status(400).json({ success: false, error: 'Necesitas 100 monedas para un boost de 12 horas' });
+        }
+
+        // Apply Boost (extend if already boosted)
+        let boostExpires = new Date();
+        if (ad.isBoosted && ad.boostedUntil > new Date()) {
+            boostExpires = new Date(ad.boostedUntil);
+            boostExpires.setHours(boostExpires.getHours() + 12);
+        } else {
+            boostExpires.setHours(boostExpires.getHours() + 12);
+        }
 
         ad.boostedUntil = boostExpires;
         ad.isBoosted = true;

@@ -88,7 +88,7 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
             formData.append('image', proofFile);
 
             // Reusing the upload endpoint
-            const uploadRes = await apiService.uploadAvatar(formData);
+            const uploadRes = await apiService.uploadProof(formData);
             if (!uploadRes.data.success) throw new Error('Error al subir imagen');
 
             const proofUrl = uploadRes.data.url;
