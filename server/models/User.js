@@ -71,6 +71,22 @@ const UserSchema = new mongoose.Schema({
     enum: ['active', 'banned'],
     default: 'active'
   },
+  isVip: {
+    type: Boolean,
+    default: false
+  },
+  rating: {
+    type: Number,
+    default: 5.0
+  },
+  reviewCount: {
+    type: Number,
+    default: 0
+  },
+  responseTime: {
+    type: String,
+    default: '15 min'
+  },
   premium: {
     type: Boolean,
     default: false
@@ -118,11 +134,16 @@ const UserSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for isOnline based on lastSeen (active in last 5 minutes)
-UserSchema.virtual('isOnline').get(function () {
+// Virtual for online based on lastSeen (active in last 5 minutes)
+UserSchema.virtual('online').get(function () {
   if (!this.lastSeen) return false;
   // 5 minutes threshold
   return new Date() - new Date(this.lastSeen) < 5 * 60 * 1000;
+});
+
+// Alias isOnline to online for compatibility
+UserSchema.virtual('isOnline').get(function () {
+  return this.online;
 });
 
 // Encrypt password using bcrypt

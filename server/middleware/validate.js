@@ -115,8 +115,11 @@ const adminUpdateUserSchema = Joi.object({
     role: Joi.string().valid('user', 'announcer', 'admin'),
     status: Joi.string().valid('active', 'banned'),
     verified: Joi.boolean(),
+    idVerified: Joi.boolean(),
+    photoVerified: Joi.boolean(),
     premium: Joi.boolean(),
-    isVip: Joi.boolean()
+    isVip: Joi.boolean(),
+    premiumUntil: Joi.date().allow(null)
 });
 
 /**

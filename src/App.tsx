@@ -141,12 +141,13 @@ function AppContent() {
               const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
               return map[d] || d;
             }),
-            rating: 5.0,
-            reviewCount: 0,
+            rating: ad.user?.rating || 5.0,
+            reviewCount: ad.user?.reviewCount || 0,
             memberSince: new Date(ad.createdAt).toLocaleDateString(),
-            responseTime: '15 min',
+            responseTime: ad.user?.responseTime || '15 min',
             premium: ad.plan === 'premium' || ad.plan === 'vip' || ad.plan === 'gold' || ad.plan === 'diamond',
             premiumPlan: ad.plan,
+            isVip: ad.user?.isVip || ad.plan === 'vip' || ad.plan === 'diamond',
             priority: ad.priority,
             lastBumpDate: ad.lastBumpDate,
             attendsTo: (ad.attendsTo || []).map((a: string) => {
@@ -159,8 +160,8 @@ function AppContent() {
             verified: ad.isVerified || ad.user?.verified,
             idVerified: ad.isVerified || ad.user?.verified,
             photoVerified: ad.isVerified || ad.user?.verified,
-            online: ad.user?.isOnline,
-            isOnline: ad.user?.isOnline,
+            online: ad.user?.online || ad.user?.isOnline,
+            isOnline: ad.user?.online || ad.user?.isOnline,
           };
         });
 
