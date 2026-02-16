@@ -281,6 +281,22 @@ exports.boostAd = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Not authorized' });
     }
 
+    // Check if already boosted
+    if (ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date()) {
+      return res.status(400).json({ success: false, error: 'Este anuncio ya tiene un Boost activo.' });
+    }
+
+    // Check if user already has an active boost on ANY ad
+    const activeBoost = await Ad.findOne({
+      user: req.user.id,
+      isBoosted: true,
+      boostedUntil: { $gt: new Date() }
+    });
+
+    if (activeBoost) {
+      return res.status(400).json({ success: false, error: 'Ya tienes un anuncio con un Boost activo. Espera a que termine para activar otro.' });
+    }
+
     // Ensure wallet exists
     if (!user.wallet) {
       user.wallet = { coins: 0 };

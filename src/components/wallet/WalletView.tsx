@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { getTransactions, submitWithdrawalRequest } from '../../services/payment';
+import { getMyAds, boostAd } from '../../services/api';
 import {
     History,
     ArrowUpRight,
@@ -37,7 +38,10 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
     const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
     const [isReviewingWithdrawal, setIsReviewingWithdrawal] = useState(false);
     const [showSuscripcionModal, setShowSuscripcionModal] = useState(false);
+    const [showBoostModal, setShowBoostModal] = useState(false);
+    const [userAds, setUserAds] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [openFaq, setOpenFaq] = useState<number | null>(null);
 
     // Exchange rates constants
     const COIN_TO_COP = 80; // Withdrawal rate for advertisers
@@ -45,7 +49,19 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
 
     useEffect(() => {
         fetchHistory();
+        fetchUserAds();
     }, []);
+
+    const fetchUserAds = async () => {
+        try {
+            const res = await getMyAds();
+            if (res.data.success) {
+                setUserAds(res.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching ads:', error);
+        }
+    };
 
     const fetchHistory = async () => {
         try {
@@ -151,13 +167,26 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
         }
     };
 
-    const handleBoost = async () => {
+    const handleBoost = () => {
+        // Check if user has ads
+        if (userAds.length === 0) {
+            alert('No tienes anuncios creados para aplicar un Boost.');
+            return;
+        }
+        setShowBoostModal(true);
+    };
+
+    const activateAdBoost = async (adId: string) => {
         try {
             setLoading(true);
-            // This is a generic boost, normally would need an adId. 
-            // For now, let's assume we boost the latest ad or show a message.
-            alert('Para aplicar el Boost, ve a Mis Anuncios en tu Perfil y selecciona el anuncio que deseas impulsar por 12 horas.');
-            setActiveTab('overview');
+            const res = await boostAd(adId);
+            if (res.data.success) {
+                alert('¡Boost activado exitosamente!');
+                setShowBoostModal(false);
+                refreshUser();
+                fetchHistory();
+                fetchUserAds();
+            }
         } catch (err: any) {
             alert(err.response?.data?.error || 'Error al aplicar boost');
         } finally {
@@ -478,36 +507,36 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                         </div>
 
                         <div className="space-y-6">
-                            <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                                <h4 className="font-bold text-gray-900 text-sm mb-4">Preguntas Frecuentes</h4>
-                                <div className="space-y-4">
-                                    {user?.role === 'announcer' ? (
-                                        <>
-                                            <div className="group cursor-pointer">
-                                                <p className="text-xs font-black text-gray-700 group-hover:text-rose-600 flex items-center justify-between">
-                                                    ¿Cómo recibo mi dinero? <ArrowRight className="w-3 h-3" />
+                            <div className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                                <h4 className="font-black text-gray-900 text-sm mb-4 flex items-center gap-2">
+                                    <Shield className="w-4 h-4 text-rose-500" />
+                                    Preguntas Frecuentes
+                                </h4>
+                                <div className="space-y-3">
+                                    {(user?.role === 'announcer' ? [
+                                        { q: '¿Cómo recibo mi dinero?', a: 'A través de Nequi, Daviplata o Transferencia configurada en tu Facturación.' },
+                                        { q: '¿Cuánto demora el retiro?', a: 'Se procesan en un máximo de 24h hábiles tras la solicitud.' },
+                                        { q: '¿Cuál es la tasa de cambio?', a: 'Cada moneda (🪙) equivale a $80 COP para retiros.' }
+                                    ] : [
+                                        { q: '¿Cómo ganar niveles?', a: 'Cada compra de monedas suma puntos a tu nivel de lealtad permanentemente.' },
+                                        { q: '¿Beneficios de nivel?', a: 'Descuentos, insignias exclusivas y atención prioritaria según tu rango.' },
+                                        { q: '¿Mis monedas expiran?', a: 'No, tus monedas no tienen fecha de vencimiento.' }
+                                    ]).map((faq, idx) => (
+                                        <div key={idx} className="border-b border-gray-50 last:border-0 pb-3 last:pb-0">
+                                            <button
+                                                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                                                className="w-full flex items-center justify-between text-left group"
+                                            >
+                                                <span className="text-xs font-black text-gray-700 group-hover:text-rose-600 transition-colors">{faq.q}</span>
+                                                <Plus className={`w-3 h-3 text-gray-400 transition-transform ${openFaq === idx ? 'rotate-45 text-rose-500' : ''}`} />
+                                            </button>
+                                            {openFaq === idx && (
+                                                <p className="mt-2 text-[10px] text-gray-500 font-medium leading-relaxed animate-in slide-in-from-top-1 duration-200">
+                                                    {faq.a}
                                                 </p>
-                                            </div>
-                                            <div className="group cursor-pointer">
-                                                <p className="text-xs font-black text-gray-700 group-hover:text-rose-600 flex items-center justify-between">
-                                                    ¿Cuánto demora el retiro? <ArrowRight className="w-3 h-3" />
-                                                </p>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="group cursor-pointer">
-                                                <p className="text-xs font-black text-gray-700 group-hover:text-rose-600 flex items-center justify-between">
-                                                    ¿Cómo ganar niveles? <ArrowRight className="w-3 h-3" />
-                                                </p>
-                                            </div>
-                                            <div className="group cursor-pointer">
-                                                <p className="text-xs font-black text-gray-700 group-hover:text-rose-600 flex items-center justify-between">
-                                                    Beneficios de ser Leyenda <ArrowRight className="w-3 h-3" />
-                                                </p>
-                                            </div>
-                                        </>
-                                    )}
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -692,6 +721,83 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Boost Selection Modal */}
+            {showBoostModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden relative">
+                        <button
+                            onClick={() => setShowBoostModal(false)}
+                            className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-all text-gray-400"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="p-8">
+                            <div className="p-4 bg-rose-50 rounded-2xl w-fit mb-6">
+                                <TrendingUp className="w-8 h-8 text-rose-600" />
+                            </div>
+                            <h3 className="text-2xl font-black text-gray-900 mb-2">Selecciona un Anuncio</h3>
+                            <p className="text-gray-500 font-medium text-sm mb-8 leading-relaxed">
+                                Elige el anuncio que deseas impulsar al tope de los resultados por 12 horas. Solo cuesta 100 🪙.
+                            </p>
+
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                {userAds.map((ad) => {
+                                    const isCurrentlyBoosted = ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date();
+                                    return (
+                                        <div
+                                            key={ad._id}
+                                            className={`group p-4 rounded-2xl border transition-all flex items-center justify-between ${isCurrentlyBoosted ? 'bg-gray-50 border-gray-100 opacity-80' : 'bg-white border-gray-100 hover:border-rose-200 hover:shadow-md'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 bg-gray-100 rounded-xl overflow-hidden shadow-inner">
+                                                    {ad.photos && ad.photos[0] && (
+                                                        <img src={ad.photos[0].url} alt="" className="w-full h-full object-cover" />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900 text-sm">{ad.title}</h4>
+                                                    {isCurrentlyBoosted ? (
+                                                        <p className="text-[10px] text-emerald-600 font-black uppercase tracking-wider flex items-center gap-1">
+                                                            <CheckCircle2 className="w-3 h-3" /> Boost Activo
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Listo para impulsar</p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {isCurrentlyBoosted ? (
+                                                <div className="text-right">
+                                                    <p className="text-[9px] text-gray-400 font-bold uppercase">Expira</p>
+                                                    <p className="text-[10px] font-black text-gray-700">{new Date(ad.boostedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                </div>
+                                            ) : (
+                                                <button
+                                                    onClick={() => activateAdBoost(ad._id)}
+                                                    disabled={loading || (user?.wallet?.coins || 0) < 100}
+                                                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${((user?.wallet?.coins || 0) >= 100) ? 'bg-rose-600 text-white shadow-lg hover:bg-rose-700 active:scale-95' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                                >
+                                                    Boost 🚀
+                                                </button>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {(user?.wallet?.coins || 0) < 100 && (
+                                <div className="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3">
+                                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                                    <p className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase">
+                                        No tienes suficientes monedas. Recarga en la sección "Cargar Monedas".
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

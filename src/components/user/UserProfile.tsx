@@ -200,14 +200,20 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
   };
 
   const handleBoostAd = async (adId: string) => {
-    if (window.confirm('¿Quieres impulsar este anuncio por 100 monedas? Subirá al inicio de su categoría.')) {
+    // Check if any ad already has an active boost
+    const activeBoost = userAds.find(ad => ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date());
+
+    if (activeBoost) {
+      alert(`Ya tienes un Boost activo en el anuncio: "${activeBoost.title}". Solo puedes tener un Boost activo a la vez.`);
+      return;
+    }
+
+    if (window.confirm('¿Quieres impulsar este anuncio por 100 monedas? Subirá al inicio de su categoría por 12 horas.')) {
       try {
         const res = await boostAd(adId);
         if (res.data.success) {
           alert('¡Anuncio impulsado con éxito!');
           fetchUserAds(); // Refresh list
-          // Update local user wallet if needed (optional, or refresh profile)
-          window.location.reload();
         }
       } catch (error: any) {
         console.error('Error boosting ad:', error);
@@ -646,22 +652,45 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     <p className="text-sm text-gray-500">Gestiona tus publicaciones activas</p>
                   </div>
 
-                  {/* Ad Limit Info */}
-                  <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-3">
-                    <div className={`p-2 rounded-lg font-black text-xs ${userAds.length >= (user.premiumPlan === 'diamond' ? 100 : user.premiumPlan === 'gold' ? 3 : 1) ? 'bg-rose-500 text-white' : 'bg-green-500 text-white'}`}>
-                      {userAds.length}/{user.premiumPlan === 'diamond' ? '∞' : user.premiumPlan === 'gold' ? 3 : 1}
-                    </div>
-                    <div>
-                      <div className="text-xs font-black text-gray-900 uppercase">Límite de Anuncios</div>
-                      <div className="text-[10px] text-gray-500">
-                        {user.premiumPlan === 'diamond' ? 'Plan Diamante: Ilimitados' : user.premiumPlan === 'gold' ? 'Plan Oro: 3 anuncios' : 'Plan Gratis: 1 anuncio'}
+                  <div className="flex flex-wrap gap-4">
+                    {/* Current Plan Mini Section */}
+                    <div className="bg-amber-50 border border-amber-100 p-3 rounded-xl flex items-center gap-3">
+                      <div className="p-2 bg-amber-500 rounded-lg shadow-sm">
+                        <Crown className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black text-amber-800 uppercase leading-none mb-1">Plan Actual</div>
+                        <div className="text-xs font-black text-gray-900">
+                          {user.premiumPlan === 'diamond' ? 'Diamante' : user.premiumPlan === 'gold' ? 'Oro' : 'Estándar'}
+                        </div>
                       </div>
                     </div>
-                    {(!user.premiumPlan || user.premiumPlan === 'none') && userAds.length >= 1 && (
-                      <button className="ml-2 px-3 py-1 bg-rose-500 text-white text-[10px] font-bold rounded-lg hover:bg-rose-600 transition-all">
-                        Mejorar Plan
-                      </button>
-                    )}
+
+                    {/* Active Boosts Mini Section */}
+                    <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-3">
+                      <div className={`p-2 rounded-lg font-black text-xs ${userAds.some(ad => ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date()) ? 'bg-rose-500 text-white shadow-lg animate-pulse' : 'bg-gray-200 text-gray-500'}`}>
+                        <Rocket className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black text-rose-800 uppercase leading-none mb-1">Boosts Activos</div>
+                        <div className="text-xs font-black text-gray-900">
+                          {userAds.filter(ad => ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date()).length} Activos
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ad Limit Info */}
+                    <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex items-center gap-3">
+                      <div className={`p-2 rounded-lg font-black text-xs ${userAds.length >= (user.premiumPlan === 'diamond' ? 100 : user.premiumPlan === 'gold' ? 3 : 1) ? 'bg-rose-500 text-white' : 'bg-green-500 text-white'}`}>
+                        {userAds.length}/{user.premiumPlan === 'diamond' ? '∞' : user.premiumPlan === 'gold' ? 3 : 1}
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black text-gray-900 uppercase leading-none mb-1">Límite</div>
+                        <div className="text-[10px] text-gray-500 font-bold">
+                          Anuncios
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -718,11 +747,15 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                           </button>
                           <button
                             onClick={() => handleBoostAd(ad._id || ad.id)}
-                            className="flex-1 flex items-center justify-center gap-2 py-2 bg-amber-100 text-amber-700 rounded-xl text-xs font-black shadow-sm border border-amber-200 hover:bg-amber-200 transition-all"
-                            title="Impulsar por 100 monedas"
+                            disabled={ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date()}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-black shadow-sm border transition-all ${ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date()
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                              : 'bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-200'
+                              }`}
+                            title={ad.isBoosted ? 'Boost Activo' : 'Impulsar por 100 monedas'}
                           >
-                            <Rocket className="w-3.5 h-3.5" />
-                            Impulsar
+                            <Rocket className={`w-3.5 h-3.5 ${ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date() ? 'animate-bounce' : ''}`} />
+                            {ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date() ? 'Impulsado' : 'Impulsar'}
                           </button>
                           <button
                             onClick={() => handleDeleteAd(ad._id || ad.id)}
