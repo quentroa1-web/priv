@@ -148,6 +148,8 @@ function AppContent() {
             premium: ad.plan === 'premium' || ad.plan === 'vip' || ad.plan === 'gold' || ad.plan === 'diamond',
             premiumPlan: ad.plan,
             isVip: ad.user?.isVip || ad.plan === 'vip' || ad.plan === 'diamond',
+            isBoosted: ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date(),
+            boostedUntil: ad.boostedUntil,
             priority: ad.priority,
             lastBumpDate: ad.lastBumpDate,
             attendsTo: (ad.attendsTo || []).map((a: string) => {

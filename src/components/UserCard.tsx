@@ -1,4 +1,4 @@
-import { MapPin, Star, Clock, Heart, MessageCircle, Crown, BadgeCheck } from 'lucide-react';
+import { MapPin, Star, Clock, Heart, MessageCircle, Crown, BadgeCheck, Rocket } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
 
@@ -22,7 +22,9 @@ export function UserCard({ user, onClick, variant = 'standard', isFavorite, onTo
           ? "border-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_30px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/20"
           : user.premiumPlan === 'gold'
             ? "border-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.15)] hover:shadow-[0_0_25px_rgba(251,191,36,0.25)] ring-1 ring-amber-400/20"
-            : "border-gray-100 shadow-sm hover:shadow-xl hover:border-rose-200"
+            : user.isBoosted
+              ? "border-rose-200 shadow-[0_0_15px_rgba(225,29,72,0.15)] hover:shadow-[0_0_25px_rgba(225,29,72,0.25)] ring-1 ring-rose-400/20"
+              : "border-gray-100 shadow-sm hover:shadow-xl hover:border-rose-200"
       )}
     >
       {(user.premiumPlan === 'diamond' || isVip) && (
@@ -46,11 +48,17 @@ export function UserCard({ user, onClick, variant = 'standard', isFavorite, onTo
         {/* Improved Gradients for visibility */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 opacity-70" />
 
-        <div className="absolute top-2 left-2 pointer-events-none">
+        <div className="absolute top-2 left-2 pointer-events-none flex flex-col gap-1.5">
           {user.online && (
             <div className="flex items-center gap-1.5 bg-green-500/90 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-xl animate-pulse">
               <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
               Live
+            </div>
+          )}
+          {user.isBoosted && (
+            <div className="flex items-center gap-1.5 bg-rose-600/90 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-xl">
+              <Rocket className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-bounce" />
+              Boost
             </div>
           )}
         </div>

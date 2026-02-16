@@ -22,6 +22,8 @@ export interface User {
   premium?: boolean;
   vip?: boolean;
   isVip?: boolean;
+  isBoosted?: boolean;
+  boostedUntil?: string;
   rating?: number;
   reviewCount?: number;
   online?: boolean;
