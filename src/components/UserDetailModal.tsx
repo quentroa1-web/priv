@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
+import { useAuth } from '../context/AuthContext';
 
 interface UserDetailModalProps {
   user: User | null;
@@ -17,13 +18,20 @@ interface UserDetailModalProps {
 
 export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggleFavorite }: UserDetailModalProps) {
   const [activeImgIndex, setActiveImgIndex] = useState(0);
+  const { user: currentUser } = useAuth();
 
   if (!user) return null;
 
-  const gallery = user.gallery || [user.avatar];
+  const gallery = user.gallery || [user.avatar].filter(Boolean) as string[];
 
   const nextImg = () => setActiveImgIndex((prev) => (prev + 1) % gallery.length);
   const prevImg = () => setActiveImgIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+
+  const displayLocation = typeof user.location === 'object'
+    ? [(user.location as any).city, (user.location as any).department].filter(Boolean).join(', ')
+    : user.location;
+
+  const isOwner = !!(currentUser && (user.uid === currentUser.id || user.id === currentUser.id));
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -50,11 +58,17 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
             {/* Left: Image Gallery (Stickied on Desktop) */}
             <div className="lg:w-1/2 relative bg-gray-50 border-r border-gray-100">
               <div className="aspect-[4/5] lg:aspect-auto lg:h-full relative overflow-hidden">
-                <img
-                  src={gallery[activeImgIndex]}
-                  alt={user.name}
-                  className="w-full h-full object-cover transition-all duration-700"
-                />
+                {gallery.length > 0 ? (
+                  <img
+                    src={gallery[activeImgIndex]}
+                    alt={user.name}
+                    className="w-full h-full object-cover transition-all duration-700"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <Camera className="w-12 h-12 text-gray-400" />
+                  </div>
+                )}
 
                 {/* Image Navigation Arrows */}
                 {gallery.length > 1 && (
@@ -139,7 +153,7 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                         {user.isOnline && <span className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm shrink-0"></span>}
                         <MapPin className="w-5 h-5 text-rose-500 shrink-0" />
                       </div>
-                      <span className="truncate">{user.location}</span>
+                      <span className="truncate">{displayLocation}</span>
                     </div>
                   </div>
                   <div className="bg-rose-50 sm:bg-transparent p-4 sm:p-0 rounded-2xl sm:text-right border border-rose-100 sm:border-none">
@@ -232,7 +246,7 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                       Atiendo a
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {(user.attendsTo || ['Todos']).map((target, idx) => (
+                      {(user.attendsTo && user.attendsTo.length > 0 ? user.attendsTo : ['Todos']).map((target, idx) => (
                         <span key={idx} className="px-4 py-2 bg-rose-50 text-rose-600 rounded-2xl text-xs font-black border border-rose-100 shadow-sm flex items-center gap-1.5">
                           <CheckCircle className="w-3.5 h-3.5" />
                           {target}
@@ -248,7 +262,7 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                       Lugares
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {(user.placeType || ['Domicilio']).map((place, idx) => (
+                      {(user.placeType && user.placeType.length > 0 ? user.placeType : ['Domicilio']).map((place, idx) => (
                         <span key={idx} className="px-4 py-2 bg-blue-50 text-blue-600 rounded-2xl text-xs font-black border border-blue-100 shadow-sm flex items-center gap-1.5">
                           <MapPin className="w-3.5 h-3.5" />
                           {place}
@@ -325,11 +339,11 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                 <div className="pt-10 pb-4 flex flex-col sm:flex-row gap-4">
                   <button
                     onClick={() => onMessage?.(user.uid || user.id || '')}
-                    disabled={user.uid === JSON.parse(localStorage.getItem('user') || '{}').id || user.id === JSON.parse(localStorage.getItem('user') || '{}').id}
+                    disabled={isOwner}
                     className="flex-1 h-14 bg-gradient-to-r from-rose-500 via-pink-600 to-rose-700 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:shadow-rose-500/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
                     <MessageCircle className="w-6 h-6" />
-                    Enviar mensaje
+                    {isOwner ? 'Es tu anuncio' : 'Enviar mensaje'}
                   </button>
                   <div className="flex gap-4">
                     <button

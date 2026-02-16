@@ -91,15 +91,6 @@ export function UserCard({ user, onClick, variant = 'standard', isFavorite, onTo
         <div className="absolute bottom-2 left-2 flex gap-1 z-20 pointer-events-none">
           {user.verified && (
             <div className="bg-white rounded-full p-0.5 shadow-lg">
-              <BadgeCheck className="w-4 h-4 text-blue-500" fill="currentColor" />
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Left: Verifications */}
-        <div className="absolute bottom-2 left-2 flex gap-1 z-20 pointer-events-none">
-          {user.verified && (
-            <div className="bg-white rounded-full p-0.5 shadow-lg">
               <BadgeCheck className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" fill="#3b82f6" color="white" />
             </div>
           )}

@@ -101,7 +101,10 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
 
   const [formData, setFormData] = useState<AdFormData>({
     displayName: editingAd?.title || currentUser?.displayName || currentUser?.name || '',
-    gender: editingAd?.category || '',
+    gender: (editingAd?.category === 'woman' ? 'mujer' :
+      editingAd?.category === 'man' ? 'hombre' :
+        editingAd?.category === 'transgender' ? 'trans' :
+          editingAd?.category) || '',
     age: editingAd?.age || 18,
     phone: editingAd?.phone || '',
     whatsapp: editingAd?.whatsapp || '',
@@ -384,7 +387,7 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
               key={opt.value}
               type="button"
               onClick={() => updateField('gender', opt.value)}
-              className={`py - 3 px - 4 rounded - xl border - 2 text - sm font - bold transition - all flex items - center justify - center gap - 2 ${formData.gender === opt.value
+              className={`py-3 px-4 rounded-xl border-2 text-sm font-bold transition-all flex items-center justify-center gap-2 ${formData.gender === opt.value
                 ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-md shadow-rose-100'
                 : 'border-gray-200 text-gray-600 hover:border-gray-300'
                 } `}
@@ -483,8 +486,8 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
           placeholder="Describe tu perfil, experiencia y lo que ofreces... (mínimo 20 caracteres)"
         />
         <div className="flex justify-between mt-1">
-          <p className={`text - xs ${formData.bio.length >= 20 ? 'text-green-600' : 'text-gray-400'} `}>
-            {formData.bio.length >= 20 ? '✓ Longitud correcta' : `Mínimo 20 caracteres(${formData.bio.length} / 20)`}
+          <p className={`text-xs ${formData.bio.length >= 20 ? 'text-green-600' : 'text-gray-400'} `}>
+            {formData.bio.length >= 20 ? '✓ Longitud correcta' : `Mínimo 20 caracteres (${formData.bio.length} / 20)`}
           </p>
           <p className="text-xs text-gray-400">{formData.bio.length}/500</p>
         </div>
@@ -868,8 +871,8 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
             onClick={triggerPhotoUpload}
             disabled={uploadingPhotos}
             className={`aspect-square rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 bg-gray-50 ${uploadingPhotos
-                ? 'border-rose-200 text-rose-300'
-                : 'border-gray-300 hover:border-rose-400 text-gray-400 hover:text-rose-500 hover:bg-rose-50'
+              ? 'border-rose-200 text-rose-300'
+              : 'border-gray-300 hover:border-rose-400 text-gray-400 hover:text-rose-500 hover:bg-rose-50'
               }`}
           >
             {uploadingPhotos ? (
