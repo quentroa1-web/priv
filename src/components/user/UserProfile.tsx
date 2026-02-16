@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { User } from '../../types';
 import { uploadAvatar, getMyAds, deleteAd as deleteAdApi, changePassword, deleteAccount, requestVerification, boostAd } from '../../services/api';
 import {
@@ -8,6 +8,13 @@ import {
   TrendingUp, CheckCircle, Crown, AlertCircle, Loader2,
   Trash2, PlusCircle, Rocket
 } from 'lucide-react';
+
+const GENDER_LABELS: Record<string, string> = {
+  woman: 'Mujer',
+  man: 'Hombre',
+  transgender: 'Transexual',
+  gigolo: 'Gigoló'
+};
 
 const GenderIcon = ({ gender, className }: { gender?: string, className?: string }) => {
   if (gender === 'man') {
@@ -93,11 +100,13 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
   });
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<any[]>(user.paymentMethods || []);
+  const [newPaymentMethod, setNewPaymentMethod] = useState({ type: '', details: '' });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [idProof, setIdProof] = useState<File | null>(null);
   const [photoProof, setPhotoProof] = useState<File | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,23 +158,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     }
   }, [activeTab]);
 
-  // Load payment methods from user or localStorage (temporary until backend is fixed)
+  // Sync payment methods from user prop
   useEffect(() => {
-    if (user.paymentMethods && user.paymentMethods.length > 0) {
+    if (user.paymentMethods) {
       setPaymentMethods(user.paymentMethods);
-      localStorage.setItem(`paymentMethods_${user.id || user._id}`, JSON.stringify(user.paymentMethods));
-    } else {
-      // Try to load from localStorage as fallback
-      const stored = localStorage.getItem(`paymentMethods_${user.id || user._id}`);
-      if (stored) {
-        try {
-          setPaymentMethods(JSON.parse(stored));
-        } catch (e) {
-          console.error('Error parsing stored payment methods:', e);
-        }
-      }
     }
-  }, [user.paymentMethods, user.id, user._id]);
+  }, [user.paymentMethods]);
 
   const fetchUserAds = async () => {
     try {
@@ -303,13 +301,14 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     </div>
                   )}
                   <button
-                    onClick={() => document.getElementById('avatar-upload')?.click()}
+                    onClick={() => avatarInputRef.current?.click()}
                     disabled={isUploading}
                     className="absolute bottom-0 right-0 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center border-2 border-white hover:scale-110 transition-transform disabled:opacity-50"
                   >
                     {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                   </button>
                   <input
+                    ref={avatarInputRef}
                     id="avatar-upload"
                     type="file"
                     className="hidden"
@@ -507,7 +506,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                             </select>
                           ) : (
                             <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900 font-medium capitalize">
-                              {user.gender || 'No especificado'}
+                              {user.gender ? (GENDER_LABELS[user.gender] || user.gender) : 'No especificado'}
                             </div>
                           )}
                         </div>
@@ -530,7 +529,9 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                           />
                         ) : (
                           <div className="px-4 py-3 bg-gray-50 rounded-xl text-gray-900 font-medium">
-                            {user.location || 'No especificada'}
+                            {typeof user.location === 'object'
+                              ? [(user.location as any).city, (user.location as any).department].filter(Boolean).join(', ')
+                              : user.location || 'No especificada'}
                           </div>
                         )}
                       </div>
@@ -647,18 +648,18 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
 
                   {/* Ad Limit Info */}
                   <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center gap-3">
-                    <div className={`p-2 rounded-lg font-black text-xs ${userAds.length >= (user.premium ? 3 : 1) ? 'bg-rose-500 text-white' : 'bg-green-500 text-white'}`}>
-                      {userAds.length}/{user.premium ? 3 : 1}
+                    <div className={`p-2 rounded-lg font-black text-xs ${userAds.length >= (user.premiumPlan === 'diamond' ? 100 : user.premiumPlan === 'gold' ? 3 : 1) ? 'bg-rose-500 text-white' : 'bg-green-500 text-white'}`}>
+                      {userAds.length}/{user.premiumPlan === 'diamond' ? '∞' : user.premiumPlan === 'gold' ? 3 : 1}
                     </div>
                     <div>
                       <div className="text-xs font-black text-gray-900 uppercase">Límite de Anuncios</div>
                       <div className="text-[10px] text-gray-500">
-                        {user.premium ? 'Plan Premium: 3 anuncios' : 'Plan Gratis: 1 anuncio'}
+                        {user.premiumPlan === 'diamond' ? 'Plan Diamante: Ilimitados' : user.premiumPlan === 'gold' ? 'Plan Oro: 3 anuncios' : 'Plan Gratis: 1 anuncio'}
                       </div>
                     </div>
-                    {!user.premium && userAds.length >= 1 && (
+                    {(!user.premiumPlan || user.premiumPlan === 'none') && userAds.length >= 1 && (
                       <button className="ml-2 px-3 py-1 bg-rose-500 text-white text-[10px] font-bold rounded-lg hover:bg-rose-600 transition-all">
-                        Mejorar a Premium
+                        Mejorar Plan
                       </button>
                     )}
                   </div>
@@ -740,7 +741,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     ))}
 
                     {/* Add New Slot if under limit */}
-                    {userAds.length < (user.premium ? 3 : 1) && (
+                    {userAds.length < (user.premiumPlan === 'diamond' ? 100 : user.premiumPlan === 'gold' ? 3 : 1) && (
                       <button
                         onClick={onCreateAd}
                         className="flex flex-col items-center justify-center p-6 bg-rose-50/30 rounded-2xl border-2 border-dashed border-rose-100 hover:bg-rose-50 hover:border-rose-300 transition-all group min-h-[160px]"
@@ -749,7 +750,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                           <PlusCircle className="w-6 h-6 text-rose-500" />
                         </div>
                         <span className="text-xs font-black text-rose-600 uppercase">Publicar Nuevo Anuncio</span>
-                        <span className="text-[10px] text-gray-400 mt-1">Dispones de {(user.premium ? 3 : 1) - userAds.length} espacios</span>
+                        <span className="text-[10px] text-gray-400 mt-1">Dispones de {(user.premiumPlan === 'diamond' ? 100 : user.premiumPlan === 'gold' ? 3 : 1) - userAds.length} espacios</span>
                       </button>
                     )}
                   </div>
@@ -760,7 +761,9 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     </div>
                     <h3 className="text-xl font-black text-gray-900 mb-2">Aún no tienes anuncios</h3>
                     <p className="text-gray-500 mb-8 max-w-xs mx-auto">Crea tu primer anuncio para empezar a recibir propuestas de contacto hoy mismo.</p>
-                    <button className="px-8 py-4 bg-rose-500 text-white rounded-2xl font-black hover:bg-rose-600 transition-all active:scale-95 shadow-lg shadow-rose-200 flex items-center gap-2 mx-auto">
+                    <button
+                      onClick={onCreateAd}
+                      className="px-8 py-4 bg-rose-500 text-white rounded-2xl font-black hover:bg-rose-600 transition-all active:scale-95 shadow-lg shadow-rose-200 flex items-center gap-2 mx-auto">
                       <PlusCircle className="w-5 h-5" />
                       Crear mi primer anuncio
                     </button>
@@ -1037,15 +1040,13 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                           try {
                             const newMethods = paymentMethods.filter((_, i) => i !== index);
                             setPaymentMethods(newMethods);
-
-                            // Save to localStorage (temporary workaround)
-                            localStorage.setItem(`paymentMethods_${(user as any).id || (user as any)._id}`, JSON.stringify(newMethods));
-
                             await onUpdateProfile({ paymentMethods: newMethods });
                             alert('Método de pago eliminado');
                           } catch (error) {
                             console.error('Error deleting payment method:', error);
                             alert('Error al eliminar el método de pago');
+                            // Revert on error
+                            setPaymentMethods(paymentMethods);
                           }
                         }}
                         className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition-all"
@@ -1070,7 +1071,8 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
                       <select
-                        id="payment-type"
+                        value={newPaymentMethod.type}
+                        onChange={e => setNewPaymentMethod({ ...newPaymentMethod, type: e.target.value })}
                         className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Seleccionar...</option>
@@ -1084,33 +1086,26 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Detalles</label>
                       <input
-                        id="payment-details"
                         type="text"
+                        value={newPaymentMethod.details}
+                        onChange={e => setNewPaymentMethod({ ...newPaymentMethod, details: e.target.value })}
                         className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                         placeholder="Número de teléfono, cuenta, etc."
                       />
                     </div>
                     <button
                       onClick={async () => {
-                        const typeSelect = document.getElementById('payment-type') as HTMLSelectElement;
-                        const detailsInput = document.getElementById('payment-details') as HTMLInputElement;
-                        const type = typeSelect.value;
-                        const details = detailsInput.value;
-
+                        const { type, details } = newPaymentMethod;
                         if (type && details) {
                           try {
                             setSavingPayment(true);
-                            const newMethods = [...paymentMethods, { type, details }];
-                            setPaymentMethods(newMethods);
-
-                            // Save to localStorage (temporary workaround)
-                            localStorage.setItem(`paymentMethods_${user.id || user._id}`, JSON.stringify(newMethods));
+                            const updatedMethods = [...paymentMethods, { type, details }];
+                            setPaymentMethods(updatedMethods);
 
                             // Save to backend
-                            await onUpdateProfile({ paymentMethods: newMethods });
+                            await onUpdateProfile({ paymentMethods: updatedMethods });
 
-                            typeSelect.value = '';
-                            detailsInput.value = '';
+                            setNewPaymentMethod({ type: '', details: '' });
                             alert('Método de pago agregado exitosamente');
                           } catch (error: any) {
                             console.error('Error saving payment method:', error);
