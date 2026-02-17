@@ -28,6 +28,8 @@ const messages = require('./routes/messages');
 const admin = require('./routes/admin');
 const upload = require('./routes/upload');
 const payment = require('./routes/payment');
+const appointments = require('./routes/appointments');
+const reviews = require('./routes/reviews');
 
 // Connect to database
 const connectDB = require('./config/db');
@@ -158,6 +160,8 @@ app.use('/api/messages', messages);
 app.use('/api/admin', admin);
 app.use('/api/upload', upload);
 app.use('/api/payment', payment);
+app.use('/api/appointments', appointments);
+app.use('/api/reviews', reviews);
 
 // Error handler
 app.use((err, req, res, next) => {

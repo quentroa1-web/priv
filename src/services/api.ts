@@ -128,6 +128,24 @@ export const getUnreadCount = () =>
 export const deleteConversation = (userId: string) =>
   api.delete(`/messages/${userId}`);
 
+// Appointments
+export const createAppointment = (appointmentData: any) =>
+  api.post('/appointments', appointmentData);
+
+export const getMyAppointments = () =>
+  api.get('/appointments');
+
+export const updateAppointmentStatus = (id: string, status: string) =>
+  api.put(`/appointments/${id}`, { status });
+
+// Reviews
+export const createReview = (reviewData: any) =>
+  api.post('/reviews', reviewData);
+
+export const getUserReviews = (userId: string) =>
+  api.get(`/reviews/user/${userId}`);
+
+
 // Admin
 export const getAllUsers = () =>
   api.get('/admin/users');
@@ -170,6 +188,11 @@ export const apiService = {
   sendMessage,
   getUnreadCount,
   deleteConversation,
+  createAppointment,
+  getMyAppointments,
+  updateAppointmentStatus,
+  createReview,
+  getUserReviews,
   ...adminApi
 };
 

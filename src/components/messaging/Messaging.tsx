@@ -7,7 +7,7 @@ import {
   MessageCircle, Search, Send, Paperclip, X,
   Smile, MoreVertical, Info, CheckCheck,
   ArrowLeft, Shield, ChevronRight, Crown, Lock, Unlock,
-  Bell, Gift, Trash2
+  Bell, Gift, Trash2, Calendar, Clock as ClockIcon
 } from 'lucide-react';
 
 const SYSTEM_USER_ID = '6989549ede1ca80e285692a8';
@@ -131,7 +131,16 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [showPriceList, setShowPriceList] = useState(false);
   const [showGiftMenu, setShowGiftMenu] = useState(false);
+  const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [appointmentForm, setAppointmentForm] = useState({
+    date: '',
+    time: '',
+    location: '',
+    details: ''
+  });
+  const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
   const [showAnimation, setShowAnimation] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isAtBottomRef = useRef(true);
@@ -181,6 +190,10 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
 
   // Load messages when active conversation changes
   useEffect(() => {
+    // Reset appointment modal state
+    setShowAppointmentModal(false);
+    setAppointmentForm({ date: '', time: '', location: '', details: '' });
+
     if (!activeConversation) {
       setMessages([]);
       return;
@@ -555,6 +568,44 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
     }
   };
 
+  const handleCreateAppointment = async () => {
+    if (!appointmentForm.date || !appointmentForm.time || !appointmentForm.location) {
+      alert('Por favor completa los campos principales de la cita.');
+      return;
+    }
+
+    const selectedDate = new Date(appointmentForm.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      alert('No puedes programar citas para fechas pasadas.');
+      return;
+    }
+
+    try {
+      setIsSubmittingAppointment(true);
+      const res = await apiService.createAppointment({
+        announcerId: activeConversation?.userId,
+        ...appointmentForm
+      }) as any;
+
+      if (res.data.success) {
+        alert('¡Solicitud de cita enviada! El anunciante ha sido notificado.');
+        setShowAppointmentModal(false);
+        setAppointmentForm({ date: '', time: '', location: '', details: '' });
+
+        // Send message to chat as well
+        handleSendMessage(`📌 SOLICITUD DE CITA: He solicitado una cita para el ${appointmentForm.date} a las ${appointmentForm.time} en ${appointmentForm.location}.`);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al solicitar cita');
+    } finally {
+      setIsSubmittingAppointment(false);
+    }
+  };
+
+
   // Determine packs for buying (the partner's packs) and selling (my packs)
   const partnerPacks = activeConversation?.priceList || [];
   const myPacks = (currentUser as any).priceList || [];
@@ -739,6 +790,15 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        {activeConversation.id !== SYSTEM_USER_ID && activeConversation.role === 'announcer' && (
+                          <button
+                            onClick={() => setShowAppointmentModal(true)}
+                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-rose-500 text-white rounded-xl text-[10px] font-black hover:bg-rose-600 transition-all shadow-md shadow-rose-200 uppercase tracking-wider"
+                          >
+                            <Calendar className="w-3.5 h-3.5" />
+                            Concretar Cita
+                          </button>
+                        )}
                         {activeConversation.id !== SYSTEM_USER_ID && (
                           <button
                             onClick={handleDeleteConversation}
@@ -789,7 +849,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
 
                           const prevMsg = messages[index - 1];
                           const showDateSeparator = !prevMsg ||
-                             new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
+                            new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
 
                           return (
                             <Fragment key={msg.id}>
@@ -810,67 +870,67 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
                                   }`}>
 
-                              {isSystemMessage && (
-                                <>
-                                  <div className="holo-glint-overlay" />
-                                  {/* Security Pattern Background */}
-                                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")` }} />
+                                  {isSystemMessage && (
+                                    <>
+                                      <div className="holo-glint-overlay" />
+                                      {/* Security Pattern Background */}
+                                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")` }} />
 
-                                  <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-indigo-200/30 relative z-10 select-none">
-                                    <div className="bg-indigo-600 p-1 rounded-md shadow-inner">
-                                      <Shield className="w-3 h-3 text-white" />
+                                      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-indigo-200/30 relative z-10 select-none">
+                                        <div className="bg-indigo-600 p-1 rounded-md shadow-inner">
+                                          <Shield className="w-3 h-3 text-white" />
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-1">
+                                          <span className="w-1 h-1 bg-indigo-400 rounded-full animate-pulse" />
+                                          SafeConnect Official Transaction
+                                        </span>
+                                      </div>
+                                    </>
+                                  )}
+
+                                  {msg.isLocked && !msg.isUnlocked && !isOwn ? (
+                                    <div className="flex flex-col items-center gap-3 p-4 min-w-[220px]">
+                                      <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center animate-pulse">
+                                        <Lock className="w-7 h-7" />
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="font-black text-gray-900">Contenido Exclusivo</p>
+                                        <p className="text-[10px] text-gray-500">Desbloquea para ver el contenido</p>
+                                      </div>
+                                      <button
+                                        onClick={() => handleUnlock(msg.id, msg.price || 100)}
+                                        className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-lg shadow-amber-200 transition-all w-full flex items-center justify-center gap-2 active:scale-95"
+                                      >
+                                        <Unlock className="w-4 h-4" />
+                                        {msg.price || 100} Coins
+                                      </button>
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-1">
-                                      <span className="w-1 h-1 bg-indigo-400 rounded-full animate-pulse" />
-                                      SafeConnect Official Transaction
+                                  ) : (
+                                    <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic' : ''}`}>
+                                      {msg.content}
+                                    </p>
+                                  )}
+
+                                  <div className={`flex items-center justify-end gap-1 mt-1.5 relative z-10 ${isOwn ? 'text-blue-100' : isSystemMessage ? 'text-indigo-700/60' : 'text-gray-400'}`}>
+                                    <span className="text-[10px] font-medium">
+                                      {formatTime(msg.timestamp)}
                                     </span>
-                                  </div>
-                                </>
-                              )}
-
-                              {msg.isLocked && !msg.isUnlocked && !isOwn ? (
-                                <div className="flex flex-col items-center gap-3 p-4 min-w-[220px]">
-                                  <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center animate-pulse">
-                                    <Lock className="w-7 h-7" />
-                                  </div>
-                                  <div className="text-center">
-                                    <p className="font-black text-gray-900">Contenido Exclusivo</p>
-                                    <p className="text-[10px] text-gray-500">Desbloquea para ver el contenido</p>
-                                  </div>
-                                  <button
-                                    onClick={() => handleUnlock(msg.id, msg.price || 100)}
-                                    className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-lg shadow-amber-200 transition-all w-full flex items-center justify-center gap-2 active:scale-95"
-                                  >
-                                    <Unlock className="w-4 h-4" />
-                                    {msg.price || 100} Coins
-                                  </button>
-                                </div>
-                              ) : (
-                                <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic' : ''}`}>
-                                  {msg.content}
-                                </p>
-                              )}
-
-                              <div className={`flex items-center justify-end gap-1 mt-1.5 relative z-10 ${isOwn ? 'text-blue-100' : isSystemMessage ? 'text-indigo-700/60' : 'text-gray-400'}`}>
-                                <span className="text-[10px] font-medium">
-                                  {formatTime(msg.timestamp)}
-                                </span>
-                                {isOwn && (
-                                  <span>
-                                    {msg.read ? (
-                                      <CheckCheck className="w-3.5 h-3.5 text-blue-200" />
-                                    ) : (
-                                      <CheckCheck className="w-3.5 h-3.5 text-blue-200/50" />
+                                    {isOwn && (
+                                      <span>
+                                        {msg.read ? (
+                                          <CheckCheck className="w-3.5 h-3.5 text-blue-200" />
+                                        ) : (
+                                          <CheckCheck className="w-3.5 h-3.5 text-blue-200/50" />
+                                        )}
+                                      </span>
                                     )}
-                                  </span>
-                                )}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        </Fragment>
-                        );
-                      })
-                    )}
+                            </Fragment>
+                          );
+                        })
+                      )}
                       <div ref={messagesEndRef} />
                     </div>
 
@@ -1082,6 +1142,90 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
               </div>
             </div>
           </div>
+
+          {/* Appointment Modal */}
+          {showAppointmentModal && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative">
+                <button
+                  onClick={() => setShowAppointmentModal(false)}
+                  className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-all text-gray-400"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="p-8">
+                  <div className="p-4 bg-rose-50 rounded-2xl w-fit mb-6">
+                    <Calendar className="w-8 h-8 text-rose-600" />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 mb-2">Concretar Cita</h3>
+                  <p className="text-gray-500 font-medium text-sm mb-6 leading-relaxed">
+                    Completa los detalles para tu encuentro presencial. Una vez enviada, el anunciante podrá confirmarla.
+                  </p>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fecha</label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="date"
+                            min={new Date().toISOString().split('T')[0]}
+                            value={appointmentForm.date}
+                            onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Hora</label>
+                        <div className="relative">
+                          <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input
+                            type="time"
+                            value={appointmentForm.time}
+                            onChange={(e) => setAppointmentForm({ ...appointmentForm, time: e.target.value })}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lugar del encuentro</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Centro Comercial, Hotel..."
+                        value={appointmentForm.location}
+                        onChange={(e) => setAppointmentForm({ ...appointmentForm, location: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Detalles adicionales (opcional)</label>
+                      <textarea
+                        placeholder="Alguna nota o instrucción especial..."
+                        value={appointmentForm.details}
+                        onChange={(e) => setAppointmentForm({ ...appointmentForm, details: e.target.value })}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm resize-none"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleCreateAppointment}
+                      disabled={isSubmittingAppointment}
+                      className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black shadow-xl shadow-rose-200 hover:bg-rose-700 transition-all active:scale-[0.98] disabled:bg-gray-200 disabled:shadow-none uppercase tracking-widest text-xs"
+                    >
+                      {isSubmittingAppointment ? 'Enviando...' : 'Confirmar Solicitud'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

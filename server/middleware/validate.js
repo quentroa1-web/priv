@@ -132,6 +132,33 @@ const messageSchema = Joi.object({
     price: Joi.number().min(0)
 });
 
+/**
+ * APPOINTMENT SCHEMAS
+ */
+const appointmentSchema = Joi.object({
+    announcerId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    adId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    date: Joi.date().iso().min('now').required(),
+    time: Joi.string().required(),
+    location: Joi.string().max(200).required(),
+    details: Joi.string().max(500).allow('', null)
+});
+
+/**
+ * REVIEW SCHEMAS
+ */
+const reviewSchema = Joi.object({
+    appointmentId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    rating: Joi.number().min(1).max(5).required(),
+    comment: Joi.string().min(5).max(1000).required(),
+    categories: Joi.object({
+        service: Joi.number().min(1).max(5).default(5),
+        punctuality: Joi.number().min(1).max(5).default(5),
+        communication: Joi.number().min(1).max(5).default(5),
+        hygiene: Joi.number().min(1).max(5).default(5)
+    }).required()
+});
+
 module.exports = {
     validate,
     registerSchema,
@@ -139,5 +166,7 @@ module.exports = {
     updateDetailsSchema,
     adSchema,
     adminUpdateUserSchema,
-    messageSchema
+    messageSchema,
+    appointmentSchema,
+    reviewSchema
 };

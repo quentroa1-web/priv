@@ -1,12 +1,21 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { User } from '../../types';
-import { uploadAvatar, getMyAds, deleteAd as deleteAdApi, changePassword, deleteAccount, requestVerification, boostAd } from '../../services/api';
+import {
+  uploadAvatar,
+  getMyAds,
+  deleteAd as deleteAdApi,
+  changePassword,
+  deleteAccount,
+  requestVerification,
+  boostAd,
+  apiService
+} from '../../services/api';
 import {
   User as UserIcon, Mail, Phone, MapPin, Shield,
   Eye, Edit, Camera, Save, X, Globe, Clock, Heart,
   MessageCircle, CreditCard, Settings, ArrowLeft,
   TrendingUp, CheckCircle, Crown, AlertCircle, Loader2,
-  Trash2, PlusCircle, Rocket
+  Trash2, PlusCircle, Rocket, Calendar, Star, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 const GENDER_LABELS: Record<string, string> = {
@@ -98,6 +107,21 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     newPassword: '',
     confirmPassword: ''
   });
+
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState<string | null>(null);
+  const [appointmentViewMode, setAppointmentViewMode] = useState<'list' | 'calendar'>('list');
+  const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date());
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState<string | null>(null);
+
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    comment: '',
+    categories: { service: 5, punctuality: 5, communication: 5, hygiene: 5 }
+  });
+
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<any[]>(user.paymentMethods || []);
   const [newPaymentMethod, setNewPaymentMethod] = useState({ type: '', details: '' });
@@ -263,12 +287,68 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
   const tabs = [
     { id: 'profile', label: 'Mi Perfil', icon: UserIcon },
     { id: 'ads', label: 'Mis Anuncios', icon: Eye },
+    { id: 'appointments', label: 'Mis Citas', icon: Calendar },
     { id: 'stats', label: 'Estadísticas', icon: TrendingUp },
     { id: 'settings', label: 'Configuración', icon: Settings },
     ...(user.role === 'announcer' || (user as any).accountType === 'announcer' ? [{ id: 'services', label: 'Servicios/Precios', icon: Crown }] : []),
     { id: 'verification', label: 'Verificación', icon: Shield },
     { id: 'billing', label: 'Facturación', icon: CreditCard }
   ];
+
+  const fetchAppointments = async () => {
+    try {
+      setLoadingAppointments(true);
+      const res = await apiService.getMyAppointments() as any;
+      if (res.data.success) {
+        setAppointments(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching appointments:', err);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'appointments') {
+      fetchAppointments();
+    }
+  }, [activeTab]);
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      setIsUpdatingStatus(id);
+      const res = await apiService.updateAppointmentStatus(id, status) as any;
+      if (res.data.success) {
+        alert(`Cita marcada como ${status}`);
+        await fetchAppointments();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al actualizar estado');
+    } finally {
+      setIsUpdatingStatus(null);
+    }
+  };
+
+
+  const handleSubmitReview = async () => {
+    if (!showReviewModal) return;
+    try {
+      const res = await apiService.createReview({
+        appointmentId: showReviewModal,
+        ...reviewForm
+      }) as any;
+      if (res.data.success) {
+        alert('¡Calificación enviada con éxito!');
+        setShowReviewModal(null);
+        setReviewForm({ rating: 5, comment: '', categories: { service: 5, punctuality: 5, communication: 5, hygiene: 5 } });
+        fetchAppointments();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al enviar calificación');
+    }
+  };
+
 
   return (
     <div className="animate-in fade-in duration-300">
@@ -1231,7 +1311,299 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                 </div>
               </div>
             )}
+
+            {activeTab === 'appointments' && (
+              <div className="space-y-6 animate-in slide-in-from-right duration-300">
+                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-900 mb-1">Mis Citas</h2>
+                      <p className="text-sm text-gray-500">Gestiona tus encuentros y califica a los usuarios</p>
+                    </div>
+
+                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                      <button
+                        onClick={() => setAppointmentViewMode('list')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${appointmentViewMode === 'list' ? 'bg-white text-rose-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                      > Lista </button>
+                      <button
+                        onClick={() => setAppointmentViewMode('calendar')}
+                        className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${appointmentViewMode === 'calendar' ? 'bg-white text-rose-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                      > Calendario </button>
+                    </div>
+                  </div>
+                  {/* Calendar View Toggle Here */}
+                  {loadingAppointments ? (
+                    <div className="py-20 text-center">
+                      <Loader2 className="w-8 h-8 animate-spin text-rose-500 mx-auto" />
+                    </div>
+                  ) : appointmentViewMode === 'list' ? (
+                    <div className="space-y-4">
+                      {appointments.length > 0 ? (
+                        appointments.map((appt: any) => {
+                          const isAnnouncer = user.role === 'announcer' || (user as any).accountType === 'announcer';
+                          const partner = isAnnouncer ? appt.client : appt.announcer;
+                          const canRate = appt.status === 'completed' && (
+                            (isAnnouncer && !appt.clientReviewed) ||
+                            (!isAnnouncer && !appt.announcerReviewed)
+                          );
+
+                          return (
+                            <div key={appt._id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="flex items-center gap-4">
+                                <img src={partner?.avatar || `https://ui-avatars.com/api/?name=${partner?.name}`} className="w-12 h-12 rounded-xl object-cover" />
+                                <div>
+                                  <div className="font-black text-gray-900">{partner?.name}</div>
+                                  <div className="text-[10px] text-gray-500 flex items-center gap-1 font-bold uppercase tracking-wider">
+                                    <Calendar className="w-3 h-3" /> {new Date(appt.date).toLocaleDateString()} - {appt.time}
+                                  </div>
+                                  <div className="text-[10px] text-gray-400 font-medium">📍 {appt.location}</div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {isUpdatingStatus === appt._id ? (
+                                  <Loader2 className="w-5 h-5 animate-spin text-rose-500" />
+                                ) : (
+                                  <>
+                                    {appt.status === 'pending' && isAnnouncer && (
+                                      <>
+                                        <button
+                                          onClick={() => handleUpdateStatus(appt._id, 'confirmed')}
+                                          className="px-3 py-1.5 bg-green-500 text-white text-[10px] font-black rounded-lg hover:bg-green-600 transition-all uppercase tracking-widest"
+                                        > Confirmar </button>
+                                        <button
+                                          onClick={() => handleUpdateStatus(appt._id, 'cancelled')}
+                                          className="px-3 py-1.5 bg-gray-200 text-gray-600 text-[10px] font-black rounded-lg hover:bg-gray-300 transition-all uppercase tracking-widest"
+                                        > Cancelar </button>
+                                      </>
+                                    )}
+                                    {appt.status === 'confirmed' && (
+                                      <button
+                                        onClick={() => handleUpdateStatus(appt._id, 'completed')}
+                                        className="px-3 py-1.5 bg-blue-500 text-white text-[10px] font-black rounded-lg hover:bg-blue-600 transition-all uppercase tracking-widest"
+                                      > Finalizar </button>
+                                    )}
+                                    {appt.status === 'completed' && (
+                                      <span className="px-3 py-1.5 bg-green-100 text-green-600 text-[10px] font-black rounded-lg uppercase tracking-widest flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" /> Completada
+                                      </span>
+                                    )}
+                                    {canRate && (
+                                      <button
+                                        onClick={() => setShowReviewModal(appt._id)}
+                                        className="px-3 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-lg hover:bg-amber-600 transition-all shadow-md shadow-amber-100 uppercase tracking-widest flex items-center gap-1"
+                                      >
+                                        <Star className="w-3 h-3" /> Calificar
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-20 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
+                          <Calendar className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                          <p className="text-gray-400 font-bold italic">Aún no tienes citas programadas</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="animate-in fade-in duration-500">
+                      <div className="flex items-center justify-between mb-6 bg-rose-50 p-4 rounded-2xl">
+                        <button
+                          onClick={() => {
+                            setCurrentCalendarDate(new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() - 1, 1));
+                            setSelectedCalendarDay(null);
+                          }}
+                          className="p-2 hover:bg-white rounded-xl transition-all text-rose-600 shadow-sm"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <h3 className="text-lg font-black text-rose-900 uppercase tracking-widest">
+                          {currentCalendarDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                        </h3>
+                        <button
+                          onClick={() => {
+                            setCurrentCalendarDate(new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + 1, 1));
+                            setSelectedCalendarDay(null);
+                          }}
+                          className="p-2 hover:bg-white rounded-xl transition-all text-rose-600 shadow-sm"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-2">
+                        {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(d => (
+                          <div key={d} className="text-center py-2 text-[10px] font-black text-gray-400 uppercase tracking-wider">{d}</div>
+                        ))}
+
+                        {(() => {
+                          const year = currentCalendarDate.getFullYear();
+                          const month = currentCalendarDate.getMonth();
+                          const firstDay = new Date(year, month, 1).getDay();
+                          const daysInMonth = new Date(year, month + 1, 0).getDate();
+                          const days = [];
+
+                          // Empty spots for previous month
+                          for (let i = 0; i < firstDay; i++) {
+                            days.push(<div key={`empty-${i}`} className="aspect-square bg-gray-50/50 rounded-xl"></div>);
+                          }
+
+                          // Days of current month
+                          for (let day = 1; day <= daysInMonth; day++) {
+                            const dateObj = new Date(year, month, day);
+                            const dateStr = dateObj.toLocaleDateString('en-CA');
+                            const dayAppts = appointments.filter((a: any) => {
+                              try {
+                                const aDate = new Date(a.date);
+                                // Normalize both to YYYY-MM-DD for comparison
+                                return aDate.toLocaleDateString('en-CA') === dateStr;
+                              } catch (e) { return false; }
+                            });
+                            const isToday = new Date().toLocaleDateString('en-CA') === dateStr;
+                            const isSelected = selectedCalendarDay === dateStr;
+
+                            days.push(
+                              <button
+                                key={day}
+                                onClick={() => setSelectedCalendarDay(isSelected ? null : dateStr)}
+                                className={`aspect-square relative flex flex-col items-center justify-center rounded-xl border transition-all ${isSelected ? 'bg-rose-600 border-rose-600 shadow-lg scale-105 z-10' :
+                                  isToday ? 'bg-rose-50 border-rose-200' :
+                                    'bg-white border-gray-100 hover:border-rose-100'
+                                  }`}
+                              >
+                                <span className={`text-xs font-black ${isSelected ? 'text-white' : isToday ? 'text-rose-600' : 'text-gray-600'}`}>{day}</span>
+                                {dayAppts.length > 0 && (
+                                  <div className="absolute bottom-1.5 flex gap-0.5">
+                                    {dayAppts.slice(0, 3).map((a: any, idx: number) => (
+                                      <div key={idx} className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/40' : a.status === 'confirmed' ? 'bg-green-500' : a.status === 'pending' ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
+                                    ))}
+                                    {dayAppts.length > 3 && <div className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white' : 'bg-gray-300'}`}></div>}
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          }
+                          return days;
+                        })()}
+                      </div>
+
+                      <div className="mt-8 flex flex-wrap gap-4 justify-center border-t border-gray-100 pt-6">
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest"><span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Pendiente</div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest"><span className="w-2.5 h-2.5 rounded-full bg-green-500"></span> Confirmada</div>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest"><span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Finalizada</div>
+                      </div>
+
+                      {selectedCalendarDay && (
+                        <div className="mt-8 animate-in slide-in-from-bottom duration-300">
+                          <h4 className="text-sm font-black text-gray-900 mb-4 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-rose-500" />
+                            Citas para el {new Date(selectedCalendarDay + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                          </h4>
+                          <div className="space-y-3">
+                            {appointments.filter(a => new Date(a.date).toLocaleDateString('en-CA') === selectedCalendarDay).map(appt => {
+                              const isAnnouncer = user.role === 'announcer' || (user as any).accountType === 'announcer';
+                              const partner = isAnnouncer ? appt.client : appt.announcer;
+                              return (
+                                <div key={appt._id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <img src={partner?.avatar || `https://ui-avatars.com/api/?name=${partner?.name}`} className="w-10 h-10 rounded-lg object-cover" />
+                                    <div>
+                                      <div className="text-xs font-black text-gray-900">{partner?.name}</div>
+                                      <div className="text-[10px] text-gray-500 font-bold">{appt.time} - {appt.location}</div>
+                                    </div>
+                                  </div>
+                                  <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-wider ${appt.status === 'confirmed' ? 'bg-green-100 text-green-600' :
+                                    appt.status === 'pending' ? 'bg-amber-100 text-amber-600' :
+                                      'bg-blue-100 text-blue-600'
+                                    }`}>
+                                    {appt.status}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
+
+          {showReviewModal && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+              <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative">
+                <button onClick={() => setShowReviewModal(null)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-all text-gray-400">
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="p-8">
+                  <div className="p-4 bg-amber-50 rounded-2xl w-fit mb-6">
+                    <Star className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-900 mb-2">Calificar Encuentro</h3>
+                  <p className="text-gray-500 font-medium text-sm mb-6 leading-relaxed">Tu opinión ayuda a mantener la seguridad de la comunidad.</p>
+
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Calificación General</label>
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button key={s} onClick={() => setReviewForm({ ...reviewForm, rating: s })}>
+                            <Star className={`w-8 h-8 ${reviewForm.rating >= s ? 'text-amber-500 fill-amber-500' : 'text-gray-200'} transition-all hover:scale-110`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {Object.keys(reviewForm.categories).map((cat) => (
+                        <div key={cat} className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-600 capitalize">{cat === 'service' ? 'Servicio prestado' : cat === 'punctuality' ? 'Puntualidad' : cat === 'communication' ? 'Comunicación' : 'Higiene'}</span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => setReviewForm({
+                                  ...reviewForm,
+                                  categories: { ...reviewForm.categories, [cat]: s }
+                                })}
+                                className={`w-5 h-5 rounded-full ${(reviewForm.categories as any)[cat] >= s ? 'bg-amber-500' : 'bg-gray-100'} transition-all`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Comentario</label>
+                      <textarea
+                        placeholder="Cuéntanos cómo fue tu experiencia..."
+                        value={reviewForm.comment}
+                        onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold text-sm resize-none"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleSubmitReview}
+                      className="w-full py-4 bg-amber-500 text-white rounded-2xl font-black shadow-xl shadow-amber-200 hover:bg-amber-600 transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
+                    >
+                      Enviar Calificación
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

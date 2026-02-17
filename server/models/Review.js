@@ -11,6 +11,19 @@ const ReviewSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  reviewee: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  appointment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment'
+  },
+  type: {
+    type: String,
+    enum: ['client-to-announcer', 'announcer-to-client']
+  },
   rating: {
     type: Number,
     required: true,

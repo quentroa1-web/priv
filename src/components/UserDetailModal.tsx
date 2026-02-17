@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X, Shield, CheckCircle, Star, MapPin, Clock, Crown,
   Heart, MessageCircle, Flag, Camera, ChevronLeft, ChevronRight,
-  Users, Home, Globe, Sparkles, BadgeCheck
+  Users, Home, Globe, Sparkles, BadgeCheck, Loader2
 } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/api';
+
 
 interface UserDetailModalProps {
   user: User | null;
@@ -19,6 +21,27 @@ interface UserDetailModalProps {
 export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggleFavorite }: UserDetailModalProps) {
   const [activeImgIndex, setActiveImgIndex] = useState(0);
   const { user: currentUser } = useAuth();
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
+
+  useEffect(() => {
+    if (user?.id || user?.uid) {
+      const fetchReviews = async () => {
+        try {
+          setLoadingReviews(true);
+          const res = await apiService.getUserReviews(user.id || user.uid || '') as any;
+          if (res.data.success) {
+            setReviews(res.data.data);
+          }
+        } catch (err) {
+          console.error('Error fetching reviews:', err);
+        } finally {
+          setLoadingReviews(false);
+        }
+      };
+      fetchReviews();
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -332,6 +355,54 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                         </div>
                       );
                     })}
+                  </div>
+                </section>
+
+                {/* Reviews Section */}
+                <section>
+                  <h3 className="text-base font-black text-gray-900 mb-6 flex items-center gap-2">
+                    <Star className="w-6 h-6 text-amber-500" fill="currentColor" />
+                    Reseñas de la comunidad
+                  </h3>
+
+                  <div className="space-y-4">
+                    {loadingReviews ? (
+                      <div className="py-10 text-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-rose-500 mx-auto" />
+                      </div>
+                    ) : reviews.length > 0 ? (
+                      reviews.map((rev) => (
+                        <div key={rev._id} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-rose-500 flex items-center justify-center text-white font-black">
+                                {rev.reviewer?.name?.charAt(0) || 'U'}
+                              </div>
+                              <div>
+                                <div className="font-black text-gray-900">{rev.reviewer?.name || 'Usuario anónimo'}</div>
+                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{new Date(rev.createdAt).toLocaleDateString()}</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 px-3 py-1 bg-white rounded-full border border-gray-100 shadow-sm">
+                              <Star className="w-3 h-3 text-amber-500" fill="currentColor" />
+                              <span className="text-sm font-black text-gray-900">{rev.rating}</span>
+                            </div>
+                          </div>
+                          <p className="text-gray-600 font-medium italic mb-4 leading-relaxed line-clamp-3">"{rev.comment}"</p>
+                          <div className="flex flex-wrap gap-2">
+                            {rev.categories && Object.entries(rev.categories).map(([k, v]: [string, any]) => (
+                              <span key={k} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 bg-white rounded-lg border border-gray-100 text-gray-400">
+                                {k}: {v}/5
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="py-10 text-center bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-100">
+                        <p className="text-gray-400 font-bold italic">Este usuario aún no tiene reseñas verificadas.</p>
+                      </div>
+                    )}
                   </div>
                 </section>
 
