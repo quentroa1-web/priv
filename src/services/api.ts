@@ -145,6 +145,12 @@ export const createReview = (reviewData: any) =>
 export const getUserReviews = (userId: string) =>
   api.get(`/reviews/user/${userId}`);
 
+export const respondToReview = (id: string, content: string) =>
+  api.post(`/reviews/${id}/response`, { content });
+
+export const markReviewHelpful = (id: string) =>
+  api.post(`/reviews/${id}/helpful`);
+
 
 // Admin
 export const getAllUsers = () =>
@@ -193,6 +199,8 @@ export const apiService = {
   updateAppointmentStatus,
   createReview,
   getUserReviews,
+  respondToReview,
+  markReviewHelpful,
   ...adminApi
 };
 

@@ -15,20 +15,31 @@ exports.createAppointment = async (req, res) => {
             return res.status(400).json({ success: false, error: 'No puedes solicitar una cita contigo mismo.' });
         }
 
-        const ad = await Ad.findById(adId);
-        if (!ad) {
-            return res.status(404).json({ success: false, error: 'Anuncio no encontrado.' });
+        // Validate date is not in the past (allow today)
+        const appointmentDate = new Date(date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (appointmentDate < today) {
+            return res.status(400).json({ success: false, error: 'No puedes programar citas para fechas pasadas.' });
         }
 
-        if (ad.user.toString() !== announcerId) {
-            return res.status(400).json({ success: false, error: 'El anuncio no pertenece al anunciante registrado.' });
+        // Ad is optional, but if provided, must be valid and belong to announcer
+        if (adId) {
+            const ad = await Ad.findById(adId);
+            if (!ad) {
+                return res.status(404).json({ success: false, error: 'Anuncio no encontrado.' });
+            }
+
+            if (ad.user.toString() !== announcerId) {
+                return res.status(400).json({ success: false, error: 'El anuncio no pertenece al anunciante registrado.' });
+            }
         }
 
-        // Check if there's already a pending appointment for the same ad and announcer
+        // Check if there's already a pending appointment for the same announcer
         const existingAppointment = await Appointment.findOne({
             client: req.user.id,
             announcer: announcerId,
-            ad: adId,
+            ad: adId || { $exists: false },
             status: { $in: ['pending', 'confirmed'] }
         });
 
@@ -39,7 +50,7 @@ exports.createAppointment = async (req, res) => {
         const appointment = await Appointment.create({
             client: req.user.id,
             announcer: announcerId,
-            ad: adId,
+            ad: adId || null,
             date,
             time,
             location,

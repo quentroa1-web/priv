@@ -1,34 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { User } from '../../types';
 import {
   Star, Search, ThumbsUp, Flag,
   CheckCircle, Shield, MoreVertical, ArrowLeft,
   X, Reply, Send,
-  Award as AwardIcon, Sparkles
+  Award as AwardIcon, Sparkles, Loader2
 } from 'lucide-react';
+import { apiService } from '../../services/api';
 
 interface Review {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
+  _id: string;
+  reviewer: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
   rating: number;
   comment: string;
-  date: Date;
-  verified: boolean;
-  helpful: number;
+  createdAt: string;
+  isVerified: boolean;
+  helpful?: number;
   response?: {
-    id: string;
-    userId: string;
-    userName: string;
-    comment: string;
-    date: Date;
+    content: string;
+    createdAt: string;
   };
   categories: {
     service: number;
     punctuality: number;
     communication: number;
-    value: number;
+    hygiene: number;
   };
 }
 
@@ -38,130 +38,109 @@ interface ReviewsProps {
 }
 
 export function Reviews({ user, onBack }: ReviewsProps) {
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: '1',
-      userId: 'user1',
-      userName: 'Carlos M.',
-      userAvatar: 'https://i.pravatar.cc/100?img=1',
-      rating: 5,
-      comment: 'Excelente servicio, muy profesional y puntual. Superó todas mis expectativas. Definitivamente recomiendo!',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-      verified: true,
-      helpful: 12,
-      categories: {
-        service: 5,
-        punctuality: 5,
-        communication: 5,
-        value: 4
-      }
-    },
-    {
-      id: '2',
-      userId: 'user2',
-      userName: 'Ana L.',
-      userAvatar: 'https://i.pravatar.cc/100?img=2',
-      rating: 4,
-      comment: 'Muy buena experiencia, aunque el lugar podría mejorar. En general todo bien.',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5), // 5 days ago
-      verified: true,
-      helpful: 8,
-      response: {
-        id: 'resp1',
-        userId: user.uid || 'current',
-        userName: user.displayName || 'Tú',
-        comment: 'Gracias por tu feedback Ana. Estamos mejorando nuestras instalaciones.',
-        date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4)
-      },
-      categories: {
-        service: 4,
-        punctuality: 5,
-        communication: 4,
-        value: 4
-      }
-    },
-    {
-      id: '3',
-      userId: 'user3',
-      userName: 'Roberto G.',
-      userAvatar: 'https://i.pravatar.cc/100?img=3',
-      rating: 5,
-      comment: 'Increíble atención al detalle. Volveré sin duda. El mejor servicio que he recibido.',
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-      verified: false,
-      helpful: 5,
-      categories: {
-        service: 5,
-        punctuality: 5,
-        communication: 5,
-        value: 5
-      }
-    }
-  ]);
-
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showResponse, setShowResponse] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
 
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoading(true);
+        const res = await apiService.getUserReviews(user.uid || user.id || '') as any;
+        if (res.data.success) {
+          setReviews(res.data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching reviews:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReviews();
+  }, [user]);
+
   const filteredReviews = reviews.filter(review => {
-    if (filter === 'verified' && !review.verified) return false;
+    if (filter === 'verified' && !review.isVerified) return false;
     if (filter === '5star' && review.rating < 5) return false;
     if (filter === 'withResponse' && !review.response) return false;
     if (searchTerm && !review.comment.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
 
-  const stats = {
-    averageRating: 4.7,
-    totalReviews: reviews.length,
-    fiveStar: reviews.filter(r => r.rating === 5).length,
-    verifiedReviews: reviews.filter(r => r.verified).length,
-    categories: {
-      service: 4.8,
-      punctuality: 4.9,
-      communication: 4.6,
-      value: 4.5
+  const stats = useMemo(() => {
+    const total = reviews.length;
+    if (total === 0) return {
+      averageRating: 0,
+      totalReviews: 0,
+      fiveStar: 0,
+      verifiedReviews: 0,
+      categories: { service: 0, punctuality: 0, communication: 0, hygiene: 0 }
+    };
+
+    const avg = reviews.reduce((acc, r) => acc + r.rating, 0) / total;
+    const catAvg = {
+      service: reviews.reduce((acc, r) => acc + (r.categories?.service || 0), 0) / total,
+      punctuality: reviews.reduce((acc, r) => acc + (r.categories?.punctuality || 0), 0) / total,
+      communication: reviews.reduce((acc, r) => acc + (r.categories?.communication || 0), 0) / total,
+      hygiene: reviews.reduce((acc, r) => acc + (r.categories?.hygiene || 0), 0) / total
+    };
+
+    return {
+      averageRating: Number(avg.toFixed(1)),
+      totalReviews: total,
+      fiveStar: reviews.filter(r => r.rating === 5).length,
+      verifiedReviews: reviews.filter(r => r.isVerified).length,
+      categories: catAvg
+    };
+  }, [reviews]);
+
+  const handleHelpful = async (reviewId: string) => {
+    try {
+      const res = await apiService.markReviewHelpful(reviewId) as any;
+      if (res.data.success) {
+        setReviews(prev =>
+          prev.map(review =>
+            review._id === reviewId
+              ? { ...review, helpful: res.data.data.helpful }
+              : review
+          )
+        );
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al marcar como útil');
     }
   };
 
-  const handleHelpful = (reviewId: string) => {
-    setReviews(prev =>
-      prev.map(review =>
-        review.id === reviewId
-          ? { ...review, helpful: review.helpful + 1 }
-          : review
-      )
-    );
-  };
-
-  const handleSendResponse = (reviewId: string) => {
+  const handleSendResponse = async (reviewId: string) => {
     if (!responseText.trim()) return;
 
-    const newResponse = {
-      id: `resp_${Date.now()}`,
-      userId: user.uid || 'current',
-      userName: user.displayName || 'Tú',
-      comment: responseText,
-      date: new Date()
-    };
-
-    setReviews(prev =>
-      prev.map(review =>
-        review.id === reviewId
-          ? { ...review, response: newResponse }
-          : review
-      )
-    );
-
-    setResponseText('');
-    setShowResponse(null);
+    try {
+      const res = await apiService.respondToReview(reviewId, responseText) as any;
+      if (res.data.success) {
+        setReviews(prev =>
+          prev.map(review =>
+            review._id === reviewId
+              ? { ...review, response: res.data.data.response }
+              : review
+          )
+        );
+        setResponseText('');
+        setShowResponse(null);
+        alert('Respuesta enviada con éxito');
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error al enviar respuesta');
+    }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     if (diff < 1000 * 60 * 60 * 24) {
       return 'Hoy';
     } else if (diff < 1000 * 60 * 60 * 24 * 2) {
@@ -220,7 +199,7 @@ export function Reviews({ user, onBack }: ReviewsProps) {
                 <h3 className="font-bold text-gray-900 text-sm mb-3">Desglose por estrellas</h3>
                 {[5, 4, 3, 2, 1].map(rating => {
                   const count = reviews.filter(r => Math.floor(r.rating) === rating).length;
-                  const percentage = (count / reviews.length) * 100;
+                  const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
                   return (
                     <div key={rating} className="flex items-center gap-2">
                       <div className="flex items-center gap-1 w-16">
@@ -244,9 +223,9 @@ export function Reviews({ user, onBack }: ReviewsProps) {
                 <h3 className="font-bold text-gray-900 text-sm mb-3">Por categoría</h3>
                 {Object.entries(stats.categories).map(([category, rating]) => (
                   <div key={category} className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-700 capitalize">{category}</span>
+                    <span className="text-xs font-medium text-gray-700 capitalize">{category === 'hygiene' ? 'Higiene' : category === 'service' ? 'Servicio' : category === 'punctuality' ? 'Puntualidad' : 'Comunicación'}</span>
                     <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-gray-900">{rating}</span>
+                      <span className="text-sm font-bold text-gray-900">{Number(rating).toFixed(1)}</span>
                       <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
                     </div>
                   </div>
@@ -302,31 +281,28 @@ export function Reviews({ user, onBack }: ReviewsProps) {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setFilter('all')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        filter === 'all'
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'all'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
                     >
                       Todas
                     </button>
                     <button
                       onClick={() => setFilter('verified')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        filter === 'verified'
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === 'verified'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
                     >
                       Verificadas
                     </button>
                     <button
                       onClick={() => setFilter('5star')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        filter === '5star'
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === '5star'
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
                     >
                       5★
                     </button>
@@ -355,132 +331,134 @@ export function Reviews({ user, onBack }: ReviewsProps) {
               </div>
             </div>
 
-            {/* Reviews List */}
-            <div className="space-y-4">
-              {filteredReviews.length > 0 ? (
-                filteredReviews.map(review => (
-                  <div key={review.id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-                    {/* Review Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={review.userAvatar}
-                          alt={review.userName}
-                          className="w-12 h-12 rounded-xl object-cover"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-gray-900">{review.userName}</h3>
-                            {review.verified && (
-                              <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                <CheckCircle className="w-3 h-3" /> Verificado
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <div className="flex items-center gap-1">
-                              {renderStars(review.rating)}
-                              <span className="text-sm font-bold text-gray-900 ml-1">{review.rating}</span>
-                            </div>
-                            <span className="text-xs text-gray-500">•</span>
-                            <span className="text-xs text-gray-500">{formatDate(review.date)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleHelpful(review.id)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
-                        >
-                          <ThumbsUp className="w-3 h-3" />
-                          Útil ({review.helpful})
-                        </button>
-                        <button className="p-1.5 text-gray-400 hover:text-gray-600">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Review Content */}
-                    <p className="text-gray-700 mb-4">{review.comment}</p>
-
-                    {/* Category Ratings */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                      {Object.entries(review.categories).map(([category, rating]) => (
-                        <div key={category} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <span className="text-xs font-medium text-gray-700 capitalize">{category}</span>
-                          <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-gray-900">{rating}</span>
-                            <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Response */}
-                    {review.response ? (
-                      <div className="mt-4 pl-4 border-l-4 border-amber-300">
-                        <div className="bg-amber-50 rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-amber-800 text-sm">{review.response.userName}</span>
-                              <span className="text-xs text-amber-600">(Respuesta)</span>
-                            </div>
-                            <span className="text-xs text-amber-600">{formatDate(review.response.date)}</span>
-                          </div>
-                          <p className="text-amber-700 text-sm">{review.response.comment}</p>
-                        </div>
-                      </div>
-                    ) : showResponse === review.id ? (
-                      <div className="mt-4">
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={responseText}
-                            onChange={e => setResponseText(e.target.value)}
-                            placeholder="Escribe tu respuesta..."
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+            {loading ? (
+              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-20 text-center">
+                <Loader2 className="w-10 h-10 animate-spin text-rose-500 mx-auto mb-4" />
+                <p className="text-gray-500 font-bold">Cargando reseñas...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredReviews.length > 0 ? (
+                  filteredReviews.map(review => (
+                    <div key={review._id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
+                      {/* Review Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={review.reviewer.avatar || `https://ui-avatars.com/api/?name=${review.reviewer.name}`}
+                            alt={review.reviewer.name}
+                            className="w-12 h-12 rounded-xl object-cover"
                           />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-gray-900">{review.reviewer.name}</h3>
+                              {review.isVerified && (
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                                  <CheckCircle className="w-3 h-3" /> Verificado
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-1">
+                                {renderStars(review.rating)}
+                                <span className="text-sm font-bold text-gray-900 ml-1">{review.rating}</span>
+                              </div>
+                              <span className="text-xs text-gray-500">•</span>
+                              <span className="text-xs text-gray-500">{formatDate(review.createdAt)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleSendResponse(review.id)}
-                            className="px-4 py-2 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors"
+                            onClick={() => handleHelpful(review._id)}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors"
                           >
-                            <Send className="w-4 h-4" />
+                            <ThumbsUp className="w-3 h-3" />
+                            Útil ({review.helpful || 0})
                           </button>
-                          <button
-                            onClick={() => setShowResponse(null)}
-                            className="px-4 py-2 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50"
-                          >
-                            <X className="w-4 h-4" />
+                          <button className="p-1.5 text-gray-400 hover:text-gray-600">
+                            <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowResponse(review.id)}
-                        className="flex items-center gap-2 text-amber-600 hover:text-amber-700 font-bold text-sm"
-                      >
-                        <Reply className="w-4 h-4" />
-                        Responder a esta reseña
-                      </button>
-                    )}
+
+                      {/* Review Content */}
+                      <p className="text-gray-700 mb-4">{review.comment}</p>
+
+                      {/* Category Ratings */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        {Object.entries(review.categories).map(([category, rating]) => (
+                          <div key={category} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                            <span className="text-xs font-medium text-gray-700 capitalize">{category === 'hygiene' ? 'Higiene' : category === 'service' ? 'Servicio' : category === 'punctuality' ? 'Puntualidad' : 'Comunicación'}</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-bold text-gray-900">{rating}</span>
+                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Response */}
+                      {review.response ? (
+                        <div className="mt-4 pl-4 border-l-4 border-amber-300">
+                          <div className="bg-amber-50 rounded-xl p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-amber-800 text-sm">Respuesta</span>
+                                <span className="text-xs text-amber-600">{formatDate(review.response.createdAt)}</span>
+                              </div>
+                            </div>
+                            <p className="text-amber-700 text-sm">{review.response.content}</p>
+                          </div>
+                        </div>
+                      ) : showResponse === review._id ? (
+                        <div className="mt-4">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={responseText}
+                              onChange={e => setResponseText(e.target.value)}
+                              placeholder="Escribe tu respuesta..."
+                              className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            />
+                            <button
+                              onClick={() => handleSendResponse(review._id)}
+                              className="px-4 py-2 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setShowResponse(null)}
+                              className="px-4 py-2 border border-gray-300 rounded-xl text-gray-600 hover:bg-gray-50"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowResponse(review._id)}
+                          className="flex items-center gap-2 text-amber-600 hover:text-amber-700 font-bold text-sm"
+                        >
+                          <Reply className="w-4 h-4" />
+                          Responder a esta reseña
+                        </button>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-12 text-center">
+                    <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                      {searchTerm ? 'No se encontraron reseñas' : 'Aún no hay reseñas'}
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                      {searchTerm ? 'Intenta con otros términos de búsqueda' : 'No has recibido reseñas de clientes aún.'}
+                    </p>
                   </div>
-                ))
-              ) : (
-                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-12 text-center">
-                  <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {searchTerm ? 'No se encontraron reseñas' : 'Aún no hay reseñas'}
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Sé el primero en dejar una reseña'}
-                  </p>
-                  <button className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 text-white rounded-xl font-bold hover:shadow-lg transition-all">
-                    Escribir reseña
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Safety Notice */}
             <div className="mt-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
@@ -489,7 +467,7 @@ export function Reviews({ user, onBack }: ReviewsProps) {
                 <div>
                   <h4 className="font-bold text-gray-900 text-sm mb-1">Reseñas Verificadas</h4>
                   <p className="text-xs text-gray-700">
-                    Todas las reseñas provienen de usuarios que han tenido contacto real. 
+                    Todas las reseñas provienen de usuarios que han tenido contacto real.
                     Reporta reseñas falsas usando el botón <Flag className="w-3 h-3 inline" />.
                     Nuestro sistema de verificación garantiza autenticidad.
                   </p>

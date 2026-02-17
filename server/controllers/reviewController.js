@@ -6,12 +6,15 @@ const Ad = require('../models/Ad');
 // @desc    Calculate and update user rating
 const updateUserRating = async (userId) => {
     const reviews = await Review.find({ reviewee: userId });
-    if (reviews.length === 0) return;
 
-    const avgRating = reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length;
+    const count = reviews.length;
+    const avgRating = count > 0
+        ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / count).toFixed(1)
+        : 5.0;
+
     await User.findByIdAndUpdate(userId, {
-        rating: avgRating.toFixed(1),
-        reviewCount: reviews.length
+        rating: avgRating,
+        reviewCount: count
     });
 };
 
@@ -60,7 +63,8 @@ exports.createReview = async (req, res) => {
             rating,
             comment,
             categories,
-            type
+            type,
+            isVerified: true // Automatically verified since it's from a completed appointment
         });
 
         await appointment.save();
@@ -71,6 +75,70 @@ exports.createReview = async (req, res) => {
         res.status(201).json({
             success: true,
             data: review
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Respond to a review
+// @route   POST /api/reviews/:id/response
+// @access  Private
+exports.respondToReview = async (req, res) => {
+    try {
+        const { content } = req.body;
+        const review = await Review.findById(req.params.id);
+
+        if (!review) {
+            return res.status(404).json({ success: false, error: 'Reseña no encontrada' });
+        }
+
+        // Only the reviewee can respond
+        if (review.reviewee.toString() !== req.user.id) {
+            return res.status(401).json({ success: false, error: 'No autorizado para responder a esta reseña' });
+        }
+
+        review.response = {
+            content,
+            createdAt: Date.now()
+        };
+
+        await review.save();
+
+        res.status(200).json({
+            success: true,
+            data: review
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// @desc    Mark review as helpful
+// @route   POST /api/reviews/:id/helpful
+// @access  Private
+exports.markHelpful = async (req, res) => {
+    try {
+        const review = await Review.findById(req.params.id);
+
+        if (!review) {
+            return res.status(404).json({ success: false, error: 'Reseña no encontrada' });
+        }
+
+        // Check if user already marked as helpful
+        const alreadyHelpful = review.helpfulUsers.includes(req.user.id);
+        if (alreadyHelpful) {
+            return res.status(400).json({ success: false, error: 'Ya has marcado esta reseña como útil' });
+        }
+
+        review.helpfulUsers.push(req.user.id);
+        review.helpful = review.helpfulUsers.length;
+
+        await review.save();
+
+        res.status(200).json({
+            success: true,
+            data: { helpful: review.helpful }
         });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

@@ -36,6 +36,7 @@ function AppContent() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [messageTargetUser, setMessageTargetUser] = useState<string | null>(null);
+  const [messageTargetAdId, setMessageTargetAdId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchFilters, setSearchFilters] = useState<any>({
     sex: '',
@@ -203,8 +204,9 @@ function AppContent() {
     setCurrentView('home');
   };
 
-  const handleOpenMessage = (userId: string) => {
+  const handleOpenMessage = (userId: string, adId?: string) => {
     setMessageTargetUser(userId);
+    setMessageTargetAdId(adId || null);
     setCurrentView('messages');
     // Modal will close because we're changing view
     // selectedUser will be cleared after Messaging uses it
@@ -410,8 +412,10 @@ function AppContent() {
                   }}
                   targetUserId={messageTargetUser}
                   targetUser={selectedUser}
+                  targetAdId={messageTargetAdId}
                   onTargetUserCleared={() => {
                     setMessageTargetUser(null);
+                    setMessageTargetAdId(null);
                     setSelectedUser(null);
                   }}
                 />

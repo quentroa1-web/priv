@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const ReviewSchema = new mongoose.Schema({
   ad: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Ad',
-    required: true
+    ref: 'Ad'
   },
   reviewer: {
     type: mongoose.Schema.Types.ObjectId,
@@ -44,6 +43,14 @@ const ReviewSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  helpful: {
+    type: Number,
+    default: 0
+  },
+  helpfulUsers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   response: {
     content: String,
     createdAt: Date

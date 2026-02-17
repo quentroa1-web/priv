@@ -50,6 +50,7 @@ interface MessagingProps {
   onBack: () => void;
   targetUserId?: string | null;
   targetUser?: User | null;
+  targetAdId?: string | null;
   onTargetUserCleared?: () => void;
 }
 
@@ -112,7 +113,7 @@ const transformMessage = (data: any): Message => ({
 });
 
 
-export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTargetUserCleared }: MessagingProps) {
+export function Messaging({ currentUser, onBack, targetUserId, targetUser, targetAdId, onTargetUserCleared }: MessagingProps) {
   const { refreshUser } = useAuth();
 
   // Helper to get robust User ID
@@ -138,6 +139,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
     location: '',
     details: ''
   });
+  const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
   const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
   const [showAnimation, setShowAnimation] = useState<string | null>(null);
 
@@ -193,6 +195,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
     // Reset appointment modal state
     setShowAppointmentModal(false);
     setAppointmentForm({ date: '', time: '', location: '', details: '' });
+    // Don't reset selectedAdId here as it might be set by targetAdId or conversation context
 
     if (!activeConversation) {
       setMessages([]);
@@ -247,6 +250,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
       if (targetConv) {
         // Conversation exists, open it
         setActiveConversation(targetConv);
+        if (targetAdId) setSelectedAdId(targetAdId);
       } else if (targetUser) {
         // No conversation exists, create temporary one
         const tempConv: Conversation = {
@@ -265,11 +269,12 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
         };
         setActiveConversation(tempConv);
         setMessages([]); // Empty messages for new conversation
+        if (targetAdId) setSelectedAdId(targetAdId);
       }
       // Clear the target after processing
       onTargetUserCleared?.();
     }
-  }, [targetUserId, conversations, targetUser, onTargetUserCleared, loading]);
+  }, [targetUserId, targetAdId, conversations, targetUser, onTargetUserCleared, loading]);
 
   // Smart Polling for real-time updates
   useEffect(() => {
@@ -587,6 +592,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, onTar
       setIsSubmittingAppointment(true);
       const res = await apiService.createAppointment({
         announcerId: activeConversation?.userId,
+        adId: selectedAdId || undefined,
         ...appointmentForm
       }) as any;
 

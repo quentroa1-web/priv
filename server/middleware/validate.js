@@ -137,8 +137,8 @@ const messageSchema = Joi.object({
  */
 const appointmentSchema = Joi.object({
     announcerId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    adId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
-    date: Joi.date().iso().min('now').required(),
+    adId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).optional(),
+    date: Joi.date().iso().required(),
     time: Joi.string().required(),
     location: Joi.string().max(200).required(),
     details: Joi.string().max(500).allow('', null)
@@ -159,6 +159,10 @@ const reviewSchema = Joi.object({
     }).required()
 });
 
+const reviewResponseSchema = Joi.object({
+    content: Joi.string().min(5).max(1000).required()
+});
+
 module.exports = {
     validate,
     registerSchema,
@@ -168,5 +172,6 @@ module.exports = {
     adminUpdateUserSchema,
     messageSchema,
     appointmentSchema,
-    reviewSchema
+    reviewSchema,
+    reviewResponseSchema
 };

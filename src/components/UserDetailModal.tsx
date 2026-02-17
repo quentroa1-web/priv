@@ -13,7 +13,7 @@ import { apiService } from '../services/api';
 interface UserDetailModalProps {
   user: User | null;
   onClose: () => void;
-  onMessage?: (userId: string) => void;
+  onMessage?: (userId: string, adId?: string) => void;
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
 }
@@ -389,13 +389,25 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                             </div>
                           </div>
                           <p className="text-gray-600 font-medium italic mb-4 leading-relaxed line-clamp-3">"{rev.comment}"</p>
-                          <div className="flex flex-wrap gap-2">
+                          <div className="flex flex-wrap gap-2 mb-4">
                             {rev.categories && Object.entries(rev.categories).map(([k, v]: [string, any]) => (
                               <span key={k} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 bg-white rounded-lg border border-gray-100 text-gray-400">
-                                {k}: {v}/5
+                                {k === 'hygiene' ? 'Higiene' : k === 'service' ? 'Servicio' : k === 'punctuality' ? 'Puntualidad' : 'Comunicación'}: {v}/5
                               </span>
                             ))}
                           </div>
+
+                          {rev.response && (
+                            <div className="mt-4 pl-4 border-l-4 border-rose-200">
+                              <div className="bg-white rounded-2xl p-4 border border-rose-100 shadow-sm">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-black text-rose-500 uppercase tracking-widest">Respuesta del anunciante</span>
+                                  <span className="text-[10px] text-gray-400 font-bold">{new Date(rev.response.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <p className="text-sm text-gray-600 italic leading-relaxed">"{rev.response.content}"</p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))
                     ) : (
@@ -409,7 +421,7 @@ export function UserDetailModal({ user, onClose, onMessage, isFavorite, onToggle
                 {/* Final Actions */}
                 <div className="pt-10 pb-4 flex flex-col sm:flex-row gap-4">
                   <button
-                    onClick={() => onMessage?.(user.uid || user.id || '')}
+                    onClick={() => onMessage?.(user.uid || user.id || '', user.id || user._id)}
                     disabled={isOwner}
                     className="flex-1 h-14 bg-gradient-to-r from-rose-500 via-pink-600 to-rose-700 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:shadow-rose-500/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
