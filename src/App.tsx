@@ -1,3 +1,4 @@
+
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { apiService, getAds, getMyAds } from './services/api';
@@ -21,10 +22,9 @@ const UserProfile = lazy(() => import('./components/user/UserProfile').then(modu
 const AdminPanel = lazy(() => import('./components/admin/AdminPanel').then(module => ({ default: module.AdminPanel })));
 const Messaging = lazy(() => import('./components/messaging/Messaging').then(module => ({ default: module.Messaging })));
 const Reviews = lazy(() => import('./components/reviews/Reviews').then(module => ({ default: module.Reviews })));
-const PremiumInfo = lazy(() => import('./components/PremiumInfo').then(module => ({ default: module.PremiumInfo })));
 const WalletView = lazy(() => import('./components/wallet/WalletView').then(module => ({ default: module.WalletView })));
 
-type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'premium-info' | 'wallet';
+type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'wallet';
 
 function AppContent() {
   const { t } = useTranslation();
@@ -59,7 +59,7 @@ function AppContent() {
 
   // Load favorites from local storage
   useEffect(() => {
-    const stored = localStorage.getItem(`favorites_${user?.id || 'guest'}`);
+    const stored = localStorage.getItem(`favorites_${user?.id || 'guest'} `);
     if (stored) {
       try {
         setFavorites(JSON.parse(stored));
@@ -78,7 +78,7 @@ function AppContent() {
       newFavorites = [...favorites, targetUser];
     }
     setFavorites(newFavorites);
-    localStorage.setItem(`favorites_${user?.id || 'guest'}`, JSON.stringify(newFavorites));
+    localStorage.setItem(`favorites_${user?.id || 'guest'} `, JSON.stringify(newFavorites));
   };
 
   // Poll for unread messages
@@ -141,7 +141,7 @@ function AppContent() {
             displayName: ad.title || 'Sin título',
             gender: gender, // Use normalized gender
             age: ad.age || 0, // Ensure age is mapped
-            location: ad.location ? `${ad.location.city || ''}, ${ad.location.department || ''}` : 'Ubicación no especificada',
+            location: ad.location ? `${ad.location.city || ''}, ${ad.location.department || ''} ` : 'Ubicación no especificada',
             locationData: ad.location || {}, // Store raw location data for precise filtering
             avatar: ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || '',
             photoURL: ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || '',
@@ -149,7 +149,7 @@ function AppContent() {
             gallery: ad.photos?.map((p: any) => p.url) || [],
             bio: ad.description || '',
             description: ad.description || '',
-            price: ad.pricing?.basePrice ? `$${ad.pricing.basePrice.toLocaleString()}` : '$0',
+            price: ad.pricing?.basePrice ? `$${ad.pricing.basePrice.toLocaleString()} ` : '$0',
             services: [...(ad.services || []), ...(ad.customServices || [])],
             availability: (ad.availability?.days || []).map((d: string) => {
               const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
@@ -385,9 +385,9 @@ function AppContent() {
           />
         )}
 
-        <main className={`flex-1 ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow-hidden`}>
+        <main className={`flex - 1 ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow - hidden`}>
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
-            <div className={`${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full'}`}>
+            <div className={`${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full'} `}>
               {currentView === 'createAd' && isAnnouncer ? (
                 <CreateAd
                   onBack={() => {
@@ -441,12 +441,6 @@ function AppContent() {
                 />
               ) : currentView === 'reviews' && isLoggedIn && user ? (
                 <Reviews user={user} onBack={() => setCurrentView('home')} />
-              ) : currentView === 'premium-info' ? (
-                <PremiumInfo
-                  onOpenStore={() => setIsStoreOpen(true)}
-                  role={user?.role as 'user' | 'announcer' | 'admin'}
-                  user={user}
-                />
               ) : currentView === 'wallet' && isLoggedIn && user ? (
                 <WalletView
                   onBack={() => setCurrentView('home')}

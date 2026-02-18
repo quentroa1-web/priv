@@ -139,8 +139,8 @@ export function HomeView({
                                     <TrendingUp className="w-5 h-5 text-rose-600" />
                                 </div>
                                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                                    {t('profiles.topAds') || 'Anuncios Top'}
-                                    <span className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm animate-pulse">Destacado</span>
+                                    {t('profiles.topAds') || 'ANUNCIOS TOP & DIAMOND'}
+                                    <span className="bg-gradient-to-r from-cyan-400 to-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm animate-pulse">Elite</span>
                                 </h2>
                             </div>
                             <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
@@ -173,8 +173,8 @@ export function HomeView({
                                     <TrendingUp className="w-5 h-5 text-amber-600" />
                                 </div>
                                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                                    {t('profiles.vipGold')}
-                                    <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">Premium</span>
+                                    {t('profiles.vipGold') || 'VIP GOLD'}
+                                    <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">Destacado</span>
                                 </h2>
                             </div>
                             <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">

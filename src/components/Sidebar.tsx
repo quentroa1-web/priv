@@ -1,4 +1,4 @@
-import { Home, Star, MessageCircle, X, User, LayoutDashboard, Coins, Heart } from 'lucide-react';
+import { Home, Star, MessageCircle, X, User, LayoutDashboard, Wallet, Heart } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,8 +15,7 @@ const menuItems = [
   { id: 'profile', label: 'Mi Perfil', icon: User, roles: ['user', 'announcer', 'admin'] },
   { id: 'favorites', label: 'Favoritos', icon: Heart, roles: ['user', 'announcer', 'admin'] },
   { id: 'messages', label: 'Mensajes', icon: MessageCircle, roles: ['user', 'announcer', 'admin'] },
-  { id: 'wallet', label: 'Billetera', icon: Coins, roles: ['user', 'announcer'] },
-  { id: 'premium-info', label: 'Premium & Monedas', icon: Star, roles: ['user', 'announcer', 'admin'] },
+  { id: 'wallet', label: 'Billetera & Premium', icon: Wallet, roles: ['user', 'announcer'] },
   { id: 'reviews', label: 'Reseñas', icon: Star, roles: ['announcer', 'admin'] },
   { id: 'admin', label: 'Panel Admin', icon: LayoutDashboard, roles: ['admin'] },
 ];

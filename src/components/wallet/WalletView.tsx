@@ -23,7 +23,7 @@ import {
     X,
     Loader2,
     ArrowRight,
-    Activity
+    User
 } from 'lucide-react';
 
 interface WalletViewProps {
@@ -34,7 +34,7 @@ interface WalletViewProps {
 
 export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletViewProps) {
     const { user, refreshUser } = useAuth();
-    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'spend'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'history' | 'spend' | 'plans'>('overview');
     const [loading, setLoading] = useState(false);
     const [transactions, setTransactions] = useState<any[]>([]);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -381,10 +381,10 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                 </button>
                 {user?.role === 'announcer' && (
                     <button
-                        onClick={() => setActiveTab('spend')}
-                        className={`flex-1 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'spend' ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-500 hover:bg-gray-50'}`}
+                        onClick={() => setActiveTab('plans')}
+                        className={`flex-1 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'plans' ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-500 hover:bg-gray-50'}`}
                     >
-                        <Rocket className="w-4 h-4" /> Gastar
+                        <Crown className="w-4 h-4" /> Planes
                     </button>
                 )}
                 <button
@@ -440,6 +440,97 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                                 );
                             })
                         )}
+                    </div>
+                )}
+
+                {activeTab === 'plans' && user?.role === 'announcer' && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="text-center mb-10">
+                            <h2 className="text-3xl font-black text-gray-900 mb-4">Niveles de Membresía</h2>
+                            <p className="text-gray-500 max-w-xl mx-auto">
+                                Elige el plan que se adapte a tus ambiciones. Desde lo esencial hasta el dominio total.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end max-w-6xl mx-auto pb-10">
+                            {/* Basic (FREE) */}
+                            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-6">
+                                    <User className="w-6 h-6 text-gray-600" />
+                                </div>
+                                <h3 className="text-xl font-black text-gray-900 mb-2">Basic</h3>
+                                <div className="flex items-baseline gap-1 mb-6">
+                                    <span className="text-3xl font-black text-gray-900">$0</span>
+                                    <span className="text-gray-500 font-medium">/mes</span>
+                                </div>
+                                <ul className="space-y-4 mb-8">
+                                    <FeatureItem text="1 Anuncio Activo" />
+                                    <FeatureItem text="Perfil Básico" />
+                                    <FeatureItem text="Soporte Estándar" />
+                                    <FeatureItem text="Visiblidad Normal" negative />
+                                    <FeatureItem text="Badge de Verificado" negative />
+                                </ul>
+                                <button disabled={!user?.premiumPlan || user.premiumPlan === 'none'} className={`w-full py-3 rounded-xl font-bold transition-all ${(!user?.premiumPlan || user.premiumPlan === 'none') ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-rose-500 text-white hover:bg-rose-600'}`}>
+                                    {(!user?.premiumPlan || user.premiumPlan === 'none') ? 'Plan Actual' : 'Bajar a Básico'}
+                                </button>
+                            </div>
+
+                            {/* Gold */}
+                            <div className="relative bg-white rounded-3xl p-8 border-2 border-amber-400 shadow-[0_10px_40px_-10px_rgba(251,191,36,0.3)] transform scale-105 z-10">
+                                <div className="absolute top-0 center left-1/2 -translate-x-1/2 -translate-y-1/2 bg-amber-500 text-white px-4 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-lg">
+                                    Más Popular
+                                </div>
+                                <div className="w-14 h-14 bg-amber-100 rounded-xl flex items-center justify-center mb-6">
+                                    <Crown className="w-7 h-7 text-amber-600" />
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900 mb-2">Gold</h3>
+                                <div className="flex items-baseline gap-1 mb-6">
+                                    <span className="text-4xl font-black text-gray-900">500</span>
+                                    <span className="text-gray-500 font-medium ml-1">🪙/mes</span>
+                                </div>
+                                <ul className="space-y-4 mb-8">
+                                    <FeatureItem text="3 Anuncios Activos" check color="text-amber-500" />
+                                    <FeatureItem text="Badge GOLD Exclusivo" check color="text-amber-500" />
+                                    <FeatureItem text="Visibilidad en VIP" check color="text-amber-500" />
+                                    <FeatureItem text="Brillo Dorado en Perfil" check color="text-amber-500" />
+                                    <FeatureItem text="Soporte Prioritario" check color="text-amber-500" />
+                                </ul>
+                                <button
+                                    onClick={() => handleBuySubscription('gold')}
+                                    disabled={user?.premiumPlan === 'gold' || currentCoins < 500}
+                                    className={`w-full py-4 rounded-xl font-bold transition-all ${user?.premiumPlan === 'gold' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-amber-400 to-yellow-600 text-white shadow-lg shadow-amber-200 hover:scale-105'}`}
+                                >
+                                    {user?.premiumPlan === 'gold' ? 'Plan Actual' : 'Obtener Gold'}
+                                </button>
+                            </div>
+
+                            {/* Diamond */}
+                            <div className="bg-gray-900 rounded-3xl p-8 border border-gray-800 text-white shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                                <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center mb-6 relative z-10">
+                                    <Medal className="w-6 h-6 text-cyan-400" />
+                                </div>
+                                <h3 className="text-xl font-black text-white mb-2 relative z-10">Diamond</h3>
+                                <div className="flex items-baseline gap-1 mb-6 relative z-10">
+                                    <span className="text-3xl font-black text-white">900</span>
+                                    <span className="text-gray-400 font-medium ml-1">🪙/mes</span>
+                                </div>
+                                <ul className="space-y-4 mb-8 relative z-10">
+                                    <FeatureItem text="Anuncios ILIMITADOS" check color="text-cyan-400" darkMode />
+                                    <FeatureItem text="Badge DIAMOND Elite" check color="text-cyan-400" darkMode />
+                                    <FeatureItem text="Prioridad en TOP ADS" check color="text-cyan-400" darkMode />
+                                    <FeatureItem text="Brillo Cian Neon" check color="text-cyan-400" darkMode />
+                                    <FeatureItem text="Acceso a Eventos VIP" check color="text-cyan-400" darkMode />
+                                </ul>
+                                <button
+                                    onClick={() => handleBuySubscription('diamond')}
+                                    disabled={user?.premiumPlan === 'diamond' || currentCoins < 900}
+                                    className={`relative z-10 w-full py-3 rounded-xl font-bold transition-all ${user?.premiumPlan === 'diamond' ? 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:scale-105'}`}
+                                >
+                                    {user?.premiumPlan === 'diamond' ? 'Plan Actual' : 'Ser Diamond'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -822,5 +913,22 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                 </div>
             )}
         </div>
+    );
+}
+
+function FeatureItem({ text, check, negative, color = "text-green-500", darkMode }: any) {
+    return (
+        <li className={`flex items-center gap-3 text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {negative ? (
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${darkMode ? 'bg-gray-800 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
+                    <X className="w-3 h-3" />
+                </div>
+            ) : (
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${check ? 'bg-opacity-20' : 'bg-green-100'} ${color.replace('text-', 'bg-')}`}>
+                    <CheckCircle2 className={`w-3 h-3 ${color}`} />
+                </div>
+            )}
+            {text}
+        </li>
     );
 }
