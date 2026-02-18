@@ -97,6 +97,10 @@ const UserSchema = new mongoose.Schema({
     default: 'none'
   },
   premiumUntil: Date,
+  diamondBoosts: {
+    type: Number,
+    default: 0
+  },
   wallet: {
     coins: {
       type: Number,

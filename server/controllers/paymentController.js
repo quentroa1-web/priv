@@ -335,7 +335,8 @@ exports.buySubscriptionWithCoins = async (req, res) => {
                     premium: true,
                     premiumPlan: planId,
                     premiumUntil: newExpiryDate,
-                    isVip: true
+                    isVip: true,
+                    diamondBoosts: planId === 'diamond' ? 5 : user.diamondBoosts || 0
                 }
             },
             { new: true }
@@ -393,20 +394,35 @@ exports.boostAdWithCoins = async (req, res) => {
             });
         }
 
-        // Atomic Deduction
-        const user = await User.findOneAndUpdate(
-            { _id: req.user.id, 'wallet.coins': { $gte: BOOST_COST } },
-            { $inc: { 'wallet.coins': -BOOST_COST } },
-            { new: true }
-        );
+        // Check for Diamond free boosts
+        const isDiamond = user.premiumPlan === 'diamond' && user.premiumUntil && new Date(user.premiumUntil) > new Date();
+        const hasFreeBoosts = isDiamond && (user.diamondBoosts > 0);
+        const boostCost = hasFreeBoosts ? 0 : BOOST_COST;
 
-        if (!user) {
-            return res.status(400).json({ success: false, error: 'Necesitas 100 monedas para un boost de 12 horas' });
+        // Atomic Deduction
+        const updateQuery = { _id: req.user.id };
+        if (boostCost > 0) {
+            updateQuery['wallet.coins'] = { $gte: boostCost };
         }
 
-        // Apply Boost (12 hours)
+        const updateOps = { $inc: {} };
+        if (boostCost > 0) {
+            updateOps.$inc['wallet.coins'] = -boostCost;
+        }
+        if (hasFreeBoosts) {
+            updateOps.$inc['diamondBoosts'] = -1;
+        }
+
+        const updatedUser = await User.findOneAndUpdate(updateQuery, updateOps, { new: true });
+
+        if (!updatedUser) {
+            return res.status(400).json({ success: false, error: `Necesitas ${boostCost} monedas para un boost.` });
+        }
+
+        // Apply Boost (Normal: 12h, Diamond Free: 112h)
+        const boostDurationHours = hasFreeBoosts ? 112 : 12;
         const boostExpires = new Date();
-        boostExpires.setHours(boostExpires.getHours() + 12);
+        boostExpires.setHours(boostExpires.getHours() + boostDurationHours);
 
         ad.boostedUntil = boostExpires;
         ad.isBoosted = true;
@@ -414,21 +430,24 @@ exports.boostAdWithCoins = async (req, res) => {
         ad.lastBoostDate = now;
         await ad.save();
 
-        // Log transaction
-        await Transaction.create({
-            user: user._id,
-            type: 'spend',
-            amount: BOOST_COST,
-            coinsAmount: BOOST_COST,
-            currency: 'COINS',
-            status: 'completed',
-            description: `Boost de 12 horas para anuncio ${ad.title}`
-        });
+        // Log transaction ONLY if it cost coins
+        if (boostCost > 0) {
+            await Transaction.create({
+                user: updatedUser._id,
+                type: 'spend',
+                amount: boostCost,
+                coinsAmount: boostCost,
+                currency: 'COINS',
+                status: 'completed',
+                description: `Boost de ${boostDurationHours} horas para anuncio ${ad.title}`
+            });
+        }
 
         res.status(200).json({
             success: true,
-            message: 'Anuncio impulsado por 12 horas',
-            newBalance: user.wallet.coins
+            message: hasFreeBoosts ? `¡Boost GRATUITO de ${boostDurationHours}h aplicado!` : `Anuncio impulsado por ${boostDurationHours} horas`,
+            newBalance: updatedUser.wallet.coins,
+            diamondBoosts: updatedUser.diamondBoosts
         });
 
     } catch (error) {

@@ -312,17 +312,26 @@ exports.boostAd = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Ya tienes un anuncio con un Boost activo. Espera a que termine para activar otro.' });
     }
 
+    // Check for Diamond free boosts
+    const isDiamond = user.premiumPlan === 'diamond' && user.premiumUntil && new Date(user.premiumUntil) > new Date();
+    const hasFreeBoosts = isDiamond && (user.diamondBoosts > 0);
+    const boostCost = hasFreeBoosts ? 0 : BOOST_COST;
+
     // Ensure wallet exists
     if (!user.wallet) {
       user.wallet = { coins: 0 };
     }
 
-    if (user.wallet.coins < BOOST_COST) {
-      return res.status(400).json({ success: false, error: `Saldo insuficiente. Necesitas ${BOOST_COST} monedas.` });
+    if (user.wallet.coins < boostCost) {
+      return res.status(400).json({ success: false, error: `Saldo insuficiente. Necesitas ${boostCost} monedas.` });
     }
 
-    // Deduct coins
-    user.wallet.coins -= BOOST_COST;
+    // Deduct coins or free boost
+    if (hasFreeBoosts) {
+      user.diamondBoosts -= 1;
+    } else {
+      user.wallet.coins -= boostCost;
+    }
     await user.save();
 
     // Check once-per-day limit (24 hours) based on PREVIOUS boost date
@@ -340,32 +349,36 @@ exports.boostAd = async (req, res) => {
     ad.lastBumpDate = now;
     ad.lastBoostDate = now;
 
-    // Apply Boost (12 hours)
+    // Apply Boost (Normal: 12h, Diamond Free: 112h)
+    const boostDurationHours = hasFreeBoosts ? 112 : 12;
     const boostExpires = new Date();
-    boostExpires.setHours(boostExpires.getHours() + 12);
+    boostExpires.setHours(boostExpires.getHours() + boostDurationHours);
     ad.boostedUntil = boostExpires;
     ad.isBoosted = true;
 
     await ad.save();
 
-    // Create Transaction Record
-    const Transaction = require('../models/Transaction');
-    await Transaction.create({
-      user: user._id,
-      type: 'spend',
-      amount: BOOST_COST,
-      currency: 'COINS',
-      status: 'completed',
-      description: `Boost Ad: ${ad.title}`,
-      metadata: { adId: ad._id }
-    });
+    // Create Transaction Record ONLY if it cost coins
+    if (boostCost > 0) {
+      const Transaction = require('../models/Transaction');
+      await Transaction.create({
+        user: user._id,
+        type: 'spend',
+        amount: boostCost,
+        currency: 'COINS',
+        status: 'completed',
+        description: `Boost Ad: ${ad.title}`,
+        metadata: { adId: ad._id }
+      });
+    }
 
     res.status(200).json({
       success: true,
       data: {
         coins: user.wallet.coins,
+        diamondBoosts: user.diamondBoosts,
         lastBumpDate: ad.lastBumpDate,
-        message: '¡Anuncio impulsado al topo de la lista!'
+        message: hasFreeBoosts ? `¡Boost GRATUITO de ${boostDurationHours}h aplicado!` : `¡Anuncio impulsado por ${boostDurationHours} horas!`
       }
     });
 
