@@ -271,8 +271,8 @@ exports.getMyAds = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: activeAds.length,
-      data: activeAds
+      count: ads.length,
+      data: ads
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
