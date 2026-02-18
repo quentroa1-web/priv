@@ -49,6 +49,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
 
   const resetPagination = () => {
     setCurrentPage(1);
+    setSearchTerm('');
   };
 
   const fetchStats = async () => {
@@ -223,12 +224,12 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   };
 
   const EmptyState = ({ icon: Icon, title, desc }: any) => (
-    <div className="bg-white p-20 rounded-[3rem] text-center border-4 border-dashed border-gray-50 animate-in fade-in zoom-in duration-500">
-      <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-gray-200">
-        <Icon className="w-10 h-10" />
+    <div className="bg-white p-8 md:p-20 rounded-[2rem] md:rounded-[3rem] text-center border-4 border-dashed border-gray-50 animate-in fade-in zoom-in duration-500">
+      <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-50 rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 md:mb-6 text-gray-200">
+        <Icon className="w-8 h-8 md:w-10 md:h-10" />
       </div>
-      <h3 className="text-2xl font-black text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-400 font-bold max-w-xs mx-auto">{desc}</p>
+      <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2">{title}</h3>
+      <p className="text-gray-400 font-bold max-w-xs mx-auto text-sm">{desc}</p>
     </div>
   );
 
@@ -250,30 +251,30 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   return (
     <>
       <div className="animate-in fade-in duration-300">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mb-4 md:mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 md:gap-4">
             <button
               onClick={onBack}
-              className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all"
+              className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all shrink-0"
             >
               <ArrowLeft className="w-5 h-5 text-gray-700" />
             </button>
             <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">Admin Console</h1>
-              <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">Gestión Central de SafeConnect</p>
+              <h1 className="text-xl md:text-3xl font-black text-gray-900 tracking-tight">Admin Console</h1>
+              <p className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-widest">Gestión Central de SafeConnect</p>
             </div>
           </div>
-          <div className="bg-rose-50 text-rose-600 px-4 py-2 rounded-2xl border border-rose-100 font-bold flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5" />
-            Modo Root Admin
+          <div className="bg-rose-50 text-rose-600 px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl border border-rose-100 font-bold flex items-center gap-2 text-xs md:text-sm">
+            <ShieldCheck className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Modo Root</span> Admin
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar Navigation */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-3 sticky top-6">
-              <nav className="space-y-1">
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-8">
+          {/* Sidebar Navigation — horizontal pills on mobile, vertical on desktop */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl lg:rounded-3xl shadow-xl border border-gray-100 p-2 lg:p-3 lg:sticky lg:top-6">
+              <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-1 lg:pb-0 [&::-webkit-scrollbar]:hidden">
                 {sidebarTabs.map(tab => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -282,16 +283,16 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={cn(
-                        "w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-black transition-all group",
+                        "flex items-center gap-2 lg:gap-4 px-3 lg:px-5 py-2.5 lg:py-4 rounded-xl lg:rounded-2xl text-xs lg:text-sm font-black transition-all group whitespace-nowrap shrink-0 lg:w-full",
                         isActive
                           ? "bg-gray-900 text-white shadow-xl shadow-gray-200"
                           : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                       )}
                     >
-                      <Icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", isActive ? "text-rose-400" : "text-gray-400")} />
-                      {tab.label}
+                      <Icon className={cn("w-4 h-4 lg:w-5 lg:h-5 transition-transform group-hover:scale-110 shrink-0", isActive ? "text-rose-400" : "text-gray-400")} />
+                      <span className="hidden sm:inline lg:inline">{tab.label}</span>
                       {tab.count !== undefined && tab.count > 0 && (
-                        <span className="ml-auto bg-rose-500 text-white text-[10px] px-2 py-1 rounded-full animate-pulse">
+                        <span className="ml-auto bg-rose-500 text-white text-[10px] px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full animate-pulse">
                           {tab.count}
                         </span>
                       )}
@@ -308,17 +309,17 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
             {/* DASHBOARD TAB */}
             {activeTab === 'dashboard' && (
               <div className="space-y-8">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
                   {dashboardStats.map((stat, idx) => (
-                    <div key={idx} className="bg-white p-6 rounded-[2rem] shadow-lg border border-gray-100 hover:shadow-xl transition-all group">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110", stat.bg)}>
-                          <stat.icon className={cn("w-6 h-6", stat.color)} />
+                    <div key={idx} className="bg-white p-4 md:p-6 rounded-2xl md:rounded-[2rem] shadow-lg border border-gray-100 hover:shadow-xl transition-all group">
+                      <div className="flex items-center justify-between mb-3 md:mb-4">
+                        <div className={cn("p-2.5 md:p-4 rounded-xl md:rounded-2xl transition-transform group-hover:scale-110", stat.bg)}>
+                          <stat.icon className={cn("w-5 h-5 md:w-6 md:h-6", stat.color)} />
                         </div>
-                        <ArrowUpRight className="w-5 h-5 text-gray-300" />
+                        <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-gray-300" />
                       </div>
-                      <div className="text-3xl font-black text-gray-900 mb-1">{stat.value}</div>
-                      <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</div>
+                      <div className="text-xl md:text-3xl font-black text-gray-900 mb-0.5 md:mb-1">{stat.value}</div>
+                      <div className="text-[9px] md:text-xs font-black text-gray-400 uppercase tracking-widest">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -328,7 +329,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                   <div className="bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
                     <div className="relative z-10">
                       <h3 className="text-2xl font-black mb-2">Pendientes hoy</h3>
-                      <p className="text-gray-400 font-bold mb-6">Tienes {verifications.length} verificaciones esperando tu revisión.</p>
+                      <p className="text-gray-300 font-bold mb-6">Tienes {verifications.length} verificaciones esperando tu revisión.</p>
                       <button
                         onClick={() => setActiveTab('verifications')}
                         className="bg-rose-500 hover:bg-rose-600 text-white px-6 py-3 rounded-2xl font-black transition-all flex items-center gap-2 group"
@@ -346,7 +347,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold text-gray-500">Base de Datos</span>
                         <span className="flex items-center gap-2 text-emerald-600 font-black text-sm">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping inline-block" />
                           ONLINE
                         </span>
                       </div>
@@ -356,7 +357,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-bold text-gray-500">Cloudinary API</span>
                         <span className="flex items-center gap-2 text-emerald-600 font-black text-sm">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping inline-block" />
                           ONLINE
                         </span>
                       </div>
@@ -399,28 +400,28 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                       <table className="w-full text-left">
                         <thead className="bg-gray-50/50 text-gray-400 uppercase text-[10px] font-black tracking-[0.2em]">
                           <tr>
-                            <th className="px-8 py-5">Usuario</th>
-                            <th className="px-8 py-5">Rol</th>
-                            <th className="px-8 py-5">Estado</th>
-                            <th className="px-8 py-5">Verificado</th>
-                            <th className="px-8 py-5 text-right">Acciones</th>
+                            <th className="px-4 md:px-8 py-3 md:py-5">Usuario</th>
+                            <th className="px-4 md:px-8 py-3 md:py-5 hidden sm:table-cell">Rol</th>
+                            <th className="px-4 md:px-8 py-3 md:py-5">Estado</th>
+                            <th className="px-4 md:px-8 py-3 md:py-5 hidden md:table-cell">Verificado</th>
+                            <th className="px-4 md:px-8 py-3 md:py-5 text-right">Acciones</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
                           {currentItems.map(u => (
                             <tr key={u.id} className="hover:bg-gray-50/30 transition-colors group">
-                              <td className="px-8 py-6">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-2xl bg-gray-100 overflow-hidden shadow-inner border-2 border-white group-hover:scale-105 transition-transform">
+                              <td className="px-4 md:px-8 py-4 md:py-6">
+                                <div className="flex items-center gap-3 md:gap-4">
+                                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-gray-100 overflow-hidden shadow-inner border-2 border-white group-hover:scale-105 transition-transform shrink-0">
                                     <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=random`} className="w-full h-full object-cover" />
                                   </div>
-                                  <div>
-                                    <div className="font-black text-gray-900">{u.name}</div>
-                                    <div className="text-xs font-bold text-gray-400">{u.email}</div>
+                                  <div className="min-w-0">
+                                    <div className="font-black text-gray-900 text-sm md:text-base truncate">{u.name}</div>
+                                    <div className="text-[10px] md:text-xs font-bold text-gray-400 truncate">{u.email}</div>
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-8 py-6">
+                              <td className="px-4 md:px-8 py-4 md:py-6 hidden sm:table-cell">
                                 <span className={cn(
                                   "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider",
                                   u.role === 'admin' ? "bg-purple-50 text-purple-600 border border-purple-100" :
@@ -429,16 +430,16 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                                   {u.role}
                                 </span>
                               </td>
-                              <td className="px-8 py-6">
+                              <td className="px-4 md:px-8 py-4 md:py-6">
                                 <span className={cn(
                                   "flex items-center gap-2 font-black text-[10px] tracking-widest uppercase",
                                   u.status === 'banned' ? "text-rose-500" : "text-emerald-500"
                                 )}>
-                                  <div className={cn("w-2 h-2 rounded-full", u.status === 'banned' ? "bg-rose-500" : "bg-emerald-500 animate-pulse")} />
+                                  <span className={cn("w-2 h-2 rounded-full inline-block shrink-0", u.status === 'banned' ? "bg-rose-500" : "bg-emerald-500 animate-pulse")} />
                                   {u.status === 'banned' ? 'BANEADO' : 'ACTIVO'}
                                 </span>
                               </td>
-                              <td className="px-8 py-6">
+                              <td className="px-4 md:px-8 py-4 md:py-6 hidden md:table-cell">
                                 {u.verified ? (
                                   <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase">
                                     <ShieldCheck className="w-5 h-5" fill="currentColor" />
@@ -451,16 +452,16 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                                   </div>
                                 )}
                               </td>
-                              <td className="px-8 py-6 text-right space-x-2">
+                              <td className="px-4 md:px-8 py-4 md:py-6 text-right">
                                 <button
                                   onClick={() => handleBanUser(u.id || '', u.status || 'active')}
                                   title={u.status === 'active' ? 'Banear Usuario' : 'Activar Usuario'}
                                   className={cn(
-                                    "p-3 rounded-2xl border transition-all h-11 w-11 flex items-center justify-center",
+                                    "p-2.5 md:p-3 rounded-xl md:rounded-2xl border transition-all inline-flex items-center justify-center",
                                     u.status === 'active' ? "border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white" : "border-emerald-100 text-emerald-500 hover:bg-emerald-500 hover:text-white"
                                   )}
                                 >
-                                  {u.status === 'active' ? <Ban className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                                  {u.status === 'active' ? <Ban className="w-4 h-4 md:w-5 md:h-5" /> : <ShieldCheck className="w-4 h-4 md:w-5 md:h-5" />}
                                 </button>
                               </td>
                             </tr>
@@ -542,7 +543,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                             "bg-white rounded-[2.5rem] shadow-xl border overflow-hidden p-8 flex flex-col md:flex-row gap-8 items-center transition-all",
                             p.status === 'pending' ? "border-amber-200 bg-amber-50/20" : "border-gray-100"
                           )}>
-                            <div className="w-full md:w-40 h-56 rounded-3xl bg-gray-900 border-4 border-white shadow-2xl overflow-hidden group relative">
+                            <div className="w-full md:w-36 h-40 md:h-56 rounded-2xl md:rounded-3xl bg-gray-900 border-4 border-white shadow-2xl overflow-hidden group relative shrink-0">
                               <img src={p.proofUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                               <div onClick={() => setSelectedImage(p.proofUrl)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-black text-[10px] tracking-tighter uppercase transition-opacity cursor-pointer text-center px-4">
                                 CLIC PARA AMPLIAR COMPROBANTE
@@ -677,7 +678,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                         type="text"
                         placeholder="Título, usuario, ciudad..."
                         value={searchTerm}
-                        className="pl-14 pr-8 py-5 bg-gray-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-rose-500 font-black text-sm w-full md:w-[32rem] shadow-inner"
+                        className="pl-14 pr-8 py-5 bg-gray-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-rose-500 font-black text-sm w-full md:w-80 lg:w-[28rem] shadow-inner"
                         onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                       />
                     </div>
@@ -692,7 +693,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
                       {currentItems.map(ad => (
-                        <div key={ad._id || ad.id} className="bg-white p-5 rounded-[2.5rem] shadow-lg border border-gray-100 flex gap-6 hover:shadow-2xl transition-all group relative overflow-hidden">
+                        <div key={ad._id || ad.id} className="bg-white p-4 md:p-5 rounded-2xl md:rounded-[2.5rem] shadow-lg border border-gray-100 flex flex-col sm:flex-row gap-4 md:gap-6 hover:shadow-2xl transition-all group relative overflow-hidden">
                           {ad.plan && ad.plan !== 'gratis' && (
                             <div className="absolute top-0 right-0 w-24 h-24 overflow-hidden pointer-events-none">
                               <div className="absolute top-2 -right-8 bg-amber-400 text-white text-[8px] font-black uppercase py-1 w-32 text-center rotate-45 shadow-sm">
@@ -701,8 +702,8 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                             </div>
                           )}
 
-                          <div className="relative shrink-0">
-                            <div className="w-32 h-44 rounded-[1.8rem] bg-gray-100 shadow-inner border-4 border-white overflow-hidden group-hover:scale-[1.02] transition-transform">
+                          <div className="relative shrink-0 mx-auto sm:mx-0">
+                            <div className="w-full sm:w-28 md:w-32 h-36 sm:h-40 md:h-44 rounded-2xl md:rounded-[1.8rem] bg-gray-100 shadow-inner border-4 border-white overflow-hidden group-hover:scale-[1.02] transition-transform">
                               <img
                                 src={ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || ad.images?.[0] || ad.avatar || `https://ui-avatars.com/api/?name=${ad.title}`}
                                 className="w-full h-full object-cover"
@@ -730,12 +731,12 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                               <p className="text-xs font-black text-gray-400 flex items-center gap-1.5 mt-1">
                                 <Users className="w-3.5 h-3.5 text-rose-500" /> {ad.user?.name || 'Cargando...'}
                               </p>
-                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block shrink-0" />
                                 {typeof ad.location === 'object'
                                   ? ad.location.city
                                   : ad.location}
-                              </p>
+                              </span>
 
                               <div className="mt-4 flex flex-wrap gap-2">
                                 <span className={cn(
@@ -940,12 +941,12 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
             </div>
 
             {/* Footer Actions */}
-            <div className="p-6 border-t border-gray-100 bg-white flex gap-4 justify-end">
+            <div className="p-4 md:p-6 border-t border-gray-100 bg-white flex flex-wrap gap-3 md:gap-4 justify-end">
               <button
                 onClick={() => {
                   setRejectModal({ id: selectedVerification.id || selectedVerification._id || '', type: 'verification' });
                 }}
-                className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-black transition-all"
+                className="px-5 md:px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-black transition-all text-sm md:text-base"
               >
                 RECHAZAR SOLICITUD
               </button>
@@ -954,7 +955,7 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
                   handleVerificationAction(selectedVerification.id || selectedVerification._id || '', 'approved');
                   setSelectedVerification(null);
                 }}
-                className="px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black shadow-lg shadow-emerald-200 transition-all flex items-center gap-2"
+                className="px-5 md:px-8 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black shadow-lg shadow-emerald-200 transition-all flex items-center gap-2 text-sm md:text-base"
               >
                 <CheckCircle className="w-5 h-5" />
                 APROBAR SOLICITUD
