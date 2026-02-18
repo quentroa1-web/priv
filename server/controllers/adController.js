@@ -112,8 +112,8 @@ exports.createAd = async (req, res) => {
 
     // Limits based on plan
     let limit = 1;
-    if (user.premiumPlan === 'gold') limit = 3;
-    if (user.premiumPlan === 'diamond') limit = 100; // Unlimited
+    if (user.premiumPlan === 'gold') limit = 2;
+    if (user.premiumPlan === 'diamond') limit = 3;
 
     if (adCount >= limit) {
       return res.status(400).json({

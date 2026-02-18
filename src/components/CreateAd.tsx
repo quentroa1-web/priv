@@ -9,6 +9,7 @@ import {
 import COLOMBIA_LOCATIONS from '../data/colombiaLocations';
 import { User as UserType } from '../types';
 import { createAd as createAdApi, updateAd, uploadImages } from '../services/api';
+import { cn } from '../utils/cn';
 
 interface CreateAdProps {
   onBack: () => void;
@@ -151,7 +152,10 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
   }, [editingAd]);
 
   const totalSteps = 5;
-  const maxPhotos = (currentUser?.premiumPlan === 'gold' || currentUser?.premiumPlan === 'diamond' || currentUser?.premium) ? 6 : 3;
+  const maxPhotos = currentUser?.premiumPlan === 'diamond' ? 10 : (currentUser?.premiumPlan === 'gold' ? 6 : 3);
+  const currentAdCount = (currentUser as any)?.adCount || 0;
+  const adLimit = currentUser?.premiumPlan === 'diamond' ? 3 : (currentUser?.premiumPlan === 'gold' ? 2 : 1);
+  const reachedLimit = !editingAd && currentAdCount >= adLimit;
 
   // Location cascading
   const ciudadesDisponibles = formData.departamento
@@ -1052,13 +1056,28 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
             <p className="text-xs text-gray-500 font-bold uppercase">Fotos</p>
             <p className="font-semibold text-gray-900">{formData.photos.length} subidas</p>
           </div>
-          <div className="col-span-2">
-            <p className="text-xs text-gray-500 font-bold uppercase">Plan</p>
-            <p className="font-bold text-lg capitalize">
-              {formData.planType === 'free' && '🆓 Gratis'}
-              {formData.planType === 'premium' && '⭐ Premium - $49.900/mes'}
-              {formData.planType === 'vip' && '👑 VIP Gold - $99.900/mes'}
-            </p>
+          <div className="col-span-2 p-4 bg-white rounded-xl border-2 border-rose-100 mt-2">
+            <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-1">Tu Plan Actual</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-black text-xl text-gray-900 capitalize flex items-center gap-2">
+                  {currentUser?.premiumPlan === 'diamond' && <Crown className="w-5 h-5 text-cyan-500" />}
+                  {currentUser?.premiumPlan === 'gold' && <Crown className="w-5 h-5 text-amber-500" />}
+                  {currentUser?.premiumPlan === 'diamond' ? 'Plan Diamante' :
+                    currentUser?.premiumPlan === 'gold' ? 'Plan Gold' : 'Plan Gratuito'}
+                </p>
+                <p className="text-xs text-gray-500 font-medium">Límite de anuncios: {adLimit} activos</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Uso de anuncios</p>
+                <p className={cn(
+                  "text-lg font-black",
+                  currentAdCount >= adLimit ? "text-rose-600" : "text-green-600"
+                )}>
+                  {currentAdCount} / {adLimit}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1119,8 +1138,8 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
 
   // ─── MAIN RENDER ────────────────────────────────────────────────────
 
-  // Check if reached limit (1 for free users, 3 for premium)
-  const isOverLimit = !editingAd && !currentUser?.premium && (currentUser as any)?.adCount >= 1;
+  // Check if reached limit
+  const isOverLimit = reachedLimit;
 
   if (isOverLimit) {
     return (
@@ -1134,10 +1153,12 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
               <Sparkles className="w-5 h-5 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">¡Alcanzaste tu límite!</h2>
-          <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">
-            Como usuario del Plan Gratis, puedes tener 1 anuncio activo.
-            Para publicar más anuncios y obtener mayor visibilidad, mejora tu cuenta a Premium.
+          <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">¡Límite alcanzado!</h2>
+          <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed text-sm font-medium">
+            Tu plan <span className="text-rose-600 font-bold uppercase">{currentUser?.premiumPlan || 'Gratuito'}</span> permite un máximo de <span className="font-black text-gray-900">{adLimit}</span> anuncios activos.
+            {currentAdCount >= adLimit && (
+              <span className="block mt-2 text-rose-500/80 italic text-xs">Ya tienes {currentAdCount} anuncios publicados.</span>
+            )}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
@@ -1167,11 +1188,26 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
             <ArrowLeft className="w-5 h-5" />
             <span className="hidden sm:inline">Volver</span>
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <h1 className="font-black text-gray-900 text-lg">Crear Anuncio</h1>
             </div>
-            <h1 className="font-black text-gray-900 text-lg">Crear Anuncio</h1>
+
+            {/* Plan Usage Badge */}
+            <div className={cn(
+              "hidden md:flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ml-2",
+              reachedLimit
+                ? "bg-rose-50 border-rose-200 text-rose-600"
+                : "bg-green-50 border-green-200 text-green-600"
+            )}>
+              <Crown className={cn("w-3 h-3", currentUser?.premiumPlan === 'diamond' ? "text-cyan-500" : (currentUser?.premiumPlan === 'gold' ? "text-amber-500" : "text-gray-400"))} />
+              <span>{currentUser?.premiumPlan || 'Gratis'}</span>
+              <span className="opacity-30">|</span>
+              <span>{currentAdCount}/{adLimit} Usados</span>
+            </div>
           </div>
           <button
             onClick={() => setShowPreview(true)}
