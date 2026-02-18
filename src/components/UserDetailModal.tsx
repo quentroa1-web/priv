@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
-  X, Shield, CheckCircle, Star, MapPin, Clock, Crown,
-  Heart, MessageCircle, Camera, ChevronLeft, ChevronRight,
-  Sparkles, BadgeCheck, Loader2,
-  ArrowRight
+  X, CheckCircle, Star, MapPin, Crown,
+  Heart, MessageCircle, Camera,
+  ChevronLeft, ChevronRight,
+  BadgeCheck, Loader2
 } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
@@ -85,165 +85,166 @@ export function UserDetailModal({
       : 'Colombia';
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center">
 
-      {/* Dark Luxury Backdrop */}
+      {/* Luxury backdrop */}
       <div
         onClick={onClose}
-        className="absolute inset-0 bg-black/80 backdrop-blur-lg"
+        className="absolute inset-0 bg-black/85 backdrop-blur-xl"
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-7xl h-full md:h-[94vh] md:rounded-3xl overflow-hidden flex flex-col lg:flex-row shadow-[0_80px_180px_-30px_rgba(0,0,0,0.85)] bg-[#0f0f12] border border-white/10">
+      <div className="relative w-full max-w-7xl h-full md:h-[95vh] md:rounded-[32px] overflow-hidden flex flex-col lg:flex-row bg-[#0b0b0e] border border-white/5 shadow-[0_100px_200px_-40px_rgba(0,0,0,0.9)]">
 
-        {/* Close */}
+        {/* CLOSE */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-50 w-11 h-11 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition"
+          className="absolute top-6 right-6 z-50 w-10 h-10 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all"
         >
-          <X className="w-5 h-5 mx-auto" />
+          <X className="w-4 h-4 mx-auto" />
         </button>
 
-        {/* LEFT - GALLERY */}
-        <div className="relative w-full lg:w-[48%] h-[55vh] lg:h-full bg-black">
+        {/* LEFT — CINEMATIC GALLERY */}
+        <div className="relative w-full lg:w-[50%] h-[55vh] lg:h-full bg-black overflow-hidden">
 
           {gallery.length > 0 ? (
             <img
               src={gallery[activeImgIndex]}
               alt={user.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-[2000ms] ease-out hover:scale-105"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-white/40">
-              <Camera className="w-14 h-14" />
+            <div className="w-full h-full flex items-center justify-center text-white/30">
+              <Camera className="w-16 h-16" />
             </div>
           )}
 
-          {/* Golden Gradient */}
+          {/* Deep gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-          {/* VIP BADGE */}
+          {/* VIP badge */}
           {user.isVip && (
-            <div className="absolute top-6 left-6 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-black px-4 py-1.5 rounded-full text-xs font-bold shadow-xl flex items-center gap-2">
+            <div className="absolute top-6 left-6 bg-[#d6b25e] text-black px-4 py-1.5 rounded-full text-xs tracking-widest font-semibold shadow-xl flex items-center gap-2">
               <Crown className="w-4 h-4" />
-              VIP ELITE
+              ELITE
             </div>
           )}
 
-          {/* Gallery Controls */}
+          {/* Gallery controls */}
           {gallery.length > 1 && (
             <div className="absolute bottom-6 inset-x-0 flex justify-center gap-4">
               <button
                 onClick={prevImg}
-                className="w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center border border-white/20 hover:bg-black"
+                className="w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white flex items-center justify-center hover:bg-black"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <div className="px-4 py-1 bg-black/60 text-white text-xs rounded-full border border-white/20">
+              <div className="px-4 py-1 text-xs bg-black/60 text-white border border-white/20 rounded-full">
                 {activeImgIndex + 1} / {gallery.length}
               </div>
 
               <button
                 onClick={nextImg}
-                className="w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center border border-white/20 hover:bg-black"
+                className="w-9 h-9 rounded-full bg-black/60 border border-white/20 text-white flex items-center justify-center hover:bg-black"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex-1 flex flex-col h-full text-white">
+        {/* RIGHT — EDITORIAL INFO */}
+        <div className="flex-1 flex flex-col text-white">
 
           <div className="flex-1 overflow-y-auto px-10 md:px-16 py-14 space-y-12">
 
             {/* HEADER */}
-            <div className="space-y-6">
+            <div className="space-y-5">
 
               <div className="flex items-end gap-4">
-                <h1 className="text-5xl md:text-6xl font-light tracking-tight">
+                <h1 className="text-6xl font-extralight tracking-tight">
                   {user.name}
                 </h1>
 
                 {user.verified && (
-                  <BadgeCheck className="w-7 h-7 text-amber-400" />
+                  <BadgeCheck className="w-6 h-6 text-[#d6b25e]" />
                 )}
 
-                <span className="text-2xl text-white/40">
+                <span className="text-xl text-white/40">
                   {user.age}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between text-sm">
 
                 <div className="flex items-center gap-2 text-white/60">
-                  <MapPin className="w-4 h-4 text-amber-400" />
-                  <span>{displayLocation}</span>
+                  <MapPin className="w-4 h-4 text-[#d6b25e]" />
+                  {displayLocation}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map(i => (
                     <Star
                       key={i}
                       className={cn(
                         "w-4 h-4",
                         i <= (user.rating || 5)
-                          ? "text-amber-400 fill-current"
+                          ? "text-[#d6b25e] fill-current"
                           : "text-white/20"
                       )}
                     />
                   ))}
-                  <span className="text-sm text-white/50">
-                    ({reviews.length})
+                  <span className="ml-2 text-white/40">
+                    {reviews.length}
                   </span>
                 </div>
 
               </div>
             </div>
 
-            {/* PRICE — PSYCHOLOGY FOCUS */}
-            <div className="bg-gradient-to-br from-white/5 to-white/2 border border-amber-400/30 rounded-3xl p-8 backdrop-blur-md">
+            {/* PRICE BLOCK */}
+            <div className="relative p-10 rounded-3xl border border-[#d6b25e]/30 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl">
 
-              <p className="text-xs uppercase tracking-[0.3em] text-amber-400 font-semibold">
-                Inversión Exclusiva
+              <div className="absolute inset-0 rounded-3xl border border-white/5 pointer-events-none" />
+
+              <p className="text-xs uppercase tracking-[0.4em] text-[#d6b25e] font-medium">
+                Experiencia Privada
               </p>
 
-              <div className="mt-3 flex items-end gap-3">
-                <span className="text-5xl font-extralight text-white">
+              <div className="mt-4 flex items-end gap-4">
+                <span className="text-6xl font-thin text-white">
                   {price}
                 </span>
-                <span className="text-white/50 text-sm">
+                <span className="text-white/50 text-sm mb-2">
                   {priceLabel}
                 </span>
               </div>
 
-              <p className="text-xs text-white/40 mt-3">
-                Disponibilidad limitada • Reserva anticipada recomendada
+              <p className="mt-4 text-xs text-white/40">
+                Agenda limitada • Confirmación prioritaria
               </p>
 
             </div>
 
             {/* DESCRIPTION */}
             <div>
-              <p className="text-lg leading-relaxed text-white/70 italic border-l-2 border-amber-400 pl-6">
-                {user.description || user.bio || 'Perfil exclusivo.'}
+              <p className="text-lg leading-relaxed text-white/70 italic border-l border-[#d6b25e] pl-6">
+                {user.description || user.bio || 'Perfil exclusivo de alto nivel.'}
               </p>
             </div>
 
           </div>
 
           {/* FOOTER CTA */}
-          <div className="p-8 border-t border-white/10 bg-[#0c0c0f] flex items-center gap-6">
+          <div className="p-8 border-t border-white/10 bg-[#0a0a0c] flex items-center gap-6">
 
             <button
               onClick={onToggleFavorite}
               className={cn(
                 "w-14 h-14 rounded-2xl flex items-center justify-center border transition-all",
                 isFavorite
-                  ? "bg-amber-400 text-black border-amber-400 shadow-lg"
-                  : "bg-white/5 text-white/50 border-white/10 hover:border-amber-400 hover:text-amber-400"
+                  ? "bg-[#d6b25e] text-black border-[#d6b25e]"
+                  : "bg-white/5 text-white/40 border-white/10 hover:border-[#d6b25e] hover:text-[#d6b25e]"
               )}
             >
               <Heart className={cn("w-6 h-6", isFavorite && "fill-current")} />
@@ -254,10 +255,10 @@ export function UserDetailModal({
                 onMessage?.(user.uid || user.id || '', user.id || user._id)
               }
               disabled={isOwner}
-              className="flex-1 h-14 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 text-black rounded-2xl font-semibold text-lg flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_rgba(251,191,36,0.6)] hover:scale-[1.02] transition disabled:opacity-40"
+              className="flex-1 h-14 rounded-2xl bg-[#d6b25e] text-black font-medium text-lg flex items-center justify-center gap-3 shadow-[0_20px_60px_-10px_rgba(214,178,94,0.5)] hover:scale-[1.015] transition-all disabled:opacity-40"
             >
               <MessageCircle className="w-5 h-5" />
-              {isOwner ? 'GESTIONAR PERFIL' : 'RESERVAR EXPERIENCIA'}
+              {isOwner ? 'Administrar Perfil' : 'Solicitar Reserva'}
             </button>
 
           </div>
