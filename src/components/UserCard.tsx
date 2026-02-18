@@ -18,18 +18,21 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
     <div
       onClick={onClick}
       className={cn(
-        "group relative bg-white rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer border",
+        "group relative bg-white rounded-3xl overflow-hidden transition-all duration-500 cursor-pointer border",
         (user.premiumPlan === 'diamond' || isVip)
-          ? "border-cyan-200 shadow-[0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_30px_rgba(6,182,212,0.25)] ring-1 ring-cyan-400/20"
+          ? "border-transparent animate-tornasol premium-glow-cyan hover:scale-[1.02] ring-1 ring-cyan-400/30"
           : user.premiumPlan === 'gold'
-            ? "border-amber-200 shadow-[0_0_15px_rgba(251,191,36,0.15)] hover:shadow-[0_0_25px_rgba(251,191,36,0.25)] ring-1 ring-amber-400/20"
+            ? "border-amber-200 premium-glow-gold hover:scale-[1.01] ring-1 ring-amber-400/20"
             : user.isBoosted
-              ? "border-rose-200 shadow-[0_0_15px_rgba(225,29,72,0.15)] hover:shadow-[0_0_25px_rgba(225,29,72,0.25)] ring-1 ring-rose-400/20"
+              ? "border-rose-200 shadow-[0_4px_20px_rgba(225,29,72,0.1)] hover:shadow-[0_8px_30px_rgba(225,29,72,0.2)]"
               : "border-gray-100 shadow-sm hover:shadow-xl hover:border-rose-200"
       )}
     >
       {(user.premiumPlan === 'diamond' || isVip) && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-300 via-blue-500 to-cyan-300 z-10" />
+        <>
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-cyan-300 via-blue-500 to-pink-400 z-10 animate-gradient-x" />
+          <div className="holo-glint-overlay" />
+        </>
       )}
       {(user.premiumPlan === 'gold' && !isVip) && (
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-300 via-yellow-500 to-amber-300 z-10" />
@@ -52,15 +55,15 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
 
         <div className="absolute top-2 left-2 pointer-events-none flex flex-col gap-1.5">
           {user.online && (
-            <div className="flex items-center gap-1.5 bg-green-500/90 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-xl animate-pulse">
-              <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+            <div className="flex items-center gap-1.5 bg-green-500/80 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-lg">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-[0_0_5px_white]"></span>
               Live
             </div>
           )}
           {user.isBoosted && (
-            <div className="flex items-center gap-1.5 bg-rose-600/90 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-xl">
-              <Rocket className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-bounce" />
-              Boost
+            <div className="flex items-center gap-1.5 bg-gradient-to-r from-rose-600 to-pink-600 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[8px] sm:text-[9px] font-black uppercase tracking-wider shadow-lg border border-white/20">
+              <Rocket className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              TOP
             </div>
           )}
         </div>
