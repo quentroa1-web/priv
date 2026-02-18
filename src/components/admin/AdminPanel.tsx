@@ -32,16 +32,24 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   const [rejectModal, setRejectModal] = useState<{ id: string, type: 'verification' | 'payment' } | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
+  // Filters & State
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchStats();
+    resetPagination();
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'verifications') fetchVerifications();
     if (activeTab === 'payments') fetchPayments();
     if (activeTab === 'reviews') fetchReviews();
     if (activeTab === 'ads') fetchAds();
   }, [activeTab]);
+
+  const resetPagination = () => {
+    setCurrentPage(1);
+  };
 
   const fetchStats = async () => {
     try {
@@ -175,10 +183,54 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
     { id: 'dashboard', label: 'Consola', icon: BarChart3 },
     { id: 'users', label: 'Usuarios', icon: Users },
     { id: 'verifications', label: 'Verificaciones', icon: ShieldCheck, count: verifications.length },
-    { id: 'payments', label: 'Pagos/Facturas', icon: CreditCard, count: payments.filter(p => p.status === 'pending').length },
+    { id: 'payments', label: 'Finanzas', icon: CreditCard, count: payments.filter(p => p.status === 'pending').length },
     { id: 'reviews', label: 'Reseñas', icon: Star },
     { id: 'ads', label: 'Anuncios', icon: FileText }
   ];
+
+  const Pagination = ({ total, current, onChange }: { total: number, current: number, onChange: (p: number) => void }) => {
+    if (total <= 1) return null;
+    return (
+      <div className="flex items-center justify-center gap-2 py-8">
+        <button
+          disabled={current === 1}
+          onClick={() => onChange(current - 1)}
+          className="p-3 rounded-xl border border-gray-100 bg-white disabled:opacity-50 hover:bg-gray-50 transition-all font-black text-xs uppercase"
+        >
+          Anterior
+        </button>
+        {[...Array(total)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => onChange(i + 1)}
+            className={cn(
+              "w-10 h-10 rounded-xl font-black text-sm transition-all",
+              current === i + 1 ? "bg-gray-900 text-white shadow-lg" : "bg-white border border-gray-100 text-gray-400 hover:bg-gray-50"
+            )}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          disabled={current === total}
+          onClick={() => onChange(current + 1)}
+          className="p-3 rounded-xl border border-gray-100 bg-white disabled:opacity-50 hover:bg-gray-50 transition-all font-black text-xs uppercase"
+        >
+          Siguiente
+        </button>
+      </div>
+    );
+  };
+
+  const EmptyState = ({ icon: Icon, title, desc }: any) => (
+    <div className="bg-white p-20 rounded-[3rem] text-center border-4 border-dashed border-gray-50 animate-in fade-in zoom-in duration-500">
+      <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-gray-200">
+        <Icon className="w-10 h-10" />
+      </div>
+      <h3 className="text-2xl font-black text-gray-900 mb-2">{title}</h3>
+      <p className="text-gray-400 font-bold max-w-xs mx-auto">{desc}</p>
+    </div>
+  );
 
   if (loading) return (
     <div className="flex items-center justify-center p-20">
@@ -315,326 +367,418 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
             )}
 
             {/* USERS TAB */}
-            {activeTab === 'users' && (
-              <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
-                <div className="p-8 border-b border-gray-50 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-black text-gray-900">Gestión de Usuarios</h2>
-                    <p className="text-gray-500 font-bold">Monitoriza y modera a todos los miembros</p>
+            {activeTab === 'users' && (() => {
+              const filtered = users.filter(u =>
+                u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                u.name?.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+              const totalItems = filtered.length;
+              const pages = Math.ceil(totalItems / itemsPerPage);
+              const currentItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+              return (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
+                    <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h2 className="text-2xl font-black text-gray-900">Gestión de Usuarios</h2>
+                        <p className="text-gray-500 font-bold">Monitoriza y modera a todos los miembros</p>
+                      </div>
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Email, nombre o ID..."
+                          value={searchTerm}
+                          className="pl-12 pr-6 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-rose-500 font-bold text-sm w-full md:w-80 shadow-inner"
+                          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                        />
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead className="bg-gray-50/50 text-gray-400 uppercase text-[10px] font-black tracking-[0.2em]">
+                          <tr>
+                            <th className="px-8 py-5">Usuario</th>
+                            <th className="px-8 py-5">Rol</th>
+                            <th className="px-8 py-5">Estado</th>
+                            <th className="px-8 py-5">Verificado</th>
+                            <th className="px-8 py-5 text-right">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {currentItems.map(u => (
+                            <tr key={u.id} className="hover:bg-gray-50/30 transition-colors group">
+                              <td className="px-8 py-6">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 rounded-2xl bg-gray-100 overflow-hidden shadow-inner border-2 border-white group-hover:scale-105 transition-transform">
+                                    <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=random`} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div>
+                                    <div className="font-black text-gray-900">{u.name}</div>
+                                    <div className="text-xs font-bold text-gray-400">{u.email}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-8 py-6">
+                                <span className={cn(
+                                  "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider",
+                                  u.role === 'admin' ? "bg-purple-50 text-purple-600 border border-purple-100" :
+                                    u.role === 'announcer' ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-gray-50 text-gray-600 border border-gray-100"
+                                )}>
+                                  {u.role}
+                                </span>
+                              </td>
+                              <td className="px-8 py-6">
+                                <span className={cn(
+                                  "flex items-center gap-2 font-black text-[10px] tracking-widest uppercase",
+                                  u.status === 'banned' ? "text-rose-500" : "text-emerald-500"
+                                )}>
+                                  <div className={cn("w-2 h-2 rounded-full", u.status === 'banned' ? "bg-rose-500" : "bg-emerald-500 animate-pulse")} />
+                                  {u.status === 'banned' ? 'BANEADO' : 'ACTIVO'}
+                                </span>
+                              </td>
+                              <td className="px-8 py-6">
+                                {u.verified ? (
+                                  <div className="flex items-center gap-2 text-blue-500 font-black text-[10px] uppercase">
+                                    <ShieldCheck className="w-5 h-5" fill="currentColor" />
+                                    SI
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 text-gray-300 font-black text-[10px] uppercase">
+                                    <X className="w-5 h-5" />
+                                    NO
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-8 py-6 text-right space-x-2">
+                                <button
+                                  onClick={() => handleBanUser(u.id || '', u.status || 'active')}
+                                  title={u.status === 'active' ? 'Banear Usuario' : 'Activar Usuario'}
+                                  className={cn(
+                                    "p-3 rounded-2xl border transition-all h-11 w-11 flex items-center justify-center",
+                                    u.status === 'active' ? "border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white" : "border-emerald-100 text-emerald-500 hover:bg-emerald-500 hover:text-white"
+                                  )}
+                                >
+                                  {u.status === 'active' ? <Ban className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Buscar por email o nombre..."
-                      className="pl-12 pr-6 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-rose-500 font-bold text-sm w-80"
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
+                  <Pagination total={pages} current={currentPage} onChange={setCurrentPage} />
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-gray-50 text-gray-400 uppercase text-[10px] font-black tracking-[0.2em]">
-                      <tr>
-                        <th className="px-8 py-4">Usuario</th>
-                        <th className="px-8 py-4">Rol</th>
-                        <th className="px-8 py-4">Estado</th>
-                        <th className="px-8 py-4">Verificado</th>
-                        <th className="px-8 py-4 text-right">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {users.filter(u => u.email?.includes(searchTerm) || u.name?.includes(searchTerm)).map(u => (
-                        <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-8 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                                <img src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}`} className="w-full h-full object-cover" />
-                              </div>
-                              <div>
-                                <div className="font-black text-gray-900">{u.name}</div>
-                                <div className="text-xs font-bold text-gray-400">{u.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-5">
-                            <span className={cn(
-                              "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                              u.role === 'admin' ? "bg-purple-100 text-purple-700" :
-                                u.role === 'announcer' ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
-                            )}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td className="px-8 py-5">
-                            <span className={cn(
-                              "flex items-center gap-1.5 font-black text-xs",
-                              u.status === 'banned' ? "text-red-500" : "text-emerald-500"
-                            )}>
-                              <div className={cn("w-1.5 h-1.5 rounded-full", u.status === 'banned' ? "bg-red-500" : "bg-emerald-500")} />
-                              {u.status === 'banned' ? 'BANEADO' : 'ACTIVO'}
-                            </span>
-                          </td>
-                          <td className="px-8 py-5">
-                            {u.verified ? (
-                              <CheckCircle className="w-5 h-5 text-blue-500" fill="currentColor" />
-                            ) : (
-                              <X className="w-5 h-5 text-gray-300" />
-                            )}
-                          </td>
-                          <td className="px-8 py-5 text-right space-x-2">
-                            <button
-                              onClick={() => handleBanUser(u.id || '', u.status || 'active')}
-                              className={cn(
-                                "p-2 rounded-xl border transition-all",
-                                u.status === 'active' ? "border-red-100 text-red-500 hover:bg-red-50" : "border-emerald-100 text-emerald-500 hover:bg-emerald-50"
-                              )}
-                            >
-                              {u.status === 'active' ? <Ban className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* VERIFICATIONS TAB */}
             {activeTab === 'verifications' && (
-              <div className="space-y-4">
-                {verifications.length === 0 && (
-                  <div className="bg-white p-20 rounded-[3rem] text-center border-4 border-dashed border-gray-100">
-                    <ShieldCheck className="w-16 h-16 text-gray-200 mx-auto mb-6" />
-                    <h3 className="text-2xl font-black text-gray-900">Sin verificaciones pendientes</h3>
-                    <p className="text-gray-400 font-bold">Todo está bajo control por aquí.</p>
+              <div className="space-y-6">
+                {verifications.length === 0 ? (
+                  <EmptyState
+                    icon={ShieldCheck}
+                    title="Sin verificaciones pendientes"
+                    desc="Todo está al día. No hay nuevas solicitudes por revisar."
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {verifications.map(v => (
+                      <div key={v.id} className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between hover:border-rose-200 transition-all group">
+                        <div className="flex items-center gap-5">
+                          <div className="w-16 h-16 rounded-[1.5rem] bg-gray-50 overflow-hidden shadow-inner border-4 border-white">
+                            <img src={v.avatar || `https://ui-avatars.com/api/?name=${v.name}&background=random`} className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <h4 className="font-black text-gray-900 text-xl tracking-tight">{v.name}</h4>
+                            <div className="flex flex-wrap items-center gap-3 mt-1 text-sm">
+                              <span className="text-gray-400 font-bold">{v.email}</span>
+                              <div className="w-1 h-1 bg-gray-200 rounded-full" />
+                              <span className="text-rose-500 font-black text-[10px] uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
+                                {v.verificationRequests?.requestedAt ? `Hace ${Math.floor((Date.now() - new Date(v.verificationRequests.requestedAt).getTime()) / (1000 * 60 * 60 * 24))} días` : 'Reciente'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => setSelectedVerification(v)}
+                          className="mt-4 md:mt-0 w-full md:w-auto px-8 py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl shadow-gray-200 active:scale-95"
+                        >
+                          <FileText className="w-5 h-5 text-rose-400" />
+                          REVISAR DOCUMENTOS
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
-                {verifications.map(v => (
-                  <div key={v.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden">
-                        {v.avatar ? (
-                          <img src={v.avatar} className="w-full h-full object-cover" alt={v.name} />
-                        ) : (
-                          <Users className="w-6 h-6 text-gray-400 m-3" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-black text-gray-900 text-lg">{v.name}</h4>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <span className="font-bold">{v.email}</span>
-                          <span>•</span>
-                          <span>Solicitado: {v.verificationRequests?.requestedAt ? new Date(v.verificationRequests.requestedAt).toLocaleDateString() : 'N/A'}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        console.log('Review Documents clicked for:', v);
-                        setSelectedVerification(v);
-                      }}
-                      className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all flex items-center gap-2 shadow-lg shadow-gray-200"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Revisar Documentos
-                    </button>
-                  </div>
-                ))}
               </div>
             )}
 
             {/* PAYMENTS TAB */}
-            {activeTab === 'payments' && (
-              <div className="space-y-6">
-                {payments.length === 0 && (
-                  <div className="bg-white p-20 rounded-[3rem] text-center border-4 border-dashed border-gray-100">
-                    <CreditCard className="w-16 h-16 text-gray-200 mx-auto mb-6" />
-                    <h3 className="text-2xl font-black text-gray-900">No hay pagos registrados</h3>
-                  </div>
-                )}
-                {payments.map(p => (
-                  <div key={p._id || p.id} className="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-8 flex flex-col md:flex-row gap-8 items-center">
-                    <div className="w-full md:w-32 h-44 rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden group relative">
-                      <img src={p.proofUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                      <button
-                        onClick={() => setSelectedImage(p.proofUrl)}
-                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-black text-xs transition-opacity cursor-pointer">
-                        VER COMPROBANTE
-                      </button>
+            {activeTab === 'payments' && (() => {
+              const pendingCount = payments.filter(p => p.status === 'pending').length;
+              return (
+                <div className="space-y-6">
+                  {payments.length === 0 ? (
+                    <EmptyState
+                      icon={CreditCard}
+                      title="No hay pagos registrados"
+                      desc="El historial de transacciones aparecerá aquí."
+                    />
+                  ) : (
+                    <div className="space-y-6">
+                      {pendingCount > 0 && (
+                        <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-center gap-3 animate-pulse">
+                          <CheckCircle className="w-6 h-6 text-amber-600" />
+                          <p className="text-amber-800 font-black text-sm uppercase">Atención: {pendingCount} transacciones requieren acción inmediata</p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 gap-6">
+                        {payments.map(p => (
+                          <div key={p._id || p.id} className={cn(
+                            "bg-white rounded-[2.5rem] shadow-xl border overflow-hidden p-8 flex flex-col md:flex-row gap-8 items-center transition-all",
+                            p.status === 'pending' ? "border-amber-200 bg-amber-50/20" : "border-gray-100"
+                          )}>
+                            <div className="w-full md:w-40 h-56 rounded-3xl bg-gray-900 border-4 border-white shadow-2xl overflow-hidden group relative">
+                              <img src={p.proofUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              <div onClick={() => setSelectedImage(p.proofUrl)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-black text-[10px] tracking-tighter uppercase transition-opacity cursor-pointer text-center px-4">
+                                CLIC PARA AMPLIAR COMPROBANTE
+                              </div>
+                            </div>
+                            <div className="flex-1 space-y-4 text-center md:text-left">
+                              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                <span className={cn(
+                                  "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.1em] border shadow-sm",
+                                  p.status === 'pending' ? "bg-amber-100 text-amber-700 border-amber-200" :
+                                    p.status === 'approved' || p.status === 'completed' ? "bg-emerald-100 text-emerald-700 border-emerald-200" : "bg-rose-100 text-rose-700 border-rose-200"
+                                )}>
+                                  {p.status}
+                                </span>
+                                <span className="text-xs font-bold text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-50">{new Date(p.createdAt).toLocaleString()}</span>
+                              </div>
+                              <div>
+                                <h4 className="text-2xl font-black text-gray-900 tracking-tight">{p.user?.name}</h4>
+                                <p className="text-gray-400 font-bold text-sm">{p.user?.email}</p>
+                              </div>
+                              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                                <div className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm min-w-[120px]">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Concepto</p>
+                                  <p className="text-sm font-black text-rose-500">{p.type?.toUpperCase() || 'PAGO'}</p>
+                                </div>
+                                <div className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm min-w-[120px]">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Monto</p>
+                                  <p className="text-sm font-black text-gray-900">${p.amount?.toLocaleString()}</p>
+                                </div>
+                                <div className="p-3 bg-white rounded-2xl border border-gray-100 shadow-sm min-w-[120px]">
+                                  <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Banco</p>
+                                  <p className="text-sm font-black text-blue-600">{p.bankName || 'NEQUI'}</p>
+                                </div>
+                              </div>
+                            </div>
+                            {p.status === 'pending' && (
+                              <div className="flex flex-col gap-3 w-full md:w-auto">
+                                <button
+                                  onClick={() => handlePaymentAction((p._id || p.id), 'approved')}
+                                  className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 transition-all transform active:scale-95"
+                                >
+                                  APROBAR Y ACCIÓN
+                                </button>
+                                <button
+                                  onClick={() => setRejectModal({ id: (p._id || p.id), type: 'payment' })}
+                                  className="px-8 py-4 bg-white border-2 border-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl font-black transition-all active:scale-95 shadow-sm"
+                                >
+                                  RECHAZAR PAGO
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                          p.status === 'pending' ? "bg-amber-100 text-amber-700" :
-                            p.status === 'approved' ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-                        )}>
-                          {p.status}
-                        </span>
-                        <span className="text-xs font-bold text-gray-400">{new Date(p.createdAt).toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500 font-medium bg-gray-50 p-2 rounded-lg inline-flex">
-                        <span>Ref: {p.referenceId || 'N/A'}</span>
-                        <span>|</span>
-                        <span>Banco: {p.bankName || 'Nequi'}</span>
-                        <span>|</span>
-                        <span>Fecha: {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : 'N/A'}</span>
-                      </div>
-                      <h4 className="text-xl font-black text-gray-900">{p.user?.name}</h4>
-                      <p className="text-sm font-bold text-gray-500">Plan solicitado: <span className="text-rose-600 uppercase text-lg">{p.planDetails?.plan || p.packageId || p.description}</span></p>
-                      <div className="text-2xl font-black text-gray-900">${p.amount}</div>
-                    </div>
-                    {p.status === 'pending' && (
-                      <div className="flex flex-col gap-3">
-                        <button
-                          onClick={() => handlePaymentAction((p._id || p.id), 'approved')}
-                          className="px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 transition-all"
-                        >
-                          Activar Plan
-                        </button>
-                        <button
-                          onClick={() => setRejectModal({ id: (p._id || p.id), type: 'payment' })}
-                          className="px-8 py-4 bg-gray-50 hover:bg-gray-100 text-gray-400 rounded-2xl font-black transition-all"
-                        >
-                          Rechazar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
 
             {/* REVIEWS TAB */}
             {activeTab === 'reviews' && (
-              <div className="grid grid-cols-1 gap-6">
-                {reviews.map(r => (
-                  <div key={r.id} className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 flex gap-6 items-start">
-                    <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center flex-shrink-0">
-                      <Star className="w-7 h-7 text-rose-500" fill="currentColor" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-black text-gray-900">{r.reviewer?.name} <span className="text-gray-400 font-bold ml-2">→ {r.ad?.title}</span></h4>
-                        <div className="flex text-amber-500">
-                          {[...Array(r.rating)].map((_, i) => <Star key={i} className="w-4 h-4" fill="currentColor" />)}
+              <div className="grid grid-cols-1 gap-4">
+                {reviews.length === 0 ? (
+                  <EmptyState
+                    icon={Star}
+                    title="Cero reseñas"
+                    desc="Aún no hay opiniones publicadas en la plataforma."
+                  />
+                ) : (
+                  reviews.map(r => (
+                    <div key={r.id} className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col md:flex-row gap-6 items-start hover:border-amber-200 transition-all group">
+                      <div className="w-16 h-16 rounded-[1.5rem] bg-amber-50 flex items-center justify-center flex-shrink-0 border-2 border-amber-100 group-hover:scale-110 transition-transform">
+                        <Star className="w-8 h-8 text-amber-500" fill="currentColor" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+                          <div>
+                            <h4 className="font-black text-gray-900 text-lg tracking-tight">{r.reviewer?.name}</h4>
+                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5 mt-1">
+                              para <ArrowUpRight className="w-3 h-3" /> {r.ad?.title}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 text-amber-500">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="w-4 h-4" fill={i < r.rating ? "currentColor" : "none"} />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-gray-600 font-medium italic relative">
+                          <span className="absolute -top-3 left-6 bg-white px-2 text-rose-500 text-2xl font-serif">“</span>
+                          {r.comment}
+                        </div>
+                        <div className="mt-6 flex items-center justify-between">
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] bg-white px-3 py-1 rounded-full border border-gray-100">
+                            {new Date(r.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteReview(r.id)}
+                            className="bg-rose-50 text-rose-500 px-4 py-2 rounded-xl font-black text-[10px] tracking-widest uppercase hover:bg-rose-500 hover:text-white transition-all flex items-center gap-2 border border-rose-100 shadow-sm"
+                          >
+                            <Trash2 className="w-4 h-4" /> BORRAR RESEÑA
+                          </button>
                         </div>
                       </div>
-                      <p className="text-gray-600 font-medium italic border-l-4 border-rose-100 pl-4 py-2">"{r.comment}"</p>
-                      <div className="mt-4 flex items-center justify-between">
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{new Date(r.createdAt).toLocaleString()}</span>
-                        <button
-                          onClick={() => handleDeleteReview(r.id)}
-                          className="text-red-500 font-black text-xs hover:underline flex items-center gap-1"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> ELIMINAR RESEÑA
-                        </button>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             )}
 
             {/* ADS TAB */}
-            {activeTab === 'ads' && (
-              <div className="space-y-6">
-                <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-black text-gray-900">Gestión de Anuncios</h2>
-                    <p className="text-gray-500 font-bold">Modera el contenido de la plataforma</p>
-                  </div>
-                  <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Buscar por título o anunciante..."
-                      className="pl-12 pr-6 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-rose-500 font-bold text-sm w-80"
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
+            {activeTab === 'ads' && (() => {
+              const filtered = ads.filter(ad =>
+                ad.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                ad.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+              );
+              const totalItems = filtered.length;
+              const pages = Math.ceil(totalItems / (itemsPerPage * 2)); // Double density for grid
+              const currentItems = filtered.slice((currentPage - 1) * itemsPerPage * 2, currentPage * itemsPerPage * 2);
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {ads.filter(ad =>
-                    ad.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    ad.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-                  ).map(ad => (
-                    <div key={ad._id || ad.id} className="bg-white p-6 rounded-[2.5rem] shadow-lg border border-gray-100 flex gap-6 hover:shadow-2xl transition-all group">
-                      <div className="relative shrink-0">
-                        <img
-                          src={ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || ad.images?.[0] || ad.avatar || ''}
-                          className="w-32 h-40 rounded-3xl object-cover bg-gray-100 shadow-inner"
-                        />
-                        <div className="absolute top-2 right-2">
-                          <span className={cn(
-                            "w-3 h-3 rounded-full border-2 border-white block",
-                            ad.isActive ? "bg-emerald-500" : "bg-gray-400"
-                          )} />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-black text-gray-900 truncate text-lg">
-                              {ad.title || ad.name}, {ad.age}
-                            </h4>
-                          </div>
-                          <p className="text-xs font-bold text-gray-400 flex items-center gap-1">
-                            <Users className="w-3 h-3" /> {ad.user?.name || 'Cargando...'}
-                          </p>
-                          <p className="text-xs font-bold text-gray-400 mt-1">
-                            {typeof ad.location === 'object'
-                              ? `${ad.location.city}, ${ad.location.department}`
-                              : ad.location}
-                          </p>
-
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            <span className={cn(
-                              "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                              ad.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"
-                            )}>
-                              {ad.isActive ? 'ACTIVO' : 'SUSPENDIDO'}
-                            </span>
-                            {ad.isVerified && <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                              <ShieldCheck className="w-3 h-3" /> VERIFICADO
-                            </span>}
-                            {ad.plan && ad.plan !== 'gratis' && <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                              <Star className="w-3 h-3" fill="currentColor" /> {ad.plan}
-                            </span>}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-gray-50">
-                          <button
-                            onClick={() => handleAdStatus(ad._id || ad.id, ad.isActive)}
-                            className={cn(
-                              "flex-1 py-2.5 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-1.5",
-                              ad.isActive
-                                ? "bg-gray-100 hover:bg-gray-200 text-gray-600"
-                                : "bg-emerald-100 hover:bg-emerald-200 text-emerald-700"
-                            )}
-                          >
-                            {ad.isActive ? <Ban className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                            {ad.isActive ? 'Suspender' : 'Activar'}
-                          </button>
-                          <button
-                            onClick={() => handleDeleteAd(ad._id || ad.id)}
-                            className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl transition-all"
-                            title="Eliminar permanentemente"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
+              return (
+                <div className="space-y-8">
+                  <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-900 tracking-tight">Gestión de Anuncios</h2>
+                      <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-1">Moderación de Catálogo</p>
                     </div>
-                  ))}
+                    <div className="relative w-full md:w-auto">
+                      <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Título, usuario, ciudad..."
+                        value={searchTerm}
+                        className="pl-14 pr-8 py-5 bg-gray-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-rose-500 font-black text-sm w-full md:w-[32rem] shadow-inner"
+                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                      />
+                    </div>
+                  </div>
+
+                  {currentItems.length === 0 ? (
+                    <EmptyState
+                      icon={FileText}
+                      title="No se encontraron anuncios"
+                      desc="Intenta con otro término de búsqueda o revisa el catálogo general."
+                    />
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+                      {currentItems.map(ad => (
+                        <div key={ad._id || ad.id} className="bg-white p-5 rounded-[2.5rem] shadow-lg border border-gray-100 flex gap-6 hover:shadow-2xl transition-all group relative overflow-hidden">
+                          {ad.plan && ad.plan !== 'gratis' && (
+                            <div className="absolute top-0 right-0 w-24 h-24 overflow-hidden pointer-events-none">
+                              <div className="absolute top-2 -right-8 bg-amber-400 text-white text-[8px] font-black uppercase py-1 w-32 text-center rotate-45 shadow-sm">
+                                {ad.plan}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="relative shrink-0">
+                            <div className="w-32 h-44 rounded-[1.8rem] bg-gray-100 shadow-inner border-4 border-white overflow-hidden group-hover:scale-[1.02] transition-transform">
+                              <img
+                                src={ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || ad.images?.[0] || ad.avatar || `https://ui-avatars.com/api/?name=${ad.title}`}
+                                className="w-full h-full object-cover"
+                                alt={ad.title}
+                              />
+                            </div>
+                            <div className="absolute -bottom-2 -right-2">
+                              {ad.isActive ? (
+                                <div className="p-2 bg-emerald-500 rounded-2xl shadow-lg border-4 border-white animate-pulse">
+                                  <CheckCircle className="w-4 h-4 text-white" />
+                                </div>
+                              ) : (
+                                <div className="p-2 bg-rose-500 rounded-2xl shadow-lg border-4 border-white">
+                                  <Ban className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                            <div>
+                              <h4 className="font-black text-gray-900 truncate text-xl tracking-tight leading-tight">
+                                {ad.title || ad.name}, {ad.age}
+                              </h4>
+                              <p className="text-xs font-black text-gray-400 flex items-center gap-1.5 mt-1">
+                                <Users className="w-3.5 h-3.5 text-rose-500" /> {ad.user?.name || 'Cargando...'}
+                              </p>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                {typeof ad.location === 'object'
+                                  ? ad.location.city
+                                  : ad.location}
+                              </p>
+
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                <span className={cn(
+                                  "px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border shadow-sm",
+                                  ad.isActive ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-rose-50 text-rose-600 border-rose-100"
+                                )}>
+                                  {ad.isActive ? 'ACTIVO' : 'SUSPENDIDO'}
+                                </span>
+                                {ad.isVerified && <span className="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                                  <ShieldCheck className="w-3 h-3" fill="currentColor" /> VERIF.
+                                </span>}
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-4">
+                              <button
+                                onClick={() => handleAdStatus(ad._id || ad.id, ad.isActive)}
+                                className={cn(
+                                  "flex-1 py-3 rounded-2xl font-black text-[10px] tracking-widest uppercase transition-all flex items-center justify-center gap-2 shadow-sm",
+                                  ad.isActive
+                                    ? "bg-gray-900 hover:bg-black text-white"
+                                    : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                )}
+                              >
+                                {ad.isActive ? <Ban className="w-4 h-4 text-rose-400" /> : <CheckCircle className="w-4 h-4 text-white" />}
+                                {ad.isActive ? 'Suspender' : 'Activar'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteAd(ad._id || ad.id)}
+                                className="px-4 py-3 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 border border-red-100 rounded-2xl transition-all shadow-sm active:scale-95"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <Pagination total={pages} current={currentPage} onChange={setCurrentPage} />
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
           </div>
         </div >
