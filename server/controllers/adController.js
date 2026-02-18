@@ -44,7 +44,7 @@ exports.getAds = async (req, res) => {
     const ads = await Ad.find(query)
       .populate({
         path: 'user',
-        select: 'name avatar lastSeen role priceList verified isVip premiumPlan rating reviewCount status premiumUntil',
+        select: 'name avatar lastSeen role priceList verified isVip premiumPlan rating reviewCount status premiumUntil diamondBoosts',
         options: { virtuals: true }
       })
       .sort({
@@ -349,8 +349,8 @@ exports.boostAd = async (req, res) => {
     ad.lastBumpDate = now;
     ad.lastBoostDate = now;
 
-    // Apply Boost (Normal: 12h, Diamond Free: 112h)
-    const boostDurationHours = hasFreeBoosts ? 112 : 12;
+    // Apply Boost (Normal: 12h, Diamond Free: 12h)
+    const boostDurationHours = 12;
     const boostExpires = new Date();
     boostExpires.setHours(boostExpires.getHours() + boostDurationHours);
     ad.boostedUntil = boostExpires;

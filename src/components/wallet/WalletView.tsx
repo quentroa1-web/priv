@@ -375,16 +375,16 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                                             <Rocket className="w-4 h-4 text-cyan-500" />
                                             <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest">Boosts Diamante</span>
                                         </div>
-                                        <span className="text-xl font-black text-cyan-600">{(user as any).diamondBoosts || 0}/5</span>
+                                        <span className="text-xl font-black text-cyan-600">{(user as any).diamondBoosts ?? 5}/5</span>
                                     </div>
                                     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                         <div
                                             className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-500"
-                                            style={{ width: `${(((user as any).diamondBoosts || 0) / 5) * 100}%` }}
+                                            style={{ width: `${(((user as any).diamondBoosts ?? 5) / 5) * 100}%` }}
                                         ></div>
                                     </div>
                                     <p className="text-[9px] text-cyan-600/70 font-bold mt-2 text-center uppercase tracking-tighter">
-                                        {((user as any).diamondBoosts || 0) > 0 ? 'Tienes boosts de 112h disponibles' : 'Has agotado tus boosts gratuitos este mes'}
+                                        {((user as any).diamondBoosts ?? 5) > 0 ? 'Tienes boosts de 12h disponibles' : 'Has agotado tus boosts gratuitos este mes'}
                                     </p>
                                 </div>
                             )}
@@ -541,7 +541,7 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                                     <FeatureItem text="Anuncios ILIMITADOS" check color="text-cyan-400" darkMode />
                                     <FeatureItem text="Badge DIAMOND Elite" check color="text-cyan-400" darkMode />
                                     <FeatureItem text="Prioridad en TOP ADS" check color="text-cyan-400" darkMode />
-                                    <FeatureItem text="5 Boosts de 112h GRATIS" check color="text-cyan-400" darkMode />
+                                    <FeatureItem text="5 Boosts de 12h GRATIS" check color="text-cyan-400" darkMode />
                                     <FeatureItem text="Brillo Cian Neon" check color="text-cyan-400" darkMode />
                                     <FeatureItem text="Acceso a Eventos VIP" check color="text-cyan-400" darkMode />
                                 </ul>
@@ -565,11 +565,15 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                             </div>
                             <h3 className="text-2xl font-black text-gray-900 mb-2">Boost de Perfil</h3>
                             <p className="text-gray-600 font-medium text-sm mb-8 leading-relaxed">
-                                Aparece en las primeras posiciones durante 12 horas y atrae más miradas.
+                                Aparece en las primeras posiciones durante {user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0 ? '12' : '12'} horas y atrae más miradas.
                             </p>
                             <div className="flex items-center justify-between mb-6">
-                                <span className="text-3xl font-black text-rose-600">100 <span className="text-sm">🪙</span></span>
-                                <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-black text-rose-700 uppercase">12 Horas TOP</span>
+                                <span className="text-3xl font-black text-rose-600">
+                                    {user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0 ? '0' : '100'} <span className="text-sm">🪙</span>
+                                </span>
+                                <span className="px-3 py-1 bg-white/50 rounded-full text-[10px] font-black text-rose-700 uppercase">
+                                    {user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0 ? '12' : '12'} Horas TOP
+                                </span>
                             </div>
                             <button
                                 onClick={handleBoost}
@@ -875,8 +879,8 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                             </div>
                             <h3 className="text-2xl font-black text-gray-900 mb-2">Selecciona un Anuncio</h3>
                             <p className="text-gray-500 font-medium text-sm mb-8 leading-relaxed">
-                                {user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0
-                                    ? `¡Aprovecha tus boosts gratuitos! Este boost durará 112 horas y no te costará monedas.`
+                                {user?.premiumPlan === 'diamond' && ((user as any).diamondBoosts ?? 5) > 0
+                                    ? `¡Aprovecha tus boosts gratuitos! Este boost durará 12 horas y no te costará monedas.`
                                     : `Elige el anuncio que deseas impulsar al tope de los resultados por 12 horas. Solo cuesta 100 🪙.`}
                             </p>
 
@@ -914,10 +918,10 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                                             ) : (
                                                 <button
                                                     onClick={() => activateAdBoost(ad._id)}
-                                                    disabled={loading || (!(user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0) && (user?.wallet?.coins || 0) < 100)}
-                                                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${(user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0) || (user?.wallet?.coins || 0) >= 100 ? 'bg-rose-600 text-white shadow-lg hover:bg-rose-700 active:scale-95' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                                    disabled={loading || (!((user?.premiumPlan === 'diamond' && ((user as any).diamondBoosts ?? 5) > 0)) && (user?.wallet?.coins || 0) < 100)}
+                                                    className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${(user?.premiumPlan === 'diamond' && ((user as any).diamondBoosts ?? 5) > 0) || (user?.wallet?.coins || 0) >= 100 ? 'bg-rose-600 text-white shadow-lg hover:bg-rose-700 active:scale-95' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                                                 >
-                                                    {user?.premiumPlan === 'diamond' && (user as any).diamondBoosts > 0 ? 'Boost GRATIS 💎' : 'Boost 🚀'}
+                                                    {user?.premiumPlan === 'diamond' && ((user as any).diamondBoosts ?? 5) > 0 ? 'Boost GRATIS 💎' : 'Boost 🚀'}
                                                 </button>
                                             )}
                                         </div>

@@ -138,7 +138,7 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
             id: 'premium_diamond',
             name: 'Diamond Access',
             price: 110000,
-            features: ['Máxima Visibilidad', 'Contenido Ilimitado', 'Badge Diamond', '5 Boosts de 112h GRATIS', 'Concierge Personal'],
+            features: ['Máxima Visibilidad', 'Contenido Ilimitado', 'Badge Diamond', '5 Boosts de 12h GRATIS', 'Concierge Personal'],
             popular: true,
             color: 'from-cyan-400 to-blue-600'
         },

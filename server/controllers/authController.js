@@ -129,6 +129,13 @@ exports.getMe = async (req, res) => {
       user.premium = false;
       user.premiumPlan = 'none';
       user.isVip = false;
+      user.diamondBoosts = 0;
+      await user.save();
+    }
+
+    // Repair existing users: Initialize diamondBoosts if Diamond and undefined/null/0 (one-time fix for existing users)
+    if (user.premiumPlan === 'diamond' && (user.diamondBoosts === undefined || user.diamondBoosts === null || user.diamondBoosts === 0)) {
+      user.diamondBoosts = 5;
       await user.save();
     }
 
@@ -147,8 +154,9 @@ exports.getMe = async (req, res) => {
 exports.updateDetails = async (req, res) => {
   try {
     // Only allow these fields to be updated by the user
+    // CRITICAL SECURITY: Never allow 'role', 'wallet', 'premium', 'isVip', or 'diamondBoosts' here
     const allowedFields = [
-      'name', 'displayName', 'email', 'phone',
+      'name', 'displayName', 'phone',
       'bio', 'languages', 'location', 'age',
       'gender', 'avatar', 'priceList', 'paymentMethods'
     ];

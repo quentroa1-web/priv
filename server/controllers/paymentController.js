@@ -419,8 +419,8 @@ exports.boostAdWithCoins = async (req, res) => {
             return res.status(400).json({ success: false, error: `Necesitas ${boostCost} monedas para un boost.` });
         }
 
-        // Apply Boost (Normal: 12h, Diamond Free: 112h)
-        const boostDurationHours = hasFreeBoosts ? 112 : 12;
+        // Apply Boost (Normal: 12h, Diamond Free: 12h)
+        const boostDurationHours = 12;
         const boostExpires = new Date();
         boostExpires.setHours(boostExpires.getHours() + boostDurationHours);
 

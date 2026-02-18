@@ -19,7 +19,7 @@ exports.getUsers = async (req, res) => {
 // @route   PUT /api/admin/users/:id
 exports.updateUserAdmin = async (req, res) => {
   try {
-    const allowedUpdates = ['role', 'status', 'verified', 'idVerified', 'photoVerified', 'premium', 'isVip', 'premiumUntil'];
+    const allowedUpdates = ['role', 'status', 'verified', 'idVerified', 'photoVerified', 'premium', 'isVip', 'premiumUntil', 'diamondBoosts'];
     const updates = {};
 
     allowedUpdates.forEach(field => {
@@ -173,6 +173,12 @@ exports.handlePayment = async (req, res) => {
       }
 
       await user.save();
+
+      // Grant Diamond benefits if applicable (Repair initialization for existing users handled in getMe, but good to have here too)
+      if (transaction.type === 'subscription' && (transaction.planDetails?.plan === 'diamond' || user.premiumPlan === 'diamond')) {
+        user.diamondBoosts = 5;
+        await user.save();
+      }
 
       // Send System Notification to User
       try {
