@@ -35,18 +35,32 @@ exports.getAds = async (req, res) => {
       query.plan = req.query.plan;
     }
 
+    // We can't easily filter by user.status in the Ad.find query without a join/lookup,
+    // so we'll populate and then filter, or better, use a more complex query if needed.
+    // However, for simplicity and performance in this scale, we'll populate and then filter in JS
+    // OR just ensure the population includes the status for the frontend to handle if they slipped through.
+    // Actually, let's stick to populating first.
+
     const ads = await Ad.find(query)
       .populate({
         path: 'user',
-        select: 'name avatar lastSeen role priceList verified',
+        select: 'name avatar lastSeen role priceList verified isVip premiumPlan rating reviewCount status premiumUntil',
         options: { virtuals: true }
       })
-      .sort({ priority: -1, lastBumpDate: -1, createdAt: -1 }); // VIP/Diamond first, then Boosted, then newest
+      .sort({
+        boostedUntil: -1, // Active/recent boosts first
+        priority: -1,
+        lastBumpDate: -1,
+        createdAt: -1
+      });
+
+    // Post-filter banned users
+    const activeAds = ads.filter(ad => ad.user && ad.user.status !== 'banned');
 
     res.status(200).json({
       success: true,
-      count: ads.length,
-      data: ads
+      count: activeAds.length,
+      data: activeAds
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -89,6 +103,7 @@ exports.createAd = async (req, res) => {
     if (user.premium && user.premiumUntil && new Date() > new Date(user.premiumUntil)) {
       user.premium = false;
       user.premiumPlan = 'none';
+      user.isVip = false;
       await user.save();
     }
 
@@ -256,8 +271,8 @@ exports.getMyAds = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      count: ads.length,
-      data: ads
+      count: activeAds.length,
+      data: activeAds
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -310,8 +325,20 @@ exports.boostAd = async (req, res) => {
     user.wallet.coins -= BOOST_COST;
     await user.save();
 
+    // Check once-per-day limit (24 hours) based on PREVIOUS boost date
+    const now = new Date();
+    if (ad.lastBoostDate && (now - new Date(ad.lastBoostDate)) < 24 * 60 * 60 * 1000) {
+      const nextAvailable = new Date(new Date(ad.lastBoostDate).getTime() + 24 * 60 * 60 * 1000);
+      const hoursLeft = Math.ceil((nextAvailable.getTime() - now.getTime()) / (60 * 60 * 1000));
+      return res.status(400).json({
+        success: false,
+        error: `Ya has impulsado este anuncio hoy. Podrás impulsarlo de nuevo en aproximadamente ${hoursLeft} horas.`
+      });
+    }
+
     // Update Ad
-    ad.lastBumpDate = Date.now();
+    ad.lastBumpDate = now;
+    ad.lastBoostDate = now;
 
     // Apply Boost (12 hours)
     const boostExpires = new Date();

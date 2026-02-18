@@ -128,6 +128,7 @@ exports.getMe = async (req, res) => {
     if (user.premium && user.premiumUntil && new Date() > new Date(user.premiumUntil)) {
       user.premium = false;
       user.premiumPlan = 'none';
+      user.isVip = false;
       await user.save();
     }
 

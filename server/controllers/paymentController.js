@@ -334,7 +334,8 @@ exports.buySubscriptionWithCoins = async (req, res) => {
                 $set: {
                     premium: true,
                     premiumPlan: planId,
-                    premiumUntil: newExpiryDate
+                    premiumUntil: newExpiryDate,
+                    isVip: true
                 }
             },
             { new: true }
@@ -381,6 +382,17 @@ exports.boostAdWithCoins = async (req, res) => {
             return res.status(403).json({ success: false, error: 'No tienes permiso sobre este anuncio' });
         }
 
+        // Check once-per-day limit (24 hours)
+        const now = new Date();
+        if (ad.lastBoostDate && (now - new Date(ad.lastBoostDate)) < 24 * 60 * 60 * 1000) {
+            const nextAvailable = new Date(new Date(ad.lastBoostDate).getTime() + 24 * 60 * 60 * 1000);
+            const hoursLeft = Math.ceil((nextAvailable.getTime() - now.getTime()) / (60 * 60 * 1000));
+            return res.status(400).json({
+                success: false,
+                error: `Ya has impulsado este anuncio hoy. Podrás impulsarlo de nuevo en aproximadamente ${hoursLeft} horas.`
+            });
+        }
+
         // Atomic Deduction
         const user = await User.findOneAndUpdate(
             { _id: req.user.id, 'wallet.coins': { $gte: BOOST_COST } },
@@ -392,18 +404,14 @@ exports.boostAdWithCoins = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Necesitas 100 monedas para un boost de 12 horas' });
         }
 
-        // Apply Boost (extend if already boosted)
-        let boostExpires = new Date();
-        if (ad.isBoosted && ad.boostedUntil > new Date()) {
-            boostExpires = new Date(ad.boostedUntil);
-            boostExpires.setHours(boostExpires.getHours() + 12);
-        } else {
-            boostExpires.setHours(boostExpires.getHours() + 12);
-        }
+        // Apply Boost (12 hours)
+        const boostExpires = new Date();
+        boostExpires.setHours(boostExpires.getHours() + 12);
 
         ad.boostedUntil = boostExpires;
         ad.isBoosted = true;
-        ad.lastBumpDate = Date.now();
+        ad.lastBumpDate = now;
+        ad.lastBoostDate = now;
         await ad.save();
 
         // Log transaction

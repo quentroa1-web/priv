@@ -62,6 +62,7 @@
   },
   "profiles": {
     "vipGold": "VIP GOLD",
+    "topAds": "TOP ADS",
     "standard": "STANDARD",
     "verifiedId": "ID Verified",
     "verifiedPhotos": "Photos Verified",

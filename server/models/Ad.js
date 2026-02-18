@@ -81,6 +81,9 @@ const AdSchema = new mongoose.Schema({
   boostedUntil: {
     type: Date
   },
+  lastBoostDate: {
+    type: Date
+  },
   isActive: {
     type: Boolean,
     default: true

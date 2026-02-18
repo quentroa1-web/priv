@@ -26,8 +26,9 @@ export function HomeView({
     onToggleFavorite,
     onUserClick
 }: HomeViewProps) {
-    const regularUsers = useMemo(() => filteredUsers.filter((u) => !u.isVip), [filteredUsers]);
-    const vipUsers = useMemo(() => filteredUsers.filter((u) => u.isVip), [filteredUsers]);
+    const topUsers = useMemo(() => filteredUsers.filter((u) => u.isBoosted), [filteredUsers]);
+    const vipUsers = useMemo(() => filteredUsers.filter((u) => u.isVip && !u.isBoosted), [filteredUsers]);
+    const regularUsers = useMemo(() => filteredUsers.filter((u) => !u.isVip && !u.isBoosted), [filteredUsers]);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     return (
@@ -130,6 +131,40 @@ export function HomeView({
 
                 {/* User Content */}
                 <div className="flex-1 min-w-0">
+                    {/* Top Ads Section */}
+                    {topUsers.length > 0 && (
+                        <div className="mb-10 relative group">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="p-1.5 bg-rose-100 rounded-lg shadow-sm ring-1 ring-rose-200">
+                                    <TrendingUp className="w-5 h-5 text-rose-600" />
+                                </div>
+                                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
+                                    {t('profiles.topAds') || 'Anuncios Top'}
+                                    <span className="bg-gradient-to-r from-rose-400 to-pink-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm animate-pulse">Destacado</span>
+                                </h2>
+                            </div>
+                            <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+                                {topUsers.map((u: User) => (
+                                    <div
+                                        key={`top-${u.id}`}
+                                        className="snap-center shrink-0 w-[180px] sm:w-[220px] md:w-[260px] lg:w-[280px] transition-transform hover:-translate-y-1"
+                                    >
+                                        <UserCard
+                                            user={u}
+                                            variant="compact"
+                                            onClick={() => onUserClick(u)}
+                                            isFavorite={favorites.some(f => f.id === u.id)}
+                                            onToggleFavorite={(e) => {
+                                                e.stopPropagation();
+                                                onToggleFavorite(u);
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* VIP Section */}
                     {vipUsers.length > 0 && (
                         <div className="mb-10 relative group">
