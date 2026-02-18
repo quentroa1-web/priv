@@ -19,7 +19,11 @@ import {
     Shield,
     Star,
     Medal,
-    Zap
+    Zap,
+    X,
+    Loader2,
+    ArrowRight,
+    Activity
 } from 'lucide-react';
 
 interface WalletViewProps {
@@ -401,25 +405,40 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                         ) : transactions.length === 0 ? (
                             <div className="py-20 text-center text-gray-400">No hay movimientos registrados</div>
                         ) : (
-                            transactions.map((tx: any, i: number) => (
-                                <div key={i} className="flex items-center justify-between p-5 rounded-3xl border border-gray-50 hover:bg-gray-50/50 transition-all">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`p-3 rounded-2xl ${tx.type === 'deposit' || tx.type === 'earnings' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                                            {tx.type === 'deposit' || tx.type === 'earnings' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                            transactions.map((tx: any) => {
+                                const isPositive = tx.type === 'deposit' || tx.type === 'receive' || tx.type === 'earnings';
+                                const statusColor =
+                                    tx.status === 'completed' || tx.status === 'approved' ? 'text-emerald-500 bg-emerald-50' :
+                                        tx.status === 'pending' ? 'text-amber-500 bg-amber-50' :
+                                            'text-rose-500 bg-rose-50';
+
+                                return (
+                                    <div key={tx._id || tx.id} className="group flex items-center justify-between p-5 rounded-3xl border border-gray-50 hover:bg-gray-50/50 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-2xl ${isPositive ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                                {isPositive ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-900 uppercase text-xs tracking-wider">
+                                                    {tx.type === 'earnings' ? 'Venta de Contenido' : (tx.description || tx.type)}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <p className="text-[10px] text-gray-400 font-bold">{new Date(tx.createdAt).toLocaleString()}</p>
+                                                    <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${statusColor}`}>
+                                                        {tx.status}
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 uppercase text-xs tracking-wider">{tx.type === 'earnings' ? 'Venta de Contenido' : tx.description}</p>
-                                            <p className="text-[10px] text-gray-400 font-bold">{new Date(tx.createdAt).toLocaleString()} • {tx.status}</p>
+                                        <div className="text-right">
+                                            <p className={`text-lg font-black ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                                {isPositive ? '+' : '-'}{tx.coinsAmount || tx.amount} 🪙
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 font-bold">Ref: {tx.referenceId || tx._id?.slice(-6) || 'N/A'}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className={`text-lg font-black ${tx.type === 'deposit' || tx.type === 'earnings' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                            {tx.type === 'deposit' || tx.type === 'earnings' ? '+' : '-'}{tx.coinsAmount || tx.amount} 🪙
-                                        </p>
-                                        <p className="text-[10px] text-gray-400 font-bold">Concepto: {tx.concept || 'Tienda'}</p>
-                                    </div>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                 )}
@@ -621,7 +640,7 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
                                                     disabled={loading}
                                                     className="flex-[2] py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
                                                 >
-                                                    {loading ? <Loader2 className="w-5 h-5" /> : 'Confirmar y Enviar'}
+                                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar y Enviar'}
                                                 </button>
                                             </div>
                                         </div>
@@ -804,17 +823,4 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
             )}
         </div>
     );
-}
-
-// Re-using Loader and X from parent or common components
-function ArrowRight(props: any) {
-    return <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-}
-
-function Loader2(props: any) {
-    return <svg {...props} className={"animate-spin " + props.className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-}
-
-function X(props: any) {
-    return <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
 }

@@ -115,7 +115,7 @@ exports.getPayments = async (req, res) => {
   try {
     // Fetch pending transactions first, then others
     const transactions = await Transaction.find({
-      type: { $in: ['deposit', 'subscription'] } // Only show purchases
+      type: { $in: ['deposit', 'subscription', 'withdrawal'] }
     })
       .populate('user', 'name email')
       .sort({ status: -1, createdAt: -1 }); // Pending first (p > c > f) if alphabetical, actually manually sorting might be better but this is ok for now.

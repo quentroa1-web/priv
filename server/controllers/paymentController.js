@@ -1,7 +1,8 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Message = require('../models/Message');
-const Ad = require('../models/Ad'); // Ensure Ad model is imported
+const Ad = require('../models/Ad');
+const mongoose = require('mongoose');
 const stripe = null; // Stripe removed
 const packages = {
     'coins_100': { coins: 100, amount: 12000, type: 'deposit', currency: 'COP' },
@@ -161,7 +162,6 @@ exports.transferCoins = async (req, res, next) => {
         }, { upsert: false }); // Don't upsert user, assume exists
 
         // If messageId provided and it's a valid ObjectId, unlock it
-        const mongoose = require('mongoose');
         if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
             await Message.findByIdAndUpdate(messageId, {
                 $addToSet: { unlockedBy: sender._id }
@@ -172,7 +172,8 @@ exports.transferCoins = async (req, res, next) => {
         await Transaction.create({
             user: sender._id,
             type: 'spend',
-            amount: coinsToTransfer, // Value in coins
+            amount: coinsToTransfer,
+            coinsAmount: coinsToTransfer,
             currency: 'COINS',
             status: 'completed',
             recipient: recipient._id,
@@ -183,6 +184,7 @@ exports.transferCoins = async (req, res, next) => {
             user: recipient._id,
             type: 'receive',
             amount: finalAmount,
+            coinsAmount: finalAmount,
             currency: 'COINS',
             status: 'completed',
             recipient: sender._id,
@@ -347,6 +349,7 @@ exports.buySubscriptionWithCoins = async (req, res) => {
             user: updatedUser._id,
             type: 'spend',
             amount: cost,
+            coinsAmount: cost,
             currency: 'COINS',
             status: 'completed',
             description: `Suscripción ${planId} (30 días)`
@@ -408,6 +411,7 @@ exports.boostAdWithCoins = async (req, res) => {
             user: user._id,
             type: 'spend',
             amount: BOOST_COST,
+            coinsAmount: BOOST_COST,
             currency: 'COINS',
             status: 'completed',
             description: `Boost de 12 horas para anuncio ${ad.title}`
