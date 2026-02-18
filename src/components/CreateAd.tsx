@@ -51,6 +51,10 @@ interface AdFormData {
 
   // Step 5: Premium
   planType: 'free' | 'premium' | 'vip';
+
+  // UI Helpers
+  phoneCountry: string;
+  whatsappCountry: string;
 }
 
 const AVAILABLE_SERVICES = [
@@ -86,6 +90,67 @@ const SERVICE_LOCATIONS = [
   'Salidas locales',
   'Viajes/Tour'
 ];
+
+const COUNTRIES = [
+  { code: '+57', flag: '🇨🇴', name: 'Colombia' },
+  { code: '+34', flag: '🇪🇸', name: 'España' },
+  { code: '+1', flag: '🇺🇸', name: 'USA' },
+  { code: '+52', flag: '🇲🇽', name: 'México' },
+  { code: '+58', flag: '🇻🇪', name: 'Venezuela' },
+  { code: '+54', flag: '🇦🇷', name: 'Argentina' },
+  { code: '+56', flag: '🇨🇱', name: 'Chile' },
+  { code: '+51', flag: '🇵🇪', name: 'Perú' },
+  { code: '+507', flag: '🇵🇦', name: 'Panamá' },
+  { code: '+1', flag: '🇨🇦', name: 'Canadá' },
+  { code: '+44', flag: '🇬🇧', name: 'Reino Unido' },
+];
+
+const CountrySelector = ({ value, onChange }: { value: string, onChange: (val: string) => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedCountry = COUNTRIES.find(c => c.code === value) || COUNTRIES[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="h-full px-3 flex items-center gap-2 bg-gray-50 border-r-2 border-gray-200 hover:bg-gray-100 transition-colors rounded-l-xl"
+      >
+        <span className="text-lg">{selectedCountry.flag}</span>
+        <span className="text-xs font-bold text-gray-700">{selectedCountry.code}</span>
+        <ArrowRight className={cn("w-3 h-3 text-gray-400 rotate-90 transition-transform", isOpen && "-rotate-90")} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-[60]" onClick={() => setIsOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 w-48 bg-white border-2 border-gray-100 rounded-xl shadow-2xl z-[70] max-h-60 overflow-y-auto overflow-x-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            {COUNTRIES.map(c => (
+              <button
+                key={`${c.code}-${c.name}`}
+                type="button"
+                onClick={() => {
+                  onChange(c.code);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "w-full px-4 py-2.5 flex items-center gap-3 hover:bg-rose-50 transition-colors text-left",
+                  value === c.code && "bg-rose-50 text-rose-600 font-bold"
+                )}
+              >
+                <span className="text-xl">{c.flag}</span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-black tracking-tighter leading-tight">{c.name}</span>
+                  <span className="text-xs font-bold leading-tight">{c.code}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 
 
@@ -127,7 +192,9 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
     horarioFin: editingAd?.availability?.hours?.end || '22:00',
     atencionA: editingAd?.attendsTo || [],
     photos: editingAd?.photos?.map((p: any) => p.url) || [],
-    planType: editingAd?.plan === 'gratis' ? 'free' : (editingAd?.plan || 'free')
+    planType: editingAd?.plan === 'gratis' ? 'free' : (editingAd?.plan || 'free'),
+    phoneCountry: '+57',
+    whatsappCountry: '+57'
   });
 
   // Effect to initialize location if editing
@@ -304,8 +371,8 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
         description: formData.bio,
         category: formData.gender,
         age: formData.age,
-        phone: formData.phone,
-        whatsapp: formData.whatsapp,
+        phone: formData.phoneCountry + ' ' + formData.phone.replace(/\D/g, ''),
+        whatsapp: formData.whatsappCountry + ' ' + formData.whatsapp.replace(/\D/g, ''),
         location: {
           department: deptName,
           city: cityName,
@@ -425,30 +492,44 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
       </div>
 
       {/* Contact */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-            <Phone className="w-3.5 h-3.5" /> Teléfono
+            <Phone className="w-3.5 h-3.5 text-rose-500" /> Teléfono Público
           </label>
-          <input
-            type="tel"
-            value={formData.phone}
-            onChange={e => updateField('phone', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all text-sm"
-            placeholder="+57 300 000 0000"
-          />
+          <div className="flex h-[52px] border-2 border-gray-200 rounded-xl focus-within:border-rose-500 transition-all bg-white relative">
+            <CountrySelector
+              value={formData.phoneCountry}
+              onChange={val => updateField('phoneCountry', val)}
+            />
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={e => updateField('phone', e.target.value)}
+              className="flex-1 px-4 py-3 outline-none text-sm bg-transparent font-medium"
+              placeholder="300 123 4567"
+            />
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1 font-medium italic">Este número será visible para todos.</p>
         </div>
         <div>
           <label className="block text-sm font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+            <MessageCircle className="w-3.5 h-3.5 text-green-500" /> WhatsApp
           </label>
-          <input
-            type="tel"
-            value={formData.whatsapp}
-            onChange={e => updateField('whatsapp', e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition-all text-sm"
-            placeholder="+57 300 000 0000"
-          />
+          <div className="flex h-[52px] border-2 border-gray-200 rounded-xl focus-within:border-green-500 transition-all bg-white relative">
+            <CountrySelector
+              value={formData.whatsappCountry}
+              onChange={val => updateField('whatsappCountry', val)}
+            />
+            <input
+              type="tel"
+              value={formData.whatsapp}
+              onChange={e => updateField('whatsapp', e.target.value)}
+              className="flex-1 px-4 py-3 outline-none text-sm bg-transparent font-medium"
+              placeholder="300 123 4567"
+            />
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1 font-medium italic">Se abrirá chat directo al pulsar.</p>
         </div>
       </div>
 
@@ -923,166 +1004,129 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
     </div>
   );
 
-  const renderStep5 = () => (
-    <div className="space-y-5">
-      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
-        <Crown className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
-        <div>
-          <h3 className="font-bold text-gray-900 text-sm">Elige tu Plan</h3>
-          <p className="text-xs text-gray-600 mt-0.5">Escoge el plan que mejor se ajuste a tus necesidades. Puedes mejorarlo después.</p>
+  const renderStep5 = () => {
+    const isActivePlan = (plan: string) => currentUser?.premiumPlan === plan;
+    const currentPlan = currentUser?.premiumPlan || 'free';
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        {/* Plan Header */}
+        <div className="bg-gradient-to-r from-amber-50 to-amber-100/50 border border-amber-200 rounded-3xl p-6 flex items-start gap-4">
+          <div className="p-3 bg-white rounded-2xl shadow-sm shrink-0">
+            <Crown className="w-8 h-8 text-amber-500" />
+          </div>
+          <div>
+            <h3 className="font-black text-gray-900 text-lg">Beneficios de tu Plan</h3>
+            <p className="text-xs text-gray-600 mt-1 font-medium leading-relaxed">
+              Hemos detectado tu suscripción activa. Tu anuncio se beneficiará automáticamente de todas las ventajas de tu nivel actual.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Free */}
-        <button
-          type="button"
-          onClick={() => updateField('planType', 'free')}
-          className={`relative p-5 rounded-2xl border-2 text-left transition-all ${formData.planType === 'free'
-            ? 'border-gray-800 bg-white shadow-lg'
-            : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-            }`}
-        >
-          {formData.planType === 'free' && (
-            <div className="absolute -top-2 -right-2">
-              <CheckCircle className="w-6 h-6 text-gray-800 bg-white rounded-full" fill="currentColor" />
-            </div>
-          )}
-          <div className="text-2xl mb-2">🆓</div>
-          <h3 className="font-black text-gray-900 text-lg">Gratis</h3>
-          <p className="text-2xl font-black text-gray-900 mt-1">$0</p>
-          <p className="text-xs text-gray-500 mt-0.5">Para siempre</p>
-          <ul className="mt-4 space-y-2 text-xs text-gray-600">
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Perfil básico</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> 3 fotos</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Mensajes limitados</li>
-            <li className="flex items-center gap-1.5 text-gray-400"><X className="w-3.5 h-3.5" /> Sin posición destacada</li>
-            <li className="flex items-center gap-1.5 text-gray-400"><X className="w-3.5 h-3.5" /> Sin badge verificado</li>
-          </ul>
-        </button>
+        {/* Benefits Comparison */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            {
+              id: 'free',
+              name: 'Gratis',
+              emoji: '🆓',
+              color: 'gray',
+              price: '$0',
+              features: ['3 fotos', 'Visibilidad Básica']
+            },
+            {
+              id: 'gold',
+              name: 'Gold',
+              emoji: '⭐',
+              color: 'rose',
+              price: '$49.900',
+              features: ['6 fotos HD', 'Visibilidad Media']
+            },
+            {
+              id: 'diamond',
+              name: 'Diamond',
+              emoji: '💎',
+              color: 'cyan',
+              price: '$99.900',
+              features: ['Fotos Ilimitadas', 'Visibilidad Máxima']
+            }
+          ].map(p => {
+            const active = isActivePlan(p.id) || (p.id === 'free' && (!currentUser?.premiumPlan || currentUser?.premiumPlan === 'none'));
 
-        {/* Premium */}
-        <button
-          type="button"
-          onClick={() => updateField('planType', 'premium')}
-          className={`relative p-5 rounded-2xl border-2 text-left transition-all ${formData.planType === 'premium'
-            ? 'border-rose-500 bg-rose-50 shadow-lg shadow-rose-100'
-            : 'border-gray-200 bg-white hover:border-rose-200'
-            }`}
-        >
-          {formData.planType === 'premium' && (
-            <div className="absolute -top-2 -right-2">
-              <CheckCircle className="w-6 h-6 text-rose-500 bg-white rounded-full" fill="currentColor" />
-            </div>
-          )}
-          <div className="absolute -top-3 left-4 bg-rose-500 text-white px-3 py-0.5 rounded-full text-[10px] font-bold uppercase">
-            Popular
-          </div>
-          <div className="text-2xl mb-2">⭐</div>
-          <h3 className="font-black text-rose-700 text-lg">Premium</h3>
-          <p className="text-2xl font-black text-rose-600 mt-1">$49.900</p>
-          <p className="text-xs text-gray-500 mt-0.5">/ mes</p>
-          <ul className="mt-4 space-y-2 text-xs text-gray-700">
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Perfil destacado</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> 6 fotos HD</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Mensajes ilimitados</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Badge Premium</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-green-500" /> Estadísticas de perfil</li>
-          </ul>
-        </button>
-
-        {/* VIP */}
-        <button
-          type="button"
-          onClick={() => updateField('planType', 'vip')}
-          className={`relative p-5 rounded-2xl border-2 text-left transition-all ${formData.planType === 'vip'
-            ? 'border-amber-500 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg shadow-amber-100'
-            : 'border-gray-200 bg-white hover:border-amber-200'
-            }`}
-        >
-          {formData.planType === 'vip' && (
-            <div className="absolute -top-2 -right-2">
-              <CheckCircle className="w-6 h-6 text-amber-500 bg-white rounded-full" fill="currentColor" />
-            </div>
-          )}
-          <div className="absolute -top-3 left-4 bg-gradient-to-r from-amber-400 to-yellow-500 text-white px-3 py-0.5 rounded-full text-[10px] font-bold uppercase">
-            👑 VIP Gold
-          </div>
-          <div className="text-2xl mb-2">👑</div>
-          <h3 className="font-black text-amber-700 text-lg">VIP Gold</h3>
-          <p className="text-2xl font-black text-amber-600 mt-1">$99.900</p>
-          <p className="text-xs text-gray-500 mt-0.5">/ mes</p>
-          <ul className="mt-4 space-y-2 text-xs text-gray-700">
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-amber-500" /> Todo de Premium +</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-amber-500" /> Posición #1 en búsqueda</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-amber-500" /> Sección VIP exclusiva</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-amber-500" /> Corona dorada + glow</li>
-            <li className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-amber-500" /> Soporte prioritario 24/7</li>
-          </ul>
-        </button>
-      </div>
-
-      {/* Summary */}
-      <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200">
-        <h4 className="font-black text-gray-900 text-sm mb-4 flex items-center gap-2">
-          <Eye className="w-4 h-4" /> Resumen de tu anuncio
-        </h4>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Nombre</p>
-            <p className="font-semibold text-gray-900">{formData.displayName || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Categoría</p>
-            <p className="font-semibold text-gray-900 capitalize">{formData.gender || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Ubicación</p>
-            <p className="font-semibold text-gray-900">{getLocationString()}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Tarifa</p>
-            <p className="font-semibold text-gray-900">{formData.price ? `$${formData.price} ` : '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Servicios</p>
-            <p className="font-semibold text-gray-900">{formData.services.length + formData.customServices.length} seleccionados</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Lugares</p>
-            <p className="font-semibold text-gray-900">{formData.atencionEn.length} seleccionados</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500 font-bold uppercase">Fotos</p>
-            <p className="font-semibold text-gray-900">{formData.photos.length} subidas</p>
-          </div>
-          <div className="col-span-2 p-4 bg-white rounded-xl border-2 border-rose-100 mt-2">
-            <p className="text-[10px] text-rose-500 font-bold uppercase tracking-widest mb-1">Tu Plan Actual</p>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-black text-xl text-gray-900 capitalize flex items-center gap-2">
-                  {currentUser?.premiumPlan === 'diamond' && <Crown className="w-5 h-5 text-cyan-500" />}
-                  {currentUser?.premiumPlan === 'gold' && <Crown className="w-5 h-5 text-amber-500" />}
-                  {currentUser?.premiumPlan === 'diamond' ? 'Plan Diamante' :
-                    currentUser?.premiumPlan === 'gold' ? 'Plan Gold' : 'Plan Gratuito'}
-                </p>
-                <p className="text-xs text-gray-500 font-medium">Límite de anuncios: {adLimit} activos</p>
+            return (
+              <div
+                key={p.id}
+                className={cn(
+                  "p-5 rounded-3xl border-2 transition-all duration-500 relative",
+                  active
+                    ? `border-${p.color}-500 bg-${p.color}-50/30 shadow-xl shadow-${p.color}-100/50 scale-105 z-10`
+                    : "border-gray-100 bg-white opacity-40 grayscale"
+                )}
+              >
+                {active && (
+                  <div className={cn(
+                    "absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg",
+                    `bg-${p.color}-500`
+                  )}>
+                    ACTIVO
+                  </div>
+                )}
+                <div className="text-3xl mb-3">{p.emoji}</div>
+                <h3 className={cn("font-black text-sm uppercase tracking-widest", active ? `text-${p.color}-700` : "text-gray-400")}>{p.name}</h3>
+                <ul className="mt-4 space-y-2">
+                  {p.features.map((f, i) => (
+                    <li key={i} className="flex items-center gap-2 text-[10px] font-bold text-gray-500">
+                      <div className={cn("w-1 h-1 rounded-full", active ? `bg-${p.color}-500` : "bg-gray-300")} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Uso de anuncios</p>
-                <p className={cn(
-                  "text-lg font-black",
-                  currentAdCount >= adLimit ? "text-rose-600" : "text-green-600"
-                )}>
-                  {currentAdCount} / {adLimit}
-                </p>
-              </div>
+            );
+          })}
+        </div>
+
+        {/* Summary Card */}
+        <div className="bg-white rounded-3xl p-6 border-2 border-gray-100 shadow-sm space-y-6">
+          <div className="flex items-center justify-between border-b border-gray-50 pb-4">
+            <h4 className="font-black text-gray-900 text-sm flex items-center gap-2">
+              <Eye className="w-4 h-4 text-rose-500" /> Resumen de Publicación
+            </h4>
+            <div className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase">
+              Todo correcto
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <div>
+              <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-1">Nombre</p>
+              <p className="font-bold text-gray-900 text-sm truncate">{formData.displayName || '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-1">Contacto</p>
+              <p className="font-bold text-gray-900 text-sm">{formData.phoneCountry} {formData.phone || '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-1">Localidad</p>
+              <p className="font-bold text-gray-900 text-sm truncate uppercase tracking-tighter">{getLocationString()}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest mb-1">Media</p>
+              <p className="font-bold text-gray-900 text-sm">{formData.photos.length} / {maxPhotos} Fotos</p>
             </div>
           </div>
         </div>
+
+        {/* Action Tips */}
+        <div className="flex gap-3 p-4 bg-rose-50 rounded-2xl border border-rose-100/50">
+          <Sparkles className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+          <p className="text-[10px] text-rose-700 font-medium leading-relaxed italic">
+            <b>Pro tip:</b> Los anuncios con WhatsApp activo y fotos de alta calidad tienen un 80% más de probabilidad de éxito. ¡Asegúrate de que tus datos sean correctos antes de publicar!
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ─── PREVIEW MODAL ──────────────────────────────────────────────────
 

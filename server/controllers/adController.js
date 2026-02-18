@@ -151,8 +151,14 @@ exports.createAd = async (req, res) => {
       }));
     }
 
+    const {
+      title, description, category, age, phone, whatsapp, location,
+      services, customServices, pricing, attendsTo, availability, photos
+    } = req.body;
+
     const adData = {
-      ...req.body,
+      title, description, category, age, phone, whatsapp, location,
+      services, customServices, pricing, attendsTo, availability,
       photos: processedPhotos,
       user: userId,
       isVerified: false,
