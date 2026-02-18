@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { apiService, getAds, getMyAds } from './services/api';
@@ -59,7 +58,7 @@ function AppContent() {
 
   // Load favorites from local storage
   useEffect(() => {
-    const stored = localStorage.getItem(`favorites_${user?.id || 'guest'} `);
+    const stored = localStorage.getItem(`favorites_${user?.id || 'guest'}`);
     if (stored) {
       try {
         setFavorites(JSON.parse(stored));
@@ -78,7 +77,7 @@ function AppContent() {
       newFavorites = [...favorites, targetUser];
     }
     setFavorites(newFavorites);
-    localStorage.setItem(`favorites_${user?.id || 'guest'} `, JSON.stringify(newFavorites));
+    localStorage.setItem(`favorites_${user?.id || 'guest'}`, JSON.stringify(newFavorites));
   };
 
   // Poll for unread messages
@@ -110,8 +109,6 @@ function AppContent() {
   };
 
   useEffect(() => {
-    // Only fetch ads if they haven't been fetched yet, or if we're on the home view
-    // to ensure fresh data. To save resources, we don't re-fetch on every view change.
     const shouldFetch = ads.length === 0 || currentView === 'home';
 
     const fetchAds = async () => {
@@ -127,7 +124,6 @@ function AppContent() {
         }
 
         const mappedAds = res.data.data.map((ad: any) => {
-          // Normalize gender for filtering
           let gender = ad.category?.toLowerCase();
           if (gender === 'mujer') gender = 'woman';
           if (gender === 'hombre') gender = 'man';
@@ -139,17 +135,17 @@ function AppContent() {
             uid: ad.user?._id || ad.user,
             name: ad.title || 'Sin título',
             displayName: ad.title || 'Sin título',
-            gender: gender, // Use normalized gender
-            age: ad.age || 0, // Ensure age is mapped
-            location: ad.location ? `${ad.location.city || ''}, ${ad.location.department || ''} ` : 'Ubicación no especificada',
-            locationData: ad.location || {}, // Store raw location data for precise filtering
+            gender: gender,
+            age: ad.age || 0,
+            location: ad.location ? `${ad.location.city || ''}, ${ad.location.department || ''}` : 'Ubicación no especificada',
+            locationData: ad.location || {},
             avatar: ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || '',
             photoURL: ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || '',
             images: ad.photos?.map((p: any) => p.url) || [],
             gallery: ad.photos?.map((p: any) => p.url) || [],
             bio: ad.description || '',
             description: ad.description || '',
-            price: ad.pricing?.basePrice ? `$${ad.pricing.basePrice.toLocaleString()} ` : '$0',
+            price: ad.pricing?.basePrice ? `$${ad.pricing.basePrice.toLocaleString()}` : '$0',
             services: [...(ad.services || []), ...(ad.customServices || [])],
             availability: (ad.availability?.days || []).map((d: string) => {
               const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
@@ -226,14 +222,10 @@ function AppContent() {
     setMessageTargetUser(userId);
     setMessageTargetAdId(adId || null);
     setCurrentView('messages');
-    // Modal will close because we're changing view
-    // selectedUser will be cleared after Messaging uses it
   };
 
-  // Filter users based on search (Memoized for performance)
   const filteredUsers = useMemo(() => {
     return ads.filter((u: User) => {
-      // Keyword Search
       if (searchFilters.keyword) {
         const kw = searchFilters.keyword.toLowerCase();
         const match =
@@ -247,20 +239,16 @@ function AppContent() {
         if (!match) return false;
       }
 
-      // Basic Search/Gender Filter
       if (searchFilters.sex && searchFilters.sex !== 'all') {
         const sex = searchFilters.sex.toLowerCase();
         if (u.gender?.toLowerCase() !== sex) return false;
       }
 
-      // Location Filter
       if (searchFilters.departamento && searchFilters.departamento !== 'all') {
         const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
-        // Compare by name if found, otherwise simple includes
         if (depto && u.locationData?.department) {
           if (u.locationData.department !== depto.name) return false;
         } else {
-          // Fallback to string includes if exact data missing
           const deptoId = searchFilters.departamento.toLowerCase();
           const match = u.location?.toLowerCase().includes(deptoId) ||
             u.location?.toLowerCase().includes(deptoId.replace(/_/g, ' '));
@@ -269,7 +257,6 @@ function AppContent() {
       }
 
       if (searchFilters.ciudad && searchFilters.ciudad !== 'all') {
-        // Find the city name
         let cityName = '';
         if (searchFilters.departamento) {
           const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
@@ -288,7 +275,6 @@ function AppContent() {
       }
 
       if (searchFilters.barrio && searchFilters.barrio !== 'all') {
-        // Find the barrio name
         let barrioName = '';
         if (searchFilters.departamento && searchFilters.ciudad) {
           const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
@@ -302,15 +288,12 @@ function AppContent() {
         }
       }
 
-      // Age Filter
       const age = u.age || 25;
       if (age < searchFilters.minAge || age > searchFilters.maxAge) return false;
 
-      // Price Filter
       const price = parseInt(u.price?.replace(/[^0-9]/g, '') || '0');
       if (price < searchFilters.minPrice || (searchFilters.maxPrice > 0 && price > searchFilters.maxPrice)) return false;
 
-      // Verification & Status Filters
       if (searchFilters.onlyVerified && !u.verified) return false;
       if (searchFilters.onlyOnline && !u.isOnline) return false;
       if (searchFilters.onlyPremium && !u.premium && !u.isVip) return false;
@@ -319,7 +302,6 @@ function AppContent() {
     });
   }, [ads, searchFilters]);
 
-  // If on auth pages, show them full screen
   if (currentView === 'login') return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
       <Login
@@ -385,9 +367,9 @@ function AppContent() {
           />
         )}
 
-        <main className={`flex - 1 ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow - hidden`}>
+        <main className={`flex-1 ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow-hidden`}>
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
-            <div className={`${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full'} `}>
+            <div className={`${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full'}`}>
               {currentView === 'createAd' && isAnnouncer ? (
                 <CreateAd
                   onBack={() => {
@@ -471,7 +453,6 @@ function AppContent() {
         </main>
       </div>
 
-      {/* Modal only shows on home or favorites view */}
       {(currentView === 'home' || currentView === 'favorites') && (
         <UserDetailModal
           user={selectedUser}
@@ -499,5 +480,3 @@ export function App() {
     </ErrorBoundary>
   );
 }
-
-

@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { User } from '../types';
 import { UserCard } from './UserCard';
 import { Heart } from 'lucide-react';
