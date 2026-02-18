@@ -5,7 +5,6 @@ export interface User {
   name?: string;
   displayName?: string;
   age?: number;
-  location?: string;
   locationData?: {
     department?: string;
     city?: string;
@@ -19,6 +18,26 @@ export interface User {
   verificationLevel?: 'none' | 'basic' | 'verified' | 'premium';
   photoVerified?: boolean;
   idVerified?: boolean;
+  whatsapp?: string;
+  customServices?: string[];
+  location?: string | {
+    department?: string;
+    city?: string;
+    neighborhood?: string;
+    specificZone?: string;
+    placeType?: string[];
+  };
+  pricing?: {
+    basePrice?: number;
+    priceType?: 'hora' | 'sesion' | 'negociable';
+  };
+  availability?: string[] | {
+    days?: string[];
+    hours?: {
+      start?: string;
+      end?: string;
+    };
+  };
   premium?: boolean;
   vip?: boolean;
   isVip?: boolean;
@@ -35,7 +54,6 @@ export interface User {
   gallery?: string[];
   services?: string[];
   price?: string;
-  availability?: string[];
   availableDays?: string[];
   responseTime?: string;
   memberSince?: string;
@@ -50,6 +68,9 @@ export interface User {
   gender?: string;
   attendsTo?: string[];
   placeType?: string[];
+  horarioInicio?: string;
+  horarioFin?: string;
+  whatsappEnabled?: boolean;
   status?: 'active' | 'banned';
   verificationRequests?: {
     idProof?: string;

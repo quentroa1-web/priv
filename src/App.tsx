@@ -233,7 +233,7 @@ function AppContent() {
           u.displayName?.toLowerCase().includes(kw) ||
           u.bio?.toLowerCase().includes(kw) ||
           u.description?.toLowerCase().includes(kw) ||
-          u.location?.toLowerCase().includes(kw) ||
+          (typeof u.location === 'object' ? (u.location as any).city : u.location)?.toLowerCase().includes(kw) ||
           u.locationData?.neighborhood?.toLowerCase().includes(kw) ||
           u.locationData?.specificZone?.toLowerCase().includes(kw);
         if (!match) return false;
@@ -250,8 +250,9 @@ function AppContent() {
           if (u.locationData.department !== depto.name) return false;
         } else {
           const deptoId = searchFilters.departamento.toLowerCase();
-          const match = u.location?.toLowerCase().includes(deptoId) ||
-            u.location?.toLowerCase().includes(deptoId.replace(/_/g, ' '));
+          const locStr = (typeof u.location === 'object' ? (u.location as any).city : u.location)?.toLowerCase() || '';
+          const match = locStr.includes(deptoId) ||
+            locStr.includes(deptoId.replace(/_/g, ' '));
           if (!match) return false;
         }
       }
@@ -268,8 +269,9 @@ function AppContent() {
           if (u.locationData.city !== cityName) return false;
         } else {
           const ciudadId = searchFilters.ciudad.toLowerCase();
-          const match = u.location?.toLowerCase().includes(ciudadId) ||
-            u.location?.toLowerCase().includes(ciudadId.replace(/_/g, ' '));
+          const locStr = (typeof u.location === 'object' ? (u.location as any).city : u.location)?.toLowerCase() || '';
+          const match = locStr.includes(ciudadId) ||
+            locStr.includes(ciudadId.replace(/_/g, ' '));
           if (!match) return false;
         }
       }

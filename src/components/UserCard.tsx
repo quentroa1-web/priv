@@ -158,7 +158,7 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
             "text-rose-400 shrink-0",
             variant === 'compact' ? "w-2 h-2" : "w-2.5 h-2.5"
           )} />
-          <span className="truncate">{user.location}</span>
+          <span className="truncate">{typeof user.location === 'object' ? (user.location as any).city : user.location}</span>
         </div>
 
         {variant !== 'compact' && (
