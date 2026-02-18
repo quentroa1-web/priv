@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { User } from '../types';
 import { UserCard } from './UserCard';
 import { FilterPanel } from './FilterPanel';
-import { Shield, TrendingUp, Search, Loader2, SlidersHorizontal, X } from 'lucide-react';
+import { Shield, Search, Loader2, SlidersHorizontal, X, Crown } from 'lucide-react';
 import { TFunction } from 'i18next';
 
 interface HomeViewProps {
@@ -131,61 +131,27 @@ export function HomeView({
 
                 {/* User Content */}
                 <div className="flex-1 min-w-0">
-                    {/* Top Ads Section */}
-                    {topUsers.length > 0 && (
-                        <div className="mb-12 relative group">
-                            <div className="flex items-center justify-between mb-6">
+                    {/* Elite Carousel (Top + VIP) */}
+                    {(topUsers.length > 0 || vipUsers.length > 0) && (
+                        <div className="mb-10 relative group">
+                            <div className="flex items-center justify-between mb-5">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl shadow-lg ring-2 ring-cyan-100 animate-pulse">
-                                        <TrendingUp className="w-5 h-5 text-white" />
+                                    <div className="p-2 bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl shadow-lg ring-2 ring-rose-100 animate-pulse">
+                                        <Crown className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <h2 className="animate-gold-text text-2xl tracking-tighter uppercase">
-                                            {t('profiles.topAds') || 'ELITE DIAMOND ADS'}
+                                        <h2 className="animate-gold-text text-2xl tracking-tighter uppercase leading-none">
+                                            MIEMBROS ÉLITE
                                         </h2>
-                                        <p className="text-[10px] text-cyan-600 font-black uppercase tracking-[0.2em] -mt-1 ml-0.5">Prioridad Máxima</p>
+                                        <p className="text-[9px] text-rose-600 font-black uppercase tracking-[0.2em] mt-1 ml-0.5">Top & VIP Gold Access</p>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
-                                {topUsers.map((u: User) => (
+                            <div className="flex overflow-x-auto gap-3 md:gap-4 pb-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
+                                {[...topUsers, ...vipUsers].map((u: User) => (
                                     <div
-                                        key={`top-${u.id}`}
-                                        className="snap-center shrink-0 w-[180px] sm:w-[220px] md:w-[260px] lg:w-[280px] transition-transform hover:-translate-y-1"
-                                    >
-                                        <UserCard
-                                            user={u}
-                                            variant="compact"
-                                            onClick={() => onUserClick(u)}
-                                            isFavorite={favorites.some(f => f.id === u.id)}
-                                            onToggleFavorite={(e) => {
-                                                e.stopPropagation();
-                                                onToggleFavorite(u);
-                                            }}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* VIP Section */}
-                    {vipUsers.length > 0 && (
-                        <div className="mb-10 relative group">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="p-1.5 bg-amber-100 rounded-lg shadow-sm ring-1 ring-amber-200">
-                                    <TrendingUp className="w-5 h-5 text-amber-600" />
-                                </div>
-                                <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight flex items-center gap-2">
-                                    {t('profiles.vipGold') || 'VIP GOLD'}
-                                    <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-[10px] px-2 py-0.5 rounded-full shadow-sm">Destacado</span>
-                                </h2>
-                            </div>
-                            <div className="flex overflow-x-auto gap-4 md:gap-5 pb-6 pt-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden -mx-4 px-4 md:mx-0 md:px-0 scroll-smooth">
-                                {vipUsers.map((u: User) => (
-                                    <div
-                                        key={`vip-${u.id}`}
-                                        className="snap-center shrink-0 w-[180px] sm:w-[220px] md:w-[260px] lg:w-[280px] transition-transform hover:-translate-y-1"
+                                        key={`elite-${u.id}`}
+                                        className="snap-center shrink-0 w-[140px] sm:w-[180px] md:w-[200px] lg:w-[210px] transition-transform hover:-translate-y-1"
                                     >
                                         <UserCard
                                             user={u}

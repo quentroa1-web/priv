@@ -110,36 +110,54 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
         </div>
 
         {/* Bottom Right: Price */}
-        <div className="absolute bottom-2 right-2 bg-white/95 text-rose-600 px-3 py-1 rounded-xl text-[10px] sm:text-xs font-black shadow-2xl transform rotate-1">
+        <div className={cn(
+          "absolute bottom-2 right-2 bg-white/95 text-rose-600 rounded-xl font-black shadow-2xl transform rotate-1",
+          variant === 'compact' ? "px-2 py-0.5 text-[9px]" : "px-3 py-1 text-[10px] sm:text-xs"
+        )}>
           {user.price}
         </div>
       </div>
 
       {/* Info Container */}
-      <div className="p-2.5 sm:p-4 space-y-1.5 sm:space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 truncate">
+      <div className={cn(
+        "space-y-1 sm:space-y-1.5",
+        variant === 'compact' ? "p-2" : "p-2.5 sm:p-4"
+      )}>
+        <div className="flex items-center justify-between gap-1.5">
+          <div className="flex items-center gap-1.5 truncate">
             {user.online && (
-              <div className="relative flex h-2.5 w-2.5 shrink-0">
+              <div className="relative flex h-2 w-2 shrink-0">
                 <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></div>
-                <div className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 border-2 border-white shadow-sm"></div>
+                <div className="relative inline-flex rounded-full h-2 w-2 bg-green-500 border-2 border-white shadow-sm"></div>
               </div>
             )}
-            <h3 className="text-xs sm:text-base font-black text-gray-900 truncate tracking-tight">
+            <h3 className={cn(
+              "font-black text-gray-900 truncate tracking-tight",
+              variant === 'compact' ? "text-[11px]" : "text-xs sm:text-base"
+            )}>
               {user.name}
             </h3>
-            {user.verified && (
-              <BadgeCheck className="w-4 h-4" fill="#3b82f6" color="white" />
-            )}
           </div>
           <div className="flex items-center gap-0.5 text-amber-500 shrink-0">
-            <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" />
-            <span className="text-[10px] sm:text-[11px] font-bold text-gray-900">{user.rating}</span>
+            <Star className={cn(
+              "fill-current",
+              variant === 'compact' ? "w-2 h-2" : "w-2.5 h-2.5 sm:w-3 sm:h-3"
+            )} />
+            <span className={cn(
+              "font-bold text-gray-900",
+              variant === 'compact' ? "text-[9px]" : "text-[10px] sm:text-[11px]"
+            )}>{user.rating}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-[9px] sm:text-[11px] text-gray-500 font-bold uppercase tracking-tight">
-          <MapPin className="w-2.5 h-2.5 text-rose-400 shrink-0" />
+        <div className={cn(
+          "flex items-center gap-1 text-gray-500 font-bold uppercase tracking-tight",
+          variant === 'compact' ? "text-[8px]" : "text-[9px] sm:text-[11px]"
+        )}>
+          <MapPin className={cn(
+            "text-rose-400 shrink-0",
+            variant === 'compact' ? "w-2 h-2" : "w-2.5 h-2.5"
+          )} />
           <span className="truncate">{user.location}</span>
         </div>
 

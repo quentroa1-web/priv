@@ -21,7 +21,7 @@ const saveBase64Image = async (base64Data, subfolder = 'ads') => {
             const result = await cloudinary.uploader.upload(base64Data, {
                 folder: `safeconnect_${subfolder}`,
                 transformation: [
-                    { width: 1200, height: 1200, crop: "limit", quality: "auto", fetch_format: "auto" }
+                    { width: 900, height: 1200, crop: "fill", gravity: "auto", quality: "auto", fetch_format: "auto" }
                 ]
             });
             return result.secure_url;
