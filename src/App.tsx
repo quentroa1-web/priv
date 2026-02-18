@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { apiService, getAds, getMyAds } from './services/api';
 import { Header } from './components/Header';
@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FavoritesView } from './components/FavoritesView';
 import { HomeView } from './components/HomeView';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy load heavy components
 const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
@@ -109,10 +110,22 @@ function AppContent() {
   };
 
   useEffect(() => {
+    // Only fetch ads if they haven't been fetched yet, or if we're on the home view
+    // to ensure fresh data. To save resources, we don't re-fetch on every view change.
+    const shouldFetch = ads.length === 0 || currentView === 'home';
+
     const fetchAds = async () => {
+      if (!shouldFetch) return;
       try {
-        setLoading(true);
+        if (ads.length === 0) setLoading(true);
         const res = await getAds();
+
+        if (!res.data || !Array.isArray(res.data.data)) {
+          console.warn('API returned non-array data for ads');
+          setAds([]);
+          return;
+        }
+
         const mappedAds = res.data.data.map((ad: any) => {
           // Normalize gender for filtering
           let gender = ad.category?.toLowerCase();
@@ -124,19 +137,19 @@ function AppContent() {
             ...ad,
             id: ad._id,
             uid: ad.user?._id || ad.user,
-            name: ad.title,
-            displayName: ad.title,
+            name: ad.title || 'Sin título',
+            displayName: ad.title || 'Sin título',
             gender: gender, // Use normalized gender
-            age: ad.age, // Ensure age is mapped
-            location: `${ad.location.city}, ${ad.location.department}`,
-            locationData: ad.location, // Store raw location data for precise filtering
-            avatar: ad.photos.find((p: any) => p.isMain)?.url || ad.photos[0]?.url || '',
-            photoURL: ad.photos.find((p: any) => p.isMain)?.url || ad.photos[0]?.url || '',
-            images: ad.photos.map((p: any) => p.url),
-            gallery: ad.photos.map((p: any) => p.url),
-            bio: ad.description,
-            description: ad.description,
-            price: `$${ad.pricing.basePrice.toLocaleString()}`,
+            age: ad.age || 0, // Ensure age is mapped
+            location: ad.location ? `${ad.location.city || ''}, ${ad.location.department || ''}` : 'Ubicación no especificada',
+            locationData: ad.location || {}, // Store raw location data for precise filtering
+            avatar: ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || '',
+            photoURL: ad.photos?.find((p: any) => p.isMain)?.url || ad.photos?.[0]?.url || '',
+            images: ad.photos?.map((p: any) => p.url) || [],
+            gallery: ad.photos?.map((p: any) => p.url) || [],
+            bio: ad.description || '',
+            description: ad.description || '',
+            price: ad.pricing?.basePrice ? `$${ad.pricing.basePrice.toLocaleString()}` : '$0',
             services: [...(ad.services || []), ...(ad.customServices || [])],
             availability: (ad.availability?.days || []).map((d: string) => {
               const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
@@ -144,27 +157,27 @@ function AppContent() {
             }),
             rating: ad.user?.rating || 5.0,
             reviewCount: ad.user?.reviewCount || 0,
-            memberSince: new Date(ad.createdAt).toLocaleDateString(),
+            memberSince: ad.createdAt ? new Date(ad.createdAt).toLocaleDateString() : 'Desconocido',
             responseTime: ad.user?.responseTime || '15 min',
             premium: ad.plan === 'premium' || ad.plan === 'vip' || ad.plan === 'gold' || ad.plan === 'diamond',
-            premiumPlan: ad.plan,
+            premiumPlan: ad.plan || 'none',
             isVip: ad.user?.isVip || ad.plan === 'vip' || ad.plan === 'diamond',
             isBoosted: ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date(),
             boostedUntil: ad.boostedUntil,
-            priority: ad.priority,
+            priority: ad.priority || 0,
             lastBumpDate: ad.lastBumpDate,
             attendsTo: (ad.attendsTo || []).map((a: string) => {
               const map: any = { 'hombres': 'Hombres', 'mujeres': 'Mujeres', 'parejas': 'Parejas', 'todos': 'Todos' };
               return map[a] || a;
             }),
-            placeType: Array.isArray(ad.location?.placeType) ? ad.location.placeType : [ad.location?.placeType].filter(Boolean),
+            placeType: Array.isArray(ad.location?.placeType) ? ad.location.placeType : (ad.location?.placeType ? [ad.location.placeType] : []),
             priceList: ad.user?.priceList || [],
             role: ad.user?.role || 'announcer',
-            verified: ad.isVerified || ad.user?.verified,
-            idVerified: ad.isVerified || ad.user?.verified,
-            photoVerified: ad.isVerified || ad.user?.verified,
-            online: ad.user?.online || ad.user?.isOnline,
-            isOnline: ad.user?.online || ad.user?.isOnline,
+            verified: ad.isVerified || ad.user?.verified || false,
+            idVerified: ad.isVerified || ad.user?.verified || false,
+            photoVerified: ad.isVerified || ad.user?.verified || false,
+            online: ad.user?.online || ad.user?.isOnline || false,
+            isOnline: ad.user?.online || ad.user?.isOnline || false,
           };
         });
 
@@ -180,16 +193,21 @@ function AppContent() {
       if (isLoggedIn && isAnnouncer) {
         try {
           const res = await getMyAds();
-          setMyAds(res.data.data || []);
+          if (res.data && Array.isArray(res.data.data)) {
+            setMyAds(res.data.data);
+          } else {
+            setMyAds([]);
+          }
         } catch (error) {
           console.error('Error fetching my ads:', error);
+          setMyAds([]);
         }
       }
     };
 
     fetchAds();
     fetchMyAds();
-  }, [currentView, isLoggedIn, isAnnouncer]);
+  }, [currentView === 'home', isLoggedIn, isAnnouncer]);
 
   const handleProtectedNavigation = (view: View) => {
     if (!isLoggedIn && view !== 'home' && view !== 'login' && view !== 'register') {
@@ -212,92 +230,94 @@ function AppContent() {
     // selectedUser will be cleared after Messaging uses it
   };
 
-  // Filter users based on search
-  const filteredUsers = ads.filter((u: User) => {
-    // Keyword Search
-    if (searchFilters.keyword) {
-      const kw = searchFilters.keyword.toLowerCase();
-      const match =
-        u.name?.toLowerCase().includes(kw) ||
-        u.displayName?.toLowerCase().includes(kw) ||
-        u.bio?.toLowerCase().includes(kw) ||
-        u.description?.toLowerCase().includes(kw) ||
-        u.location?.toLowerCase().includes(kw) ||
-        u.locationData?.neighborhood?.toLowerCase().includes(kw) ||
-        u.locationData?.specificZone?.toLowerCase().includes(kw);
-      if (!match) return false;
-    }
-
-    // Basic Search/Gender Filter
-    if (searchFilters.sex && searchFilters.sex !== 'all') {
-      const sex = searchFilters.sex.toLowerCase();
-      if (u.gender?.toLowerCase() !== sex) return false;
-    }
-
-    // Location Filter
-    if (searchFilters.departamento && searchFilters.departamento !== 'all') {
-      const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
-      // Compare by name if found, otherwise simple includes
-      if (depto && u.locationData?.department) {
-        if (u.locationData.department !== depto.name) return false;
-      } else {
-        // Fallback to string includes if exact data missing
-        const deptoId = searchFilters.departamento.toLowerCase();
-        const match = u.location?.toLowerCase().includes(deptoId) ||
-          u.location?.toLowerCase().includes(deptoId.replace(/_/g, ' '));
+  // Filter users based on search (Memoized for performance)
+  const filteredUsers = useMemo(() => {
+    return ads.filter((u: User) => {
+      // Keyword Search
+      if (searchFilters.keyword) {
+        const kw = searchFilters.keyword.toLowerCase();
+        const match =
+          u.name?.toLowerCase().includes(kw) ||
+          u.displayName?.toLowerCase().includes(kw) ||
+          u.bio?.toLowerCase().includes(kw) ||
+          u.description?.toLowerCase().includes(kw) ||
+          u.location?.toLowerCase().includes(kw) ||
+          u.locationData?.neighborhood?.toLowerCase().includes(kw) ||
+          u.locationData?.specificZone?.toLowerCase().includes(kw);
         if (!match) return false;
       }
-    }
 
-    if (searchFilters.ciudad && searchFilters.ciudad !== 'all') {
-      // Find the city name
-      let cityName = '';
-      if (searchFilters.departamento) {
+      // Basic Search/Gender Filter
+      if (searchFilters.sex && searchFilters.sex !== 'all') {
+        const sex = searchFilters.sex.toLowerCase();
+        if (u.gender?.toLowerCase() !== sex) return false;
+      }
+
+      // Location Filter
+      if (searchFilters.departamento && searchFilters.departamento !== 'all') {
         const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
-        const city = depto?.ciudades.find(c => c.id === searchFilters.ciudad);
-        if (city) cityName = city.name;
+        // Compare by name if found, otherwise simple includes
+        if (depto && u.locationData?.department) {
+          if (u.locationData.department !== depto.name) return false;
+        } else {
+          // Fallback to string includes if exact data missing
+          const deptoId = searchFilters.departamento.toLowerCase();
+          const match = u.location?.toLowerCase().includes(deptoId) ||
+            u.location?.toLowerCase().includes(deptoId.replace(/_/g, ' '));
+          if (!match) return false;
+        }
       }
 
-      if (cityName && u.locationData?.city) {
-        if (u.locationData.city !== cityName) return false;
-      } else {
-        const ciudadId = searchFilters.ciudad.toLowerCase();
-        const match = u.location?.toLowerCase().includes(ciudadId) ||
-          u.location?.toLowerCase().includes(ciudadId.replace(/_/g, ' '));
-        if (!match) return false;
+      if (searchFilters.ciudad && searchFilters.ciudad !== 'all') {
+        // Find the city name
+        let cityName = '';
+        if (searchFilters.departamento) {
+          const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
+          const city = depto?.ciudades.find(c => c.id === searchFilters.ciudad);
+          if (city) cityName = city.name;
+        }
+
+        if (cityName && u.locationData?.city) {
+          if (u.locationData.city !== cityName) return false;
+        } else {
+          const ciudadId = searchFilters.ciudad.toLowerCase();
+          const match = u.location?.toLowerCase().includes(ciudadId) ||
+            u.location?.toLowerCase().includes(ciudadId.replace(/_/g, ' '));
+          if (!match) return false;
+        }
       }
-    }
 
-    if (searchFilters.barrio && searchFilters.barrio !== 'all') {
-      // Find the barrio name
-      let barrioName = '';
-      if (searchFilters.departamento && searchFilters.ciudad) {
-        const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
-        const city = depto?.ciudades.find(c => c.id === searchFilters.ciudad);
-        const barrio = city?.barrios.find(b => b.id === searchFilters.barrio);
-        if (barrio) barrioName = barrio.name;
+      if (searchFilters.barrio && searchFilters.barrio !== 'all') {
+        // Find the barrio name
+        let barrioName = '';
+        if (searchFilters.departamento && searchFilters.ciudad) {
+          const depto = COLOMBIA_LOCATIONS.find(d => d.id === searchFilters.departamento);
+          const city = depto?.ciudades.find(c => c.id === searchFilters.ciudad);
+          const barrio = city?.barrios.find(b => b.id === searchFilters.barrio);
+          if (barrio) barrioName = barrio.name;
+        }
+
+        if (barrioName && u.locationData?.neighborhood) {
+          if (u.locationData.neighborhood !== barrioName) return false;
+        }
       }
 
-      if (barrioName && u.locationData?.neighborhood) {
-        if (u.locationData.neighborhood !== barrioName) return false;
-      }
-    }
+      // Age Filter
+      const age = u.age || 25;
+      if (age < searchFilters.minAge || age > searchFilters.maxAge) return false;
 
-    // Age Filter
-    const age = u.age || 25;
-    if (age < searchFilters.minAge || age > searchFilters.maxAge) return false;
+      // Price Filter
+      const price = parseInt(u.price?.replace(/[^0-9]/g, '') || '0');
+      if (price < searchFilters.minPrice || (searchFilters.maxPrice > 0 && price > searchFilters.maxPrice)) return false;
 
-    // Price Filter
-    const price = parseInt(u.price?.replace(/[^0-9]/g, '') || '0');
-    if (price < searchFilters.minPrice || (searchFilters.maxPrice > 0 && price > searchFilters.maxPrice)) return false;
+      // Verification & Status Filters
+      if (searchFilters.onlyVerified && !u.verified) return false;
+      if (searchFilters.onlyOnline && !u.isOnline) return false;
+      if (searchFilters.onlyPremium && !u.premium && !u.isVip) return false;
 
-    // Verification & Status Filters
-    if (searchFilters.onlyVerified && !u.verified) return false;
-    if (searchFilters.onlyOnline && !u.isOnline) return false;
-    if (searchFilters.onlyPremium && !u.premium && !u.isVip) return false;
-
-    return true;
-  });
+      return true;
+    });
+  }, [ads, searchFilters]);
 
   // If on auth pages, show them full screen
   if (currentView === 'login') return (
@@ -478,9 +498,11 @@ function AppContent() {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

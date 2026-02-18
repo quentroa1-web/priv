@@ -1,5 +1,4 @@
-
-import React from 'react';
+import { useMemo } from 'react';
 import { User } from '../types';
 import { UserCard } from './UserCard';
 import { FilterPanel } from './FilterPanel';
@@ -27,8 +26,8 @@ export function HomeView({
     onToggleFavorite,
     onUserClick
 }: HomeViewProps) {
-    const regularUsers = filteredUsers.filter((u) => !u.isVip);
-    const vipUsers = filteredUsers.filter((u) => u.isVip);
+    const regularUsers = useMemo(() => filteredUsers.filter((u) => !u.isVip), [filteredUsers]);
+    const vipUsers = useMemo(() => filteredUsers.filter((u) => u.isVip), [filteredUsers]);
 
     return (
         <>

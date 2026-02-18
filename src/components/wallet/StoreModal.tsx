@@ -344,7 +344,7 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-xs font-black text-blue-400 uppercase tracking-widest">Monto a Transferir</p>
-                                            <p className="text-3xl font-black text-blue-600">${selectedPackage.price.toLocaleString()} COP</p>
+                                            <p className="text-3xl font-black text-blue-600">${selectedPackage?.price?.toLocaleString()} COP</p>
                                         </div>
                                         <div className="mt-4 pt-4 border-t border-blue-100 text-xs text-blue-800 font-medium">
                                             * Incluye tu nombre de usuario en la referencia del pago.

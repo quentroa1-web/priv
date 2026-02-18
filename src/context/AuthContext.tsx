@@ -102,9 +102,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   useEffect(() => {
+    let interval: any;
+
     if (!!user) {
-      const interval = setInterval(refreshUser, 60000); // Poll every minute for wallet updates
-      return () => clearInterval(interval);
+      // Refresh immediately when user returns to the tab
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          refreshUser();
+          // Resume polling
+          if (!interval) {
+            interval = setInterval(refreshUser, 15000);
+          }
+        } else {
+          // Pause polling to save resources
+          if (interval) {
+            clearInterval(interval);
+            interval = null;
+          }
+        }
+      };
+
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      // Start initial interval if visible
+      if (document.visibilityState === 'visible') {
+        interval = setInterval(refreshUser, 15000);
+      }
+
+      return () => {
+        if (interval) clearInterval(interval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     }
   }, [!!user]);
 

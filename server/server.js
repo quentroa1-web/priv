@@ -95,8 +95,10 @@ const corsOptions = {
     // Permitir si falta CLIENT_URL o coincide, o si estamos en el mismo dominio (Vercel)
     if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
       callback(null, true);
+    } else if (process.env.NODE_ENV !== 'production') {
+      callback(null, true);
     } else {
-      callback(null, true); // En producción podrías querer restringir esto más, pero para debug lo dejamos abierto
+      callback(new Error('Not allowed by CORS'));
     }
   },
   optionsSuccessStatus: 200,

@@ -1,3 +1,4 @@
+import React from 'react';
 import { MapPin, Star, Clock, Heart, MessageCircle, Crown, BadgeCheck, Rocket } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
@@ -10,7 +11,7 @@ interface UserCardProps {
   onToggleFavorite?: (e: React.MouseEvent) => void;
 }
 
-export function UserCard({ user, onClick, variant = 'standard', isFavorite, onToggleFavorite }: UserCardProps) {
+export const UserCard = React.memo(function UserCard({ user, onClick, variant = 'standard', isFavorite, onToggleFavorite }: UserCardProps) {
   const isVip = user.isVip;
 
   return (
@@ -42,6 +43,7 @@ export function UserCard({ user, onClick, variant = 'standard', isFavorite, onTo
         <img
           src={(user.gallery && user.gallery.length > 0) ? user.gallery[0] : user.avatar}
           alt={user.name}
+          loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 
@@ -150,4 +152,4 @@ export function UserCard({ user, onClick, variant = 'standard', isFavorite, onTo
       </div>
     </div>
   );
-}
+});
