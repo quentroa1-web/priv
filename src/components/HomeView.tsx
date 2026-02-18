@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { User } from '../types';
 import { UserCard } from './UserCard';
 import { FilterPanel } from './FilterPanel';
-import { Shield, TrendingUp, Search, Loader2 } from 'lucide-react';
+import { Shield, TrendingUp, Search, Loader2, SlidersHorizontal, X } from 'lucide-react';
 import { TFunction } from 'i18next';
 
 interface HomeViewProps {
@@ -28,6 +28,7 @@ export function HomeView({
 }: HomeViewProps) {
     const regularUsers = useMemo(() => filteredUsers.filter((u) => !u.isVip), [filteredUsers]);
     const vipUsers = useMemo(() => filteredUsers.filter((u) => u.isVip), [filteredUsers]);
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     return (
         <>
@@ -41,9 +42,9 @@ export function HomeView({
                         <Shield className="w-6 h-6 text-white drop-shadow-md" />
                     </div>
                     <div>
-                        <h1 className="text-lg md:text-xl font-black tracking-tight drop-shadow-sm flex items-center gap-2">
+                        <h1 className="text-lg md:text-xl font-black tracking-tight drop-shadow-sm flex items-center gap-2 flex-wrap">
                             {t('hero.safety')}
-                            <div className="flex items-center gap-1 bg-green-400/20 text-green-100 border border-green-400/30 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold">
+                            <div className="flex items-center gap-1 bg-green-400/20 text-green-100 border border-green-400/30 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold shrink-0">
                                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
                                 100% Real
                             </div>
@@ -81,11 +82,11 @@ export function HomeView({
                     >
                         <div className={`absolute -right-4 -top-4 w-16 h-16 ${stat.bg} rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out`}></div>
                         <div className="relative z-10 flex items-center gap-3">
-                            <div className={`w-10 h-10 ${stat.bg} ${stat.border} border rounded-xl flex items-center justify-center text-lg shadow-inner`}>
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bg} ${stat.border} border rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-lg shadow-inner`}>
                                 {stat.icon}
                             </div>
                             <div>
-                                <div className={`text-xl font-black ${stat.color} tracking-tight leading-none mb-1`}>
+                                <div className={`text-lg sm:text-xl font-black ${stat.color} tracking-tight leading-none mb-1`}>
                                     {stat.value}
                                 </div>
                                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -95,6 +96,26 @@ export function HomeView({
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* Mobile Filter Toggle */}
+            <div className="lg:hidden mb-4">
+                <button
+                    onClick={() => setShowMobileFilters(!showMobileFilters)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl border border-gray-200 shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all w-full justify-center"
+                >
+                    <SlidersHorizontal className="w-4 h-4 text-rose-500" />
+                    {showMobileFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+                    {showMobileFilters && <X className="w-4 h-4 ml-auto" />}
+                </button>
+                {showMobileFilters && (
+                    <div className="mt-3 animate-in slide-in-from-top duration-200">
+                        <FilterPanel
+                            filters={searchFilters}
+                            onFilterChange={onFilterChange}
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Main Content */}
@@ -160,7 +181,7 @@ export function HomeView({
                             <p className="text-gray-500 font-medium">Cargando anuncios...</p>
                         </div>
                     ) : filteredUsers.length > 0 ? (
-                        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
                             {filteredUsers.map((user) => (
                                 <UserCard
                                     key={user.id}
@@ -175,7 +196,7 @@ export function HomeView({
                             ))}
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+                        <div className="flex flex-col items-center justify-center py-10 md:py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100">
                             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                                 <Search className="w-10 h-10 text-gray-300" />
                             </div>
