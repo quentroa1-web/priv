@@ -40,7 +40,8 @@ connectDB();
 const app = express();
 
 // Trust proxy for Vercel/proxies (Required for express-rate-limit)
-app.set('trust proxy', true);
+// Set to 1 to only trust the first proxy (prevents X-Forwarded-For spoofing)
+app.set('trust proxy', 1);
 
 
 // Debug middleware for production
@@ -53,8 +54,8 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
 
 
 // Body parser
-app.use(express.json({ limit: '50mb' })); // Increased limit for Base64 images
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -92,8 +93,8 @@ const corsOptions = {
       'http://localhost:5000'
     ].filter(Boolean);
 
-    // Permitir si falta CLIENT_URL o coincide, o si estamos en el mismo dominio (Vercel)
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
+    // Allow if CLIENT_URL matches, or if it's our specific Vercel deploy
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.match(/^https:\/\/safeconnect[\w-]*\.vercel\.app$/)) {
       callback(null, true);
     } else if (process.env.NODE_ENV !== 'production') {
       callback(null, true);
@@ -168,7 +169,11 @@ app.use('/api/reviews', reviews);
 // Error handler
 app.use((err, req, res, next) => {
   logger('error', `Error 500: ${err.message}\nStack: ${err.stack}`);
-  res.status(500).json({ success: false, error: err.message || 'Error interno del servidor' });
+  // In production, don't leak internal error details
+  const message = process.env.NODE_ENV === 'production'
+    ? 'Error interno del servidor'
+    : (err.message || 'Error interno del servidor');
+  res.status(500).json({ success: false, error: message });
 });
 
 const PORT = process.env.PORT || 5000;

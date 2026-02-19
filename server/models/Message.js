@@ -13,7 +13,8 @@ const MessageSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true
+    required: true,
+    maxlength: [5000, 'Message content cannot exceed 5000 characters']
   },
   isRead: {
     type: Boolean,
@@ -40,5 +41,9 @@ const MessageSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Indexes for performance on frequent queries
+MessageSchema.index({ sender: 1, recipient: 1, createdAt: -1 });
+MessageSchema.index({ recipient: 1, isRead: 1 });
 
 module.exports = mongoose.model('Message', MessageSchema);

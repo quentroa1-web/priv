@@ -250,7 +250,22 @@ exports.getReviews = async (req, res) => {
 // @route   DELETE /api/admin/reviews/:id
 exports.deleteReview = async (req, res) => {
   try {
-    await Review.findByIdAndDelete(req.params.id);
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ success: false, error: 'Review not found' });
+
+    const revieweeId = review.reviewee;
+    await review.deleteOne();
+
+    // Recalculate reviewee's average rating
+    if (revieweeId) {
+      const reviews = await Review.find({ reviewee: revieweeId });
+      const count = reviews.length;
+      const avgRating = count > 0
+        ? parseFloat((reviews.reduce((acc, rev) => acc + rev.rating, 0) / count).toFixed(1))
+        : 0;
+      await User.findByIdAndUpdate(revieweeId, { rating: avgRating, reviewCount: count });
+    }
+
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

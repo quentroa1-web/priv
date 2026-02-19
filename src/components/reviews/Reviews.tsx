@@ -25,10 +25,12 @@ interface Review {
     createdAt: string;
   };
   categories: {
-    service: number;
-    punctuality: number;
-    communication: number;
-    hygiene: number;
+    service?: number;
+    punctuality?: number;
+    communication?: number;
+    hygiene?: number;
+    respect?: number;
+    tidiness?: number;
   };
 }
 
@@ -77,16 +79,20 @@ export function Reviews({ user, onBack }: ReviewsProps) {
       totalReviews: 0,
       fiveStar: 0,
       verifiedReviews: 0,
-      categories: { service: 0, punctuality: 0, communication: 0, hygiene: 0 }
+      categories: {} as Record<string, number>
     };
 
     const avg = reviews.reduce((acc, r) => acc + r.rating, 0) / total;
-    const catAvg = {
-      service: reviews.reduce((acc, r) => acc + (r.categories?.service || 0), 0) / total,
-      punctuality: reviews.reduce((acc, r) => acc + (r.categories?.punctuality || 0), 0) / total,
-      communication: reviews.reduce((acc, r) => acc + (r.categories?.communication || 0), 0) / total,
-      hygiene: reviews.reduce((acc, r) => acc + (r.categories?.hygiene || 0), 0) / total
-    };
+
+    // Build category averages dynamically from whatever keys exist
+    const catKeys = ['service', 'punctuality', 'communication', 'hygiene', 'respect', 'tidiness'] as const;
+    const catAvg: Record<string, number> = {};
+    catKeys.forEach(key => {
+      const vals = reviews.filter(r => r.categories?.[key] != null).map(r => r.categories[key]!);
+      if (vals.length > 0) {
+        catAvg[key] = vals.reduce((a, b) => a + b, 0) / vals.length;
+      }
+    });
 
     return {
       averageRating: Number(avg.toFixed(1)),
@@ -221,15 +227,22 @@ export function Reviews({ user, onBack }: ReviewsProps) {
               {/* Category Ratings */}
               <div className="space-y-3">
                 <h3 className="font-bold text-gray-900 text-sm mb-3">Por categoría</h3>
-                {Object.entries(stats.categories).map(([category, rating]) => (
-                  <div key={category} className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-700 capitalize">{category === 'hygiene' ? 'Higiene' : category === 'service' ? 'Servicio' : category === 'punctuality' ? 'Puntualidad' : 'Comunicación'}</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-gray-900">{Number(rating).toFixed(1)}</span>
-                      <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                {Object.entries(stats.categories).map(([category, rating]) => {
+                  const labelMap: Record<string, string> = {
+                    service: 'Servicio', punctuality: 'Puntualidad',
+                    communication: 'Comunicación', hygiene: 'Higiene',
+                    respect: 'Respeto', tidiness: 'Limpieza/Trato'
+                  };
+                  return (
+                    <div key={category} className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-gray-700">{labelMap[category] || category}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-bold text-gray-900">{Number(rating).toFixed(1)}</span>
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Badges */}
@@ -387,15 +400,22 @@ export function Reviews({ user, onBack }: ReviewsProps) {
 
                       {/* Category Ratings */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                        {Object.entries(review.categories).map(([category, rating]) => (
-                          <div key={category} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                            <span className="text-xs font-medium text-gray-700 capitalize">{category === 'hygiene' ? 'Higiene' : category === 'service' ? 'Servicio' : category === 'punctuality' ? 'Puntualidad' : 'Comunicación'}</span>
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm font-bold text-gray-900">{rating}</span>
-                              <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        {Object.entries(review.categories).filter(([, v]) => v != null).map(([category, rating]) => {
+                          const labelMap: Record<string, string> = {
+                            service: 'Servicio', punctuality: 'Puntualidad',
+                            communication: 'Comunicación', hygiene: 'Higiene',
+                            respect: 'Respeto', tidiness: 'Limpieza/Trato'
+                          };
+                          return (
+                            <div key={category} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                              <span className="text-xs font-medium text-gray-700">{labelMap[category] || category}</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-sm font-bold text-gray-900">{rating}</span>
+                                <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Response */}

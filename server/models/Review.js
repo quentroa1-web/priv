@@ -30,14 +30,20 @@ const ReviewSchema = new mongoose.Schema({
     max: 5
   },
   categories: {
+    // Client → Announcer criteria
     service: Number,
     punctuality: Number,
     communication: Number,
-    hygiene: Number
+    hygiene: Number,
+    // Announcer → Client criteria
+    respect: Number,
+    tidiness: Number
   },
   comment: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 1000,
+    trim: true
   },
   isVerified: {
     type: Boolean,

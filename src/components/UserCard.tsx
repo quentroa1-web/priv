@@ -146,7 +146,10 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
             <span className={cn(
               "font-bold text-gray-900",
               variant === 'compact' ? "text-[9px]" : "text-[10px] sm:text-[11px]"
-            )}>{user.rating}</span>
+            )}>{user.rating || '—'}</span>
+            {variant !== 'compact' && (user.reviewCount || 0) > 0 && (
+              <span className="text-[8px] sm:text-[9px] text-gray-400 font-bold ml-0.5">({user.reviewCount})</span>
+            )}
           </div>
         </div>
 

@@ -305,10 +305,13 @@ export function UserDetailModal({
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">TESTIMONIOS VERIFICADOS</p>
                 </div>
                 <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-lg flex items-center gap-3">
-                  <span className="text-2xl font-black text-gray-900 tabular-nums">{user.rating || 5.0}</span>
+                  <span className="text-2xl font-black text-gray-900 tabular-nums">{user.rating || 0}</span>
                   <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-500 fill-current" />)}
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} className={`w-4 h-4 ${(user.rating || 0) >= s ? 'text-amber-500 fill-current' : (user.rating || 0) >= s - 0.5 ? 'text-amber-300 fill-current' : 'text-gray-200'}`} />
+                    ))}
                   </div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">({user.reviewCount || 0})</span>
                 </div>
               </div>
 

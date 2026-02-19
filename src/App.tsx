@@ -164,7 +164,7 @@ function AppContent() {
               const map: any = { 'lunes': 'Lun', 'martes': 'Mar', 'miercoles': 'Mié', 'jueves': 'Jue', 'viernes': 'Vie', 'sabado': 'Sáb', 'domingo': 'Dom' };
               return map[d] || d;
             }),
-            rating: ad.user?.rating || 5.0,
+            rating: ad.user?.rating || 0,
             reviewCount: ad.user?.reviewCount || 0,
             memberSince: ad.createdAt ? new Date(ad.createdAt).toLocaleDateString() : 'Desconocido',
             responseTime: ad.user?.responseTime || '15 min',

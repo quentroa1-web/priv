@@ -119,8 +119,30 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
   const [reviewForm, setReviewForm] = useState({
     rating: 5,
     comment: '',
-    categories: { service: 5, punctuality: 5, communication: 5, hygiene: 5 }
+    categories: {} as Record<string, number>
   });
+
+  // Determine review criteria based on user role
+  const getReviewCategories = () => {
+    const isAnnouncer = user.role === 'announcer' || (user as any).accountType === 'announcer';
+    if (isAnnouncer) {
+      // Announcer reviewing a client
+      return [
+        { key: 'respect', label: 'Respeto' },
+        { key: 'punctuality', label: 'Puntualidad' },
+        { key: 'communication', label: 'Comunicación' },
+        { key: 'tidiness', label: 'Limpieza / Trato' }
+      ];
+    } else {
+      // Client reviewing an announcer
+      return [
+        { key: 'service', label: 'Servicio prestado' },
+        { key: 'punctuality', label: 'Puntualidad' },
+        { key: 'communication', label: 'Comunicación' },
+        { key: 'hygiene', label: 'Higiene' }
+      ];
+    }
+  };
 
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<any[]>(user.paymentMethods || []);
@@ -341,7 +363,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
       if (res.data.success) {
         alert('¡Calificación enviada con éxito!');
         setShowReviewModal(null);
-        setReviewForm({ rating: 5, comment: '', categories: { service: 5, punctuality: 5, communication: 5, hygiene: 5 } });
+        setReviewForm({ rating: 5, comment: '', categories: {} });
         fetchAppointments();
       }
     } catch (err: any) {
@@ -1563,18 +1585,18 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     </div>
 
                     <div className="space-y-3">
-                      {Object.keys(reviewForm.categories).map((cat) => (
-                        <div key={cat} className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-gray-600 capitalize">{cat === 'service' ? 'Servicio prestado' : cat === 'punctuality' ? 'Puntualidad' : cat === 'communication' ? 'Comunicación' : 'Higiene'}</span>
+                      {getReviewCategories().map(({ key, label }) => (
+                        <div key={key} className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-600">{label}</span>
                           <div className="flex gap-1">
                             {[1, 2, 3, 4, 5].map((s) => (
                               <button
                                 key={s}
                                 onClick={() => setReviewForm({
                                   ...reviewForm,
-                                  categories: { ...reviewForm.categories, [cat]: s }
+                                  categories: { ...reviewForm.categories, [key]: s }
                                 })}
-                                className={`w-5 h-5 rounded-full ${(reviewForm.categories as any)[cat] >= s ? 'bg-amber-500' : 'bg-gray-100'} transition-all`}
+                                className={`w-5 h-5 rounded-full ${(reviewForm.categories[key] || 0) >= s ? 'bg-amber-500' : 'bg-gray-100'} transition-all`}
                               />
                             ))}
                           </div>

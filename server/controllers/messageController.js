@@ -3,6 +3,12 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const logger = require('../utils/logger');
 
+// Simple HTML sanitizer to prevent XSS
+const sanitize = (str) => {
+  if (!str) return '';
+  return str.replace(/<[^>]*>/g, '').trim();
+};
+
 // @desc    Get all conversations for logged in user
 // @route   GET /api/messages
 // @access  Private
@@ -165,10 +171,26 @@ exports.sendMessage = async (req, res) => {
     const { recipientId, content, isLocked, price } = req.body;
     const currentUserId = req.user._id.toString();
 
+    // SECURITY: Block self-messaging
+    if (recipientId === currentUserId) {
+      return res.status(400).json({ success: false, error: 'No puedes enviarte mensajes a ti mismo' });
+    }
+
+    // Validate recipientId
+    if (!mongoose.Types.ObjectId.isValid(recipientId)) {
+      return res.status(400).json({ success: false, error: 'ID de destinatario inválido' });
+    }
+
+    // Sanitize content to prevent XSS
+    const safeContent = sanitize(content);
+    if (!safeContent || safeContent.length < 1) {
+      return res.status(400).json({ success: false, error: 'El mensaje no puede estar vacío' });
+    }
+
     const messageData = {
       sender: currentUserId,
       recipient: recipientId,
-      content,
+      content: safeContent,
       isLocked: !!isLocked,
       price: price || 0,
       unlockedBy: [] // Initialize empty
@@ -177,7 +199,7 @@ exports.sendMessage = async (req, res) => {
     const message = await Message.create(messageData);
 
     // Log the chat message
-    logger('chat', `[DE: ${currentUserId}] [PARA: ${recipientId}] - ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`);
+    logger('chat', `[DE: ${currentUserId}] [PARA: ${recipientId}] - ${safeContent.substring(0, 50)}${safeContent.length > 50 ? '...' : ''}`);
 
     res.status(201).json({
       success: true,

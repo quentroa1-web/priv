@@ -3,14 +3,20 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Ad = require('../models/Ad');
 
+// Simple HTML tag stripper to prevent XSS in user-generated content
+const sanitize = (str) => {
+    if (!str) return '';
+    return str.replace(/<[^>]*>/g, '').trim();
+};
+
 // @desc    Calculate and update user rating
 const updateUserRating = async (userId) => {
     const reviews = await Review.find({ reviewee: userId });
 
     const count = reviews.length;
     const avgRating = count > 0
-        ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / count).toFixed(1)
-        : 5.0;
+        ? parseFloat((reviews.reduce((acc, rev) => acc + rev.rating, 0) / count).toFixed(1))
+        : 0;
 
     await User.findByIdAndUpdate(userId, {
         rating: avgRating,
@@ -34,6 +40,11 @@ exports.createReview = async (req, res) => {
             return res.status(400).json({ success: false, error: 'Solo puedes calificar citas completadas' });
         }
 
+        // Prevent self-reviews
+        if (appointment.client.toString() === appointment.announcer.toString()) {
+            return res.status(400).json({ success: false, error: 'No puedes calificarte a ti mismo' });
+        }
+
         let type, reviewee;
         if (appointment.client.toString() === req.user.id) {
             // Client reviewing Announcer
@@ -52,7 +63,13 @@ exports.createReview = async (req, res) => {
             reviewee = appointment.client;
             appointment.clientReviewed = true;
         } else {
-            return res.status(401).json({ success: false, error: 'No autorizado para calificar esta cita' });
+            return res.status(403).json({ success: false, error: 'No autorizado para calificar esta cita' });
+        }
+
+        // Sanitize comment to prevent XSS
+        const safeComment = sanitize(comment);
+        if (safeComment.length < 5) {
+            return res.status(400).json({ success: false, error: 'El comentario debe tener al menos 5 caracteres válidos' });
         }
 
         const review = await Review.create({
@@ -61,7 +78,7 @@ exports.createReview = async (req, res) => {
             reviewer: req.user.id,
             reviewee,
             rating,
-            comment,
+            comment: safeComment,
             categories,
             type,
             isVerified: true // Automatically verified since it's from a completed appointment
@@ -77,6 +94,7 @@ exports.createReview = async (req, res) => {
             data: review
         });
     } catch (error) {
+        console.error('Error creating review:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 };
@@ -95,11 +113,16 @@ exports.respondToReview = async (req, res) => {
 
         // Only the reviewee can respond
         if (review.reviewee.toString() !== req.user.id) {
-            return res.status(401).json({ success: false, error: 'No autorizado para responder a esta reseña' });
+            return res.status(403).json({ success: false, error: 'No autorizado para responder a esta reseña' });
+        }
+
+        // Prevent overwriting existing responses
+        if (review.response && review.response.content) {
+            return res.status(400).json({ success: false, error: 'Ya has respondido a esta reseña' });
         }
 
         review.response = {
-            content,
+            content: sanitize(content),
             createdAt: Date.now()
         };
 

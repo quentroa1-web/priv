@@ -77,7 +77,7 @@ const UserSchema = new mongoose.Schema({
   },
   rating: {
     type: Number,
-    default: 5.0
+    default: 0
   },
   reviewCount: {
     type: Number,

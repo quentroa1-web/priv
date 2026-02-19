@@ -127,10 +127,21 @@ exports.getMyTransactions = async (req, res) => {
 // @route   POST /api/payment/transfer
 // @access  Private
 exports.transferCoins = async (req, res, next) => {
+    let coinsToTransfer = 0; // Declared outside try for catch-block access
     try {
         const { recipientId, amount, reason, messageId } = req.body;
-        const coinsToTransfer = parseInt(amount);
+        coinsToTransfer = parseInt(amount);
         if (isNaN(coinsToTransfer) || coinsToTransfer <= 0) return res.status(400).json({ success: false, error: 'Invalid amount' });
+
+        // SECURITY: Block self-transfer
+        if (recipientId === req.user.id || recipientId === req.user._id?.toString()) {
+            return res.status(400).json({ success: false, error: 'No puedes transferirte monedas a ti mismo' });
+        }
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(recipientId)) {
+            return res.status(400).json({ success: false, error: 'ID de destinatario inválido' });
+        }
 
         // Atomic update for sender: Decrement coins ONLY if balance is sufficient
         const sender = await User.findOneAndUpdate(

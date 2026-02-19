@@ -152,10 +152,15 @@ const reviewSchema = Joi.object({
     rating: Joi.number().min(1).max(5).required(),
     comment: Joi.string().min(5).max(1000).required(),
     categories: Joi.object({
-        service: Joi.number().min(1).max(5).default(5),
-        punctuality: Joi.number().min(1).max(5).default(5),
-        communication: Joi.number().min(1).max(5).default(5),
-        hygiene: Joi.number().min(1).max(5).default(5)
+        // Client → Announcer criteria
+        service: Joi.number().min(1).max(5),
+        hygiene: Joi.number().min(1).max(5),
+        // Announcer → Client criteria
+        respect: Joi.number().min(1).max(5),
+        tidiness: Joi.number().min(1).max(5),
+        // Shared criteria
+        punctuality: Joi.number().min(1).max(5),
+        communication: Joi.number().min(1).max(5)
     }).required()
 });
 

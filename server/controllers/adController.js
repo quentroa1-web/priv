@@ -78,9 +78,8 @@ exports.getAd = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Ad not found' });
     }
 
-    // Increment views
-    ad.views += 1;
-    await ad.save();
+    // Increment views atomically
+    await Ad.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
 
     res.status(200).json({
       success: true,
@@ -193,7 +192,7 @@ exports.updateAd = async (req, res) => {
 
     // Make sure user is ad owner or admin
     if (ad.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(401).json({ success: false, error: 'Not authorized to update this ad' });
+      return res.status(403).json({ success: false, error: 'Not authorized to update this ad' });
     }
 
     // Protected fields that shouldn't be updated by owner directly
@@ -254,7 +253,7 @@ exports.deleteAd = async (req, res) => {
 
     // Make sure user is ad owner or admin
     if (ad.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(401).json({ success: false, error: 'Not authorized to delete this ad' });
+      return res.status(403).json({ success: false, error: 'Not authorized to delete this ad' });
     }
 
     await ad.deleteOne();
@@ -299,7 +298,18 @@ exports.boostAd = async (req, res) => {
     }
 
     if (ad.user.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(401).json({ success: false, error: 'Not authorized' });
+      return res.status(403).json({ success: false, error: 'Not authorized' });
+    }
+
+    // Check once-per-day limit (24 hours) — MUST be checked BEFORE deducting coins
+    const now = new Date();
+    if (ad.lastBoostDate && (now - new Date(ad.lastBoostDate)) < 24 * 60 * 60 * 1000) {
+      const nextAvailable = new Date(new Date(ad.lastBoostDate).getTime() + 24 * 60 * 60 * 1000);
+      const hoursLeft = Math.ceil((nextAvailable.getTime() - now.getTime()) / (60 * 60 * 1000));
+      return res.status(400).json({
+        success: false,
+        error: `Ya has impulsado este anuncio hoy. Podrás impulsarlo de nuevo en aproximadamente ${hoursLeft} horas.`
+      });
     }
 
     // Check if already boosted
@@ -339,17 +349,6 @@ exports.boostAd = async (req, res) => {
       user.wallet.coins -= boostCost;
     }
     await user.save();
-
-    // Check once-per-day limit (24 hours) based on PREVIOUS boost date
-    const now = new Date();
-    if (ad.lastBoostDate && (now - new Date(ad.lastBoostDate)) < 24 * 60 * 60 * 1000) {
-      const nextAvailable = new Date(new Date(ad.lastBoostDate).getTime() + 24 * 60 * 60 * 1000);
-      const hoursLeft = Math.ceil((nextAvailable.getTime() - now.getTime()) / (60 * 60 * 1000));
-      return res.status(400).json({
-        success: false,
-        error: `Ya has impulsado este anuncio hoy. Podrás impulsarlo de nuevo en aproximadamente ${hoursLeft} horas.`
-      });
-    }
 
     // Update Ad
     ad.lastBumpDate = now;
