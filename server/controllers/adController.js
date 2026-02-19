@@ -198,11 +198,20 @@ exports.updateAd = async (req, res) => {
     // Protected fields that shouldn't be updated by owner directly
     const updates = { ...req.body };
     delete updates.user;
-    delete updates.plan;
-    delete updates.priority;
-    delete updates.lastBumpDate;
-    delete updates.isVerified;
-    delete updates.views;
+
+    // Si no es admin, no puede modificar estos campos sensibles
+    if (req.user.role !== 'admin') {
+      delete updates.plan;
+      delete updates.priority;
+      delete updates.lastBumpDate;
+      delete updates.isVerified;
+      delete updates.views;
+      delete updates.isBoosted;
+      delete updates.boostedUntil;
+      delete updates.lastBoostDate;
+      delete updates.createdAt;
+      delete updates.expiresAt;
+    }
 
     // Process Photos if updated
     if (updates.photos && Array.isArray(updates.photos)) {
