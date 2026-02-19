@@ -18,6 +18,7 @@ import { InfoPage } from './components/info/InfoPage';
 import { SupportContent } from './components/info/SupportContent';
 import { LegalContent } from './components/info/LegalContent';
 import { PaymentContent } from './components/info/PaymentContent';
+import { AgeVerificationModal } from './components/AgeVerificationModal';
 import { HelpCircle, FileText, CreditCard } from 'lucide-react';
 
 // Lazy load heavy components
@@ -521,6 +522,7 @@ function AppContent() {
       />
 
       <CookieConsent />
+      <AgeVerificationModal />
     </div>
   );
 }
