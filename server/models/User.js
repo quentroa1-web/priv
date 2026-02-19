@@ -137,11 +137,11 @@ const UserSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Virtual for online based on lastSeen (active in last 5 minutes)
+// Virtual for online based on lastSeen (active in last 3 minutes)
 UserSchema.virtual('online').get(function () {
   if (!this.lastSeen) return false;
-  // 5 minutes threshold
-  return new Date() - new Date(this.lastSeen) < 5 * 60 * 1000;
+  // 3 minutes threshold
+  return new Date() - new Date(this.lastSeen) < 3 * 60 * 1000;
 });
 
 // Alias isOnline to online for compatibility

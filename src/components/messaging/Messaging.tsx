@@ -57,28 +57,8 @@ interface MessagingProps {
 
 // Transform backend conversation data to frontend format
 const transformConversation = (data: any): Conversation => {
-  // Check multiple fields for online status to be robust
-  let isOnline = data.partner.isOnline === true || data.partner.online === true;
-
-  // Fallback: check lastSeen or updatedAt (if within 10 minutes)
-  const lastActive = data.partner.lastSeen || data.partner.updatedAt;
-  if (!isOnline && lastActive) {
-    const lastActiveTime = new Date(lastActive).getTime();
-    const now = Date.now();
-    // Consider online if seen/updated in the last 10 minutes
-    if (now - lastActiveTime < 10 * 60 * 1000) {
-      isOnline = true;
-    }
-  }
-
-  // Fallback 2: check lastMessage timestamp (if within 10 minutes)
-  if (!isOnline && data.lastMessage?.createdAt) {
-    const lastMessageTime = new Date(data.lastMessage.createdAt).getTime();
-    const now = Date.now();
-    if (now - lastMessageTime < 10 * 60 * 1000) {
-      isOnline = true;
-    }
-  }
+  // Use backend online flags directly
+  const isOnline = data.partner.isOnline === true || data.partner.online === true;
 
   return {
     id: data.partner._id,
