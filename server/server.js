@@ -94,7 +94,7 @@ const corsOptions = {
     ].filter(Boolean);
 
     // Allow if CLIENT_URL matches, or if it's our specific Vercel deploy
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.match(/^https:\/\/safeconnect[\w-]*\.vercel\.app$/)) {
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.match(/^https:\/\/(safeconnect|priv)[\w-]*\.vercel\.app$/)) {
       callback(null, true);
     } else if (process.env.NODE_ENV !== 'production') {
       callback(null, true);

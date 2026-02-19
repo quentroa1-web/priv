@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 // Simple HTML sanitizer to prevent XSS
 const sanitize = (str) => {
-  if (!str) return '';
+  if (!str || typeof str !== 'string') return '';
   return str.replace(/<[^>]*>/g, '').trim();
 };
 
@@ -215,8 +215,9 @@ exports.sendMessage = async (req, res) => {
 // @access  Private
 exports.getUnreadCount = async (req, res) => {
   try {
+    const userId = req.user._id || req.user.id;
     const count = await Message.countDocuments({
-      recipient: req.user.id,
+      recipient: userId,
       isRead: false
     });
 

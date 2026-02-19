@@ -225,10 +225,11 @@ exports.updatePassword = async (req, res) => {
 // @access  Private
 exports.heartbeat = async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user.id, { lastSeen: Date.now() });
+    const userId = req.user._id || req.user.id;
+    await User.findByIdAndUpdate(userId, { lastSeen: Date.now() });
     res.status(200).json({ success: true });
   } catch (error) {
-    // Silent fail for heartbeat
-    res.status(500).json({ success: false });
+    logger('error', `Heartbeat error: ${error.message}`);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
