@@ -111,9 +111,11 @@ export function UserDetailModal({
               <div className="flex items-center gap-2.5 mt-0.5">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-100/50">
                   <div className={cn("w-1.5 h-1.5 rounded-full", user.isOnline ? "bg-emerald-500" : "bg-gray-300")} />
-                  <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">{user.isOnline ? 'Online' : 'Offline'}</span>
+                  <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">{user.isOnline ? 'En línea' : 'Desconectado'}</span>
                 </div>
-                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Colombia • {city}</span>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                  {locationData?.department ? `${locationData.department} • ` : ''}{city}
+                </span>
               </div>
             </div>
 
@@ -209,16 +211,18 @@ export function UserDetailModal({
                 )}
               </div>
 
-              {/* BIO */}
-              <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-sm relative overflow-hidden group">
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2.5 mb-6 opacity-80">
+              {/* BIO / SOBRE MÍ */}
+              <div className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-gray-100 shadow-sm relative overflow-hidden">
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-center gap-2.5 opacity-80">
                     <Languages className="w-5 h-5 text-indigo-600" />
-                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">ABOUT ME</h4>
+                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">SOBRE MÍ</h4>
                   </div>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800 leading-tight italic border-l-4 border-indigo-600 pl-6 max-w-3xl">
-                    "{user.description || user.bio || 'Available for a remarkable experience. Contact me for more information.'}"
-                  </p>
+                  <div className="border-l-2 border-indigo-100 pl-6">
+                    <p className="text-sm md:text-base font-medium text-gray-600 leading-relaxed max-w-3xl">
+                      {user.description || user.bio || 'Disponible para una experiencia inolvidable. Contáctame para más información.'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -232,28 +236,28 @@ export function UserDetailModal({
                   <div className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-white shadow-sm">
                     <Clock className="w-5 h-5 text-amber-600" />
                     <div className="text-center">
-                      <span className="block text-[8px] font-black text-gray-600 uppercase tracking-widest mb-0.5">SCHEDULE</span>
+                      <span className="block text-[8px] font-black text-gray-600 uppercase tracking-widest mb-0.5">HORARIO</span>
                       <span className="text-xs font-bold text-gray-900">{startTime} - {endTime}</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-center gap-2 p-4 bg-indigo-50/50 rounded-2xl border border-white shadow-sm">
                     <MapPin className="w-5 h-5 text-indigo-700" />
                     <div className="text-center">
-                      <span className="block text-[8px] font-black text-indigo-700 uppercase tracking-widest mb-0.5">ZONE</span>
+                      <span className="block text-[8px] font-black text-indigo-700 uppercase tracking-widest mb-0.5">UBICACIÓN</span>
                       <span className="text-xs font-bold text-gray-900 uppercase">{city}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-3 px-1">
+                <div className="space-y-4 px-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">AVAILABILITY</span>
+                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">DISPONIBILIDAD</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                   </div>
-                  <div className="flex justify-between gap-1">
+                  <div className="flex flex-wrap justify-start gap-1.5">
                     {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d, i) => (
                       <div key={i} className={cn(
-                        "flex-1 aspect-square rounded-xl flex items-center justify-center text-[10px] font-black transition-all border",
+                        "w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-black transition-all border",
                         i < 5
                           ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100/50"
                           : "bg-gray-50 border-gray-100 text-gray-400"
@@ -270,7 +274,7 @@ export function UserDetailModal({
                 <div className="space-y-4">
                   <div className="flex items-center gap-2.5 opacity-80">
                     <Sparkles className="w-5 h-5 text-rose-600" />
-                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">SERVICES</h4>
+                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">SERVICIOS</h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {[...(user.services || []), ...(user.customServices || [])].slice(0, 10).map((s, idx) => (
@@ -282,11 +286,11 @@ export function UserDetailModal({
                 <div className="pt-6 border-t border-gray-100 space-y-4">
                   <div className="flex items-center gap-2.5 opacity-80">
                     <Info className="w-5 h-5 text-indigo-500" />
-                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">EXTRA INFO</h4>
+                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">INFO EXTRA</h4>
                   </div>
                   <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100/50">
                     <p className="text-xs font-semibold text-indigo-900/80 italic leading-relaxed">
-                      {specificZone || neighborhood || 'The exact meeting point will be shared upon booking confirmation.'}
+                      {[locationData?.department, locationData?.city, neighborhood, specificZone].filter(Boolean).join(' • ') || 'El punto exacto se compartirá al confirmar la reserva.'}
                     </p>
                   </div>
                 </div>
@@ -297,8 +301,8 @@ export function UserDetailModal({
             <div className="col-span-12 py-10 border-t border-gray-100">
               <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 px-4">
                 <div>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">EXPERIENCES</h3>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">VERIFIED USER TESTIMONIES</p>
+                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">EXPERIENCIAS</h3>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">TESTIMONIOS VERIFICADOS</p>
                 </div>
                 <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-lg flex items-center gap-3">
                   <span className="text-2xl font-black text-gray-900 tabular-nums">{user.rating || 5.0}</span>
@@ -317,7 +321,7 @@ export function UserDetailModal({
                           <div className="w-10 h-10 rounded-xl bg-gray-950 flex items-center justify-center text-white text-[11px] font-black">
                             {rev.reviewer?.name?.charAt(0) || 'U'}
                           </div>
-                          <span className="text-[13px] font-black text-gray-900 uppercase tracking-tight">{rev.reviewer?.name || 'Guest User'}</span>
+                          <span className="text-[13px] font-black text-gray-900 uppercase tracking-tight">{rev.reviewer?.name || 'Usuario Invitado'}</span>
                         </div>
                         <div className="px-3 py-1 bg-amber-50 rounded-xl text-amber-700 text-[11px] font-black border border-amber-200 flex items-center gap-1.5">
                           <Star className="w-3.5 h-3.5 fill-current" /> {rev.rating}
@@ -329,7 +333,7 @@ export function UserDetailModal({
                 ) : (
                   <div className="col-span-full py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-4 text-gray-300">
                     <Star className="w-12 h-12" />
-                    <p className="text-[10px] font-black uppercase tracking-widest">Be the first to leave a review</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Sé el primero en dejar una reseña</p>
                   </div>
                 )}
               </div>
