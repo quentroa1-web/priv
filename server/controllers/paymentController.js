@@ -156,10 +156,8 @@ exports.transferCoins = async (req, res, next) => {
 
         // Atomic update for recipient
         await User.findByIdAndUpdate(recipientId, {
-            $inc: { 'wallet.coins': finalAmount },
-            // Ensure wallet exists handled via schema default usually, but good to be safe
-            $setOnInsert: { 'wallet.coins': finalAmount }
-        }, { upsert: false }); // Don't upsert user, assume exists
+            $inc: { 'wallet.coins': finalAmount }
+        });
 
         // If messageId provided and it's a valid ObjectId, unlock it
         if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
