@@ -111,18 +111,18 @@ export function UserDetailModal({
               <div className="flex items-center gap-2.5 mt-0.5">
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-100/50">
                   <div className={cn("w-1.5 h-1.5 rounded-full", user.isOnline ? "bg-emerald-500" : "bg-gray-300")} />
-                  <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider">{user.isOnline ? 'Online' : 'Offline'}</span>
+                  <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">{user.isOnline ? 'Online' : 'Offline'}</span>
                 </div>
-                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Colombia • {city}</span>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Colombia • {city}</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="hidden md:flex flex-col items-end border-r border-gray-100 pr-5">
-                <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">VALORACIÓN</span>
+                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">VALORACIÓN</span>
                 <div className="flex items-center gap-1">
                   <span className="text-base font-black text-gray-900">{user.rating || 5.0}</span>
-                  <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                  <Star className="w-3.5 h-3.5 text-amber-500 fill-current" />
                 </div>
               </div>
               <button
@@ -154,23 +154,24 @@ export function UserDetailModal({
                   </div>
                 )}
 
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                {/* Strengthened Overlays */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
 
                 {/* ANCHORED PRICE TAG */}
                 <div className="absolute top-6 right-6 z-30">
-                  <div className="px-5 py-3 bg-gray-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-xl flex flex-col items-center gap-0.5">
-                    <span className="text-xl font-black text-white tracking-tighter">{price}</span>
-                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest">{priceLabel}</span>
+                  <div className="px-5 py-3 bg-gray-950/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl flex flex-col items-center gap-0.5">
+                    <span className="text-xl font-black text-white tracking-tighter">{price || '$0'}</span>
+                    <span className="text-[8px] font-black text-indigo-300 uppercase tracking-widest leading-none pb-0.5">{priceLabel}</span>
                   </div>
                 </div>
 
                 {/* Floating Info */}
                 <div className="absolute bottom-8 left-8 right-8 z-20 flex items-end justify-between gap-6">
-                  <div className="flex-1 space-y-2">
-                    <h3 className="text-white text-3xl font-black tracking-tight drop-shadow-md">{user.displayName || user.name}</h3>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div className="flex-1 space-y-2.5">
+                    <h3 className="text-white text-3xl md:text-4xl font-black tracking-tight drop-shadow-lg">{user.displayName || user.name}</h3>
+                    <div className="flex flex-wrap gap-2">
                       {(user.placeType || ['Domicilio']).map(p => (
-                        <span key={p} className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-xl text-white text-[9px] font-black uppercase tracking-wider border border-white/10">
+                        <span key={p} className="px-3.5 py-1.5 bg-gray-900/60 backdrop-blur-md rounded-xl text-white text-[9px] font-black uppercase tracking-wider border border-white/10">
                           {p}
                         </span>
                       ))}
@@ -178,7 +179,7 @@ export function UserDetailModal({
                   </div>
 
                   {gallery.length > 1 && (
-                    <div className="hidden md:flex items-center gap-1.5 p-1.5 bg-white/10 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-xl">
+                    <div className="hidden md:flex items-center gap-1.5 p-1.5 bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-xl">
                       {gallery.slice(0, 4).map((img, idx) => (
                         <button
                           key={idx}
@@ -195,13 +196,13 @@ export function UserDetailModal({
                   )}
                 </div>
 
-                {/* Nav Arrows */}
+                {/* Nav Arrows - Only if > 1 img */}
                 {gallery.length > 1 && (
                   <>
-                    <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:bg-white/20">
+                    <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:bg-black/40">
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:bg-white/20">
+                    <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:bg-black/40">
                       <ChevronRight className="w-5 h-5" />
                     </button>
                   </>
@@ -211,11 +212,11 @@ export function UserDetailModal({
               {/* BIO */}
               <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-sm relative overflow-hidden group">
                 <div className="relative z-10">
-                  <div className="flex items-center gap-2.5 mb-6 opacity-60">
-                    <Languages className="w-5 h-5 text-indigo-500" />
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">ABOUT ME</h4>
+                  <div className="flex items-center gap-2.5 mb-6 opacity-80">
+                    <Languages className="w-5 h-5 text-indigo-600" />
+                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">ABOUT ME</h4>
                   </div>
-                  <p className="text-xl md:text-2xl font-bold text-gray-800 leading-tight italic border-l-4 border-indigo-500 pl-6 max-w-3xl">
+                  <p className="text-xl md:text-2xl font-bold text-gray-800 leading-tight italic border-l-4 border-indigo-600 pl-6 max-w-3xl">
                     "{user.description || user.bio || 'Available for a remarkable experience. Contact me for more information.'}"
                   </p>
                 </div>
@@ -229,16 +230,16 @@ export function UserDetailModal({
               <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col gap-8">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl border border-white shadow-sm">
-                    <Clock className="w-5 h-5 text-amber-500" />
+                    <Clock className="w-5 h-5 text-amber-600" />
                     <div className="text-center">
-                      <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">SCHEDULE</span>
+                      <span className="block text-[8px] font-black text-gray-600 uppercase tracking-widest mb-0.5">SCHEDULE</span>
                       <span className="text-xs font-bold text-gray-900">{startTime} - {endTime}</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-center gap-2 p-4 bg-indigo-50/50 rounded-2xl border border-white shadow-sm">
-                    <MapPin className="w-5 h-5 text-indigo-600" />
+                    <MapPin className="w-5 h-5 text-indigo-700" />
                     <div className="text-center">
-                      <span className="block text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">ZONE</span>
+                      <span className="block text-[8px] font-black text-indigo-700 uppercase tracking-widest mb-0.5">ZONE</span>
                       <span className="text-xs font-bold text-gray-900 uppercase">{city}</span>
                     </div>
                   </div>
@@ -246,8 +247,8 @@ export function UserDetailModal({
 
                 <div className="space-y-3 px-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">AVAILABILITY</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">AVAILABILITY</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                   </div>
                   <div className="flex justify-between gap-1">
                     {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d, i) => (
@@ -255,7 +256,7 @@ export function UserDetailModal({
                         "flex-1 aspect-square rounded-xl flex items-center justify-center text-[10px] font-black transition-all border",
                         i < 5
                           ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100/50"
-                          : "bg-gray-50 border-gray-100 text-gray-300"
+                          : "bg-gray-50 border-gray-100 text-gray-400"
                       )}>
                         {d}
                       </div>
@@ -267,24 +268,24 @@ export function UserDetailModal({
               {/* Services & Personal Details */}
               <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col gap-6">
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2.5 opacity-60">
-                    <Sparkles className="w-5 h-5 text-rose-500" />
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">SERVICES</h4>
+                  <div className="flex items-center gap-2.5 opacity-80">
+                    <Sparkles className="w-5 h-5 text-rose-600" />
+                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">SERVICES</h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {[...(user.services || []), ...(user.customServices || [])].slice(0, 10).map((s, idx) => (
-                      <span key={idx} className="px-3 py-1.5 bg-gray-50 text-[9px] font-bold text-gray-700 uppercase tracking-wider rounded-xl border border-gray-100 hover:border-indigo-200 transition-colors">{s}</span>
+                      <span key={idx} className="px-3 py-1.5 bg-gray-50 text-[9px] font-bold text-gray-800 uppercase tracking-wider rounded-xl border border-gray-200 hover:border-indigo-300 transition-colors">{s}</span>
                     ))}
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-50 space-y-4">
-                  <div className="flex items-center gap-2.5 opacity-60">
-                    <Info className="w-5 h-5 text-indigo-400" />
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">EXTRA INFO</h4>
+                <div className="pt-6 border-t border-gray-100 space-y-4">
+                  <div className="flex items-center gap-2.5 opacity-80">
+                    <Info className="w-5 h-5 text-indigo-500" />
+                    <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">EXTRA INFO</h4>
                   </div>
-                  <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100/30">
-                    <p className="text-xs font-medium text-indigo-900/70 italic leading-relaxed">
+                  <div className="p-4 bg-indigo-50 rounded-2xl border border-indigo-100/50">
+                    <p className="text-xs font-semibold text-indigo-900/80 italic leading-relaxed">
                       {specificZone || neighborhood || 'The exact meeting point will be shared upon booking confirmation.'}
                     </p>
                   </div>
@@ -297,12 +298,12 @@ export function UserDetailModal({
               <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10 px-4">
                 <div>
                   <h3 className="text-2xl font-black text-gray-900 tracking-tight">EXPERIENCES</h3>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">VERIFIED USER TESTIMONIES</p>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">VERIFIED USER TESTIMONIES</p>
                 </div>
                 <div className="bg-white px-6 py-3 rounded-2xl border border-gray-100 shadow-lg flex items-center gap-3">
                   <span className="text-2xl font-black text-gray-900 tabular-nums">{user.rating || 5.0}</span>
                   <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-400 fill-current" />)}
+                    {[1, 2, 3, 4, 5].map(s => <Star key={s} className="w-4 h-4 text-amber-500 fill-current" />)}
                   </div>
                 </div>
               </div>
@@ -318,15 +319,15 @@ export function UserDetailModal({
                           </div>
                           <span className="text-[13px] font-black text-gray-900 uppercase tracking-tight">{rev.reviewer?.name || 'Guest User'}</span>
                         </div>
-                        <div className="px-3 py-1 bg-amber-50 rounded-xl text-amber-600 text-[11px] font-black border border-amber-100 flex items-center gap-1.5">
+                        <div className="px-3 py-1 bg-amber-50 rounded-xl text-amber-700 text-[11px] font-black border border-amber-200 flex items-center gap-1.5">
                           <Star className="w-3.5 h-3.5 fill-current" /> {rev.rating}
                         </div>
                       </div>
-                      <p className="text-gray-600 text-[15px] font-medium italic leading-snug border-l-2 border-indigo-100 pl-4">"{rev.comment}"</p>
+                      <p className="text-gray-700 text-[15px] font-semibold italic leading-snug border-l-2 border-indigo-200 pl-4">"{rev.comment}"</p>
                     </div>
                   ))
                 ) : (
-                  <div className="col-span-full py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-4 text-gray-200">
+                  <div className="col-span-full py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100 flex flex-col items-center justify-center gap-4 text-gray-300">
                     <Star className="w-12 h-12" />
                     <p className="text-[10px] font-black uppercase tracking-widest">Be the first to leave a review</p>
                   </div>
@@ -346,7 +347,7 @@ export function UserDetailModal({
               "w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 relative border border-white backdrop-blur-md",
               isFavorite
                 ? "bg-rose-500 text-white border-rose-600 shadow-rose-200"
-                : "bg-white/90 text-gray-400 hover:text-rose-500"
+                : "bg-white/90 text-gray-500 hover:text-rose-600"
             )}
           >
             <Heart className={cn("w-5 h-5 md:w-6 md:h-6 transition-transform", isFavorite && "fill-current")} />
