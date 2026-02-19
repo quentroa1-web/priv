@@ -107,6 +107,11 @@ function AppContent() {
     return () => clearInterval(interval);
   }, [isLoggedIn]);
 
+  // Scroll to top on view change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentView]);
+
   const handleNavigate = (view: View) => {
     setCurrentView(view);
     setSidebarOpen(false);
