@@ -31,69 +31,76 @@ export function HomeView({
     const regularUsers = useMemo(() => filteredUsers.filter((u) => !u.isVip && !u.isBoosted), [filteredUsers]);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+    // Dynamic Stats Logic
+    const stats = useMemo(() => {
+        const total = filteredUsers.length;
+        const verified = filteredUsers.filter(u => u.verified).length;
+        const online = filteredUsers.filter(u => u.isOnline || u.online).length;
+        const reviews = filteredUsers.reduce((acc, u) => acc + (u.reviewCount || 0), 0);
+
+        return [
+            { label: 'Perfiles', value: `${total.toLocaleString()}`, icon: '👥', color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Verificados', value: `${total > 0 ? Math.round((verified / total) * 100) : 98}%`, icon: '🛡️', color: 'text-green-600', bg: 'bg-green-50' },
+            { label: 'En Línea', value: online.toLocaleString(), icon: '🟢', color: 'text-purple-600', bg: 'bg-purple-50' },
+            { label: 'Reseñas', value: reviews > 1000 ? `${(reviews / 1000).toFixed(1)}k` : reviews.toString(), icon: '⭐', color: 'text-amber-600', bg: 'bg-amber-50' },
+        ];
+    }, [filteredUsers]);
+
     return (
         <>
-            {/* Hero Banner */}
-            <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-500 bg-[length:200%_100%] animate-[gradient_8s_ease_infinite] rounded-2xl p-4 md:p-5 mb-6 text-white shadow-lg flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative">
-                <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+            {/* Compact Hero Banner */}
+            <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-500 bg-[length:200%_100%] animate-[gradient_8s_ease_infinite] rounded-2xl p-3 md:p-4 mb-5 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 overflow-hidden relative border border-white/10">
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
 
-                <div className="flex items-center gap-4 relative z-10">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
-                        <Shield className="w-6 h-6 text-white drop-shadow-md" />
+                <div className="flex items-center gap-3 relative z-10 w-full sm:w-auto">
+                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
+                        <Shield className="w-5 h-5 text-white drop-shadow-md" />
                     </div>
-                    <div>
-                        <h1 className="text-lg md:text-xl font-black tracking-tight drop-shadow-sm flex items-center gap-2 flex-wrap">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-base md:text-lg font-black tracking-tight drop-shadow-sm flex items-center gap-2">
                             {t('hero.safety')}
-                            <div className="flex items-center gap-1 bg-green-400/20 text-green-100 border border-green-400/30 px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold shrink-0">
-                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                                100% Real
+                            <div className="flex items-center gap-1 bg-green-400/20 text-green-100 border border-green-400/30 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-wider font-bold shrink-0">
+                                <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
+                                IA Check
                             </div>
                         </h1>
-                        <p className="text-rose-50 text-xs md:text-sm font-medium mt-0.5">
+                        <p className="text-rose-50 text-[10px] md:text-xs font-medium opacity-90 truncate">
                             {t('hero.safety_desc')}
                         </p>
                     </div>
                 </div>
 
-                <div className="hidden lg:flex items-center gap-6 relative z-10 bg-black/10 px-6 py-2.5 rounded-xl border border-white/10 backdrop-blur-sm">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-rose-100 uppercase tracking-wider font-bold">Trust Score</span>
-                        <span className="text-lg font-black text-amber-300 drop-shadow-md">4.9/5.0 ★</span>
+                <div className="flex items-center gap-4 relative z-10 bg-black/10 px-4 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm shrink-0">
+                    <div className="flex flex-col items-center">
+                        <span className="text-[8px] text-rose-100 uppercase tracking-widest font-bold leading-none mb-0.5">Trust</span>
+                        <span className="text-sm font-black text-amber-300">4.9/5 ★</span>
                     </div>
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div className="flex flex-col">
-                        <span className="text-[10px] text-rose-100 uppercase tracking-wider font-bold">Soporte</span>
-                        <span className="text-lg font-black drop-shadow-md">24/7</span>
+                    <div className="w-px h-6 bg-white/20"></div>
+                    <div className="flex flex-col items-center text-center">
+                        <span className="text-[8px] text-rose-100 uppercase tracking-widest font-bold leading-none mb-0.5">Soporte</span>
+                        <span className="text-sm font-black">24/7</span>
                     </div>
                 </div>
             </div>
 
-            {/* Stats Bar */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
-                {[
-                    { label: 'Perfiles Activos', value: '1,500+', icon: '👥', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-                    { label: 'Verificados con IA', value: '98%', icon: '🛡️', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
-                    { label: 'En Línea Ahora', value: '234', icon: '🟢', color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
-                    { label: 'Reseñas Reales', value: '12.4k', icon: '⭐', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-                ].map((stat, index) => (
+            {/* Redesigned Compact Stats Bar */}
+            <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 mb-6">
+                {stats.map((stat, index) => (
                     <div
                         key={index}
-                        className="relative overflow-hidden bg-white rounded-2xl p-4 shadow-sm hover:shadow-md border border-gray-100 transition-all duration-300 group"
+                        className="flex-1 min-w-[100px] bg-white rounded-xl p-2.5 shadow-sm border border-gray-100 flex items-center gap-2.5 group transition-all hover:border-indigo-100 hover:shadow-md"
                     >
-                        <div className={`absolute -right-4 -top-4 w-16 h-16 ${stat.bg} rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out`}></div>
-                        <div className="relative z-10 flex items-center gap-3">
-                            <div className={`w-8 h-8 sm:w-10 sm:h-10 ${stat.bg} ${stat.border} border rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-lg shadow-inner`}>
-                                {stat.icon}
-                            </div>
-                            <div>
-                                <div className={`text-lg sm:text-xl font-black ${stat.color} tracking-tight leading-none mb-1`}>
-                                    {stat.value}
-                                </div>
-                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    {stat.label}
-                                </div>
-                            </div>
+                        <div className={`w-8 h-8 ${stat.bg} rounded-lg flex items-center justify-center text-sm shrink-0 transition-transform group-hover:scale-110`}>
+                            {stat.icon}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className={`text-sm font-black ${stat.color} leading-none truncate`}>
+                                {stat.value}
+                            </span>
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider truncate">
+                                {stat.label}
+                            </span>
                         </div>
                     </div>
                 ))}
