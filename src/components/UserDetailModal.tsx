@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
-  X, Star, MapPin, Crown,
+  X, Star, MapPin,
   Heart, MessageCircle, Camera,
   ChevronLeft, ChevronRight,
-  BadgeCheck, Plane, Clock, Globe, Languages, Info, ExternalLink, Sparkles, Share2
+  BadgeCheck, Clock, Languages, Info, Sparkles
 } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
@@ -28,21 +28,17 @@ export function UserDetailModal({
   const [activeImgIndex, setActiveImgIndex] = useState(0);
   const { user: currentUser } = useAuth();
   const [reviews, setReviews] = useState<any[]>([]);
-  const [loadingReviews, setLoadingReviews] = useState(false);
 
   useEffect(() => {
     if (user?.id || user?.uid) {
       const fetchReviews = async () => {
         try {
-          setLoadingReviews(true);
           const res = await apiService.getUserReviews(user.id || user.uid || '') as any;
           if (res.data.success) {
             setReviews(res.data.data);
           }
         } catch (err) {
           console.error(err);
-        } finally {
-          setLoadingReviews(false);
         }
       };
       fetchReviews();

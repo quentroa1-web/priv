@@ -1006,7 +1006,6 @@ export function CreateAd({ onBack, onPublish, currentUser, editingAd }: CreateAd
 
   const renderStep5 = () => {
     const isActivePlan = (plan: string) => currentUser?.premiumPlan === plan;
-    const currentPlan = currentUser?.premiumPlan || 'free';
 
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
