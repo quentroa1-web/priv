@@ -14,6 +14,11 @@ import { HomeView } from './components/HomeView';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Footer } from './components/Footer';
 import { CookieConsent } from './components/CookieConsent';
+import { InfoPage } from './components/info/InfoPage';
+import { SupportContent } from './components/info/SupportContent';
+import { LegalContent } from './components/info/LegalContent';
+import { PaymentContent } from './components/info/PaymentContent';
+import { HelpCircle, FileText, CreditCard } from 'lucide-react';
 
 // Lazy load heavy components
 const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
@@ -306,23 +311,6 @@ function AppContent() {
     });
   }, [ads, searchFilters]);
 
-  const renderPlaceholderPage = (title: string, content: string) => (
-    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 min-h-[60vh] flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
-      <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-6">
-        <Shield className="w-8 h-8 text-rose-500" />
-      </div>
-      <h2 className="text-3xl font-black text-gray-900 mb-4">{title}</h2>
-      <p className="text-gray-500 max-w-lg mx-auto leading-relaxed mb-8">
-        {content}
-      </p>
-      <button
-        onClick={() => setCurrentView('home')}
-        className="px-8 py-3 bg-gray-900 text-white rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-lg shadow-gray-200"
-      >
-        VOLVER AL INICIO
-      </button>
-    </div>
-  );
 
   if (currentView === 'login') return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
@@ -459,13 +447,41 @@ function AppContent() {
                   onToggleFavorite={toggleFavorite}
                 />
               ) : currentView === 'support' ? (
-                renderPlaceholderPage("Soporte y Contacto", "Estamos aquí para ayudarte. Contacta con nuestro equipo de soporte para cualquier duda o inconveniente.")
+                <InfoPage
+                  title="Soporte y Ayuda"
+                  subtitle="¿Tienes dudas o necesitas asistencia? Nuestro equipo está aquí para garantizar una experiencia segura."
+                  icon={<HelpCircle className="w-7 h-7" />}
+                  onBack={() => setCurrentView('home')}
+                >
+                  <SupportContent />
+                </InfoPage>
               ) : currentView === 'legal' ? (
-                renderPlaceholderPage("Términos y Condiciones", "Consulta las reglas y normas de uso de nuestra plataforma para garantizar una experiencia segura para todos.")
+                <InfoPage
+                  title="Términos y Condiciones"
+                  subtitle="Reglas de convivencia y uso de la plataforma SafeConnect."
+                  icon={<Shield className="w-7 h-7" />}
+                  onBack={() => setCurrentView('home')}
+                >
+                  <LegalContent />
+                </InfoPage>
               ) : currentView === 'privacy' ? (
-                renderPlaceholderPage("Política de Privacidad", "Tu privacidad es lo más importante. Aquí explicamos cómo protegemos y manejamos tus datos personales.")
+                <InfoPage
+                  title="Privacidad"
+                  subtitle="Tu seguridad y privacidad de datos es lo que nos hace líderes."
+                  icon={<FileText className="w-7 h-7" />}
+                  onBack={() => setCurrentView('home')}
+                >
+                  <LegalContent />
+                </InfoPage>
               ) : currentView === 'payments' ? (
-                renderPlaceholderPage("Pagos y Tarifas", "Información detallada sobre nuestros métodos de pago, costos de anuncios y planes premium.")
+                <InfoPage
+                  title="Pagos y Tarifas"
+                  subtitle="Conoce nuestros planes, packs de monedas y métodos de pago verificados."
+                  icon={<CreditCard className="w-7 h-7" />}
+                  onBack={() => setCurrentView('home')}
+                >
+                  <PaymentContent />
+                </InfoPage>
               ) : (
                 <HomeView
                   t={t}

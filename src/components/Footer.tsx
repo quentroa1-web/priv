@@ -1,4 +1,4 @@
-import { Shield, Mail, FileText, Scale, CreditCard, Copyright, AlertTriangle } from 'lucide-react';
+import { Shield, Copyright, AlertTriangle } from 'lucide-react';
 
 interface FooterProps {
     onNavigate: (view: any) => void;
@@ -8,113 +8,79 @@ export function Footer({ onNavigate }: FooterProps) {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="mt-auto border-t border-gray-100 bg-white/50 backdrop-blur-sm py-8 md:py-12">
+        <footer className="mt-8 border-t border-gray-100 bg-white/50 backdrop-blur-sm py-6 md:py-8">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12 mb-10">
+                <div className="flex flex-col md:flex-row justify-between gap-8 mb-6">
                     {/* Brand Section */}
-                    <div className="col-span-1 md:col-span-1">
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-rose-200">
-                                <Shield className="w-5 h-5 text-white" />
+                    <div className="max-w-xs">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="w-7 h-7 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-rose-200">
+                                <Shield className="w-4 h-4 text-white" />
                             </div>
-                            <span className="text-xl font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+                            <span className="text-lg font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
                                 SafeConnect
                             </span>
                         </div>
-                        <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                            Plataforma líder en conexiones seguras y verificadas. Tu seguridad es nuestra prioridad.
+                        <p className="text-gray-500 text-xs leading-relaxed mb-4">
+                            Conexiones seguras y verificadas. Tu seguridad es nuestra prioridad.
                         </p>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-gray-600 font-bold text-[10px] uppercase tracking-wider">
-                                <Copyright className="w-3.5 h-3.5" />
-                                {currentYear}
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-gray-500 font-bold text-[9px] uppercase tracking-wider">
+                                <Copyright className="w-3 h-3" /> {currentYear}
                             </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 border border-red-100 rounded-lg text-red-600 font-bold text-[10px] uppercase tracking-wider">
-                                <AlertTriangle className="w-3.5 h-3.5" />
-                                RTA
+                            <div className="flex items-center gap-1 px-2 py-1 bg-red-50 border border-red-100 rounded text-red-600 font-bold text-[9px] uppercase tracking-wider">
+                                <AlertTriangle className="w-3 h-3" /> RTA
                             </div>
                         </div>
                     </div>
 
-                    {/* Links Sections */}
-                    <div>
-                        <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-4">Soporte</h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <button
-                                    onClick={() => onNavigate('support')}
-                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-rose-600 transition-colors"
-                                >
-                                    <Mail className="w-4 h-4" />
-                                    Atención al Cliente
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => onNavigate('support')}
-                                    className="text-sm text-gray-500 hover:text-rose-600 transition-colors"
-                                >
-                                    Centro de Ayuda
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                    {/* Links Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 md:gap-12">
+                        <div>
+                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">Soporte</h3>
+                            <ul className="space-y-2">
+                                <li>
+                                    <button onClick={() => onNavigate('support')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Centro de Ayuda</button>
+                                </li>
+                                <li>
+                                    <button onClick={() => onNavigate('support')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Contacto 24/7</button>
+                                </li>
+                            </ul>
+                        </div>
 
-                    <div>
-                        <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-4">Legal</h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <button
-                                    onClick={() => onNavigate('legal')}
-                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-rose-600 transition-colors"
-                                >
-                                    <Scale className="w-4 h-4" />
-                                    Términos y Condiciones
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => onNavigate('privacy')}
-                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-rose-600 transition-colors"
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    Política de Privacidad
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                        <div>
+                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">Legal</h3>
+                            <ul className="space-y-2">
+                                <li>
+                                    <button onClick={() => onNavigate('legal')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Términos</button>
+                                </li>
+                                <li>
+                                    <button onClick={() => onNavigate('privacy')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Privacidad</button>
+                                </li>
+                            </ul>
+                        </div>
 
-                    <div>
-                        <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-4">Transparencia</h3>
-                        <ul className="space-y-3">
-                            <li>
-                                <button
-                                    onClick={() => onNavigate('payments')}
-                                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-rose-600 transition-colors"
-                                >
-                                    <CreditCard className="w-4 h-4" />
-                                    Pagos y Tarifas
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    onClick={() => onNavigate('legal')}
-                                    className="text-sm text-gray-500 hover:text-rose-600 transition-colors"
-                                >
-                                    Seguridad y Verificación
-                                </button>
-                            </li>
-                        </ul>
+                        <div className="col-span-2 sm:col-span-1">
+                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">Servicios</h3>
+                            <ul className="space-y-2">
+                                <li>
+                                    <button onClick={() => onNavigate('payments')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Pagos y Tarifas</button>
+                                </li>
+                                <li>
+                                    <button onClick={() => onNavigate('legal')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Verificación</button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
-                <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-                    <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                <div className="pt-5 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                         SafeConnect &copy; {currentYear} • Todos los derechos reservados.
                     </p>
-                    <div className="flex gap-6">
-                        <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.2em]">Bogotá, Colombia</span>
-                        <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.2em]">Certificación 2A-01</span>
+                    <div className="flex gap-4">
+                        <span className="text-[8px] font-bold text-gray-300 uppercase tracking-[0.2em]">Colombia</span>
+                        <span className="text-[8px] font-bold text-gray-300 uppercase tracking-[0.2em]">V.2.1-A</span>
                     </div>
                 </div>
             </div>
