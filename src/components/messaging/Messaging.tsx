@@ -847,10 +847,10 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                 </div>
                               )}
                               <div
-                                className={`flex ${isSystemMessage ? 'justify-center w-full my-2' : isOwn ? 'justify-end' : 'justify-start'} mb-1`}
+                                className={`flex ${isSystemMessage ? 'justify-center w-full my-3' : isOwn ? 'justify-end' : 'justify-start'} mb-1`}
                               >
-                                <div className={`${isSystemMessage ? 'w-full max-w-lg mx-4' : 'max-w-[85%] md:max-w-[75%]'} rounded-2xl p-3 px-4 shadow-sm relative text-sm overflow-hidden ${isSystemMessage
-                                  ? 'animate-holo border-2 border-white/50 text-indigo-950 shadow-indigo-200/50'
+                                <div className={`${isSystemMessage ? 'w-full max-w-md mx-auto' : 'max-w-[85%] md:max-w-[70%]'} rounded-2xl p-3 px-4 shadow-sm relative text-sm overflow-hidden ${isSystemMessage
+                                  ? 'animate-holo border-2 border-white/50 text-indigo-950 shadow-indigo-200/50 mx-4 md:mx-auto'
                                   : isOwn
                                     ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-tr-none'
                                     : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
@@ -951,7 +951,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                               </button>
 
                               {showGiftMenu && (
-                                <div className="absolute bottom-full left-0 md:left-auto md:right-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
+                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
                                   <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
                                     <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
                                       <Gift className="w-3 h-3" /> Enviar Regalo
@@ -991,7 +991,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                               </button>
 
                               {showPriceList && (
-                                <div className="absolute bottom-full left-0 md:left-auto md:right-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
+                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
                                   <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                                     <div className="flex flex-col">
                                       <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Centro de Contenido</span>
