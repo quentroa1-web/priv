@@ -53,8 +53,10 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
 
     useEffect(() => {
         fetchHistory();
-        fetchUserAds();
-    }, []);
+        if (user?.role === 'announcer' || user?.role === 'admin') {
+            fetchUserAds();
+        }
+    }, [user?.role]);
 
     const fetchUserAds = async () => {
         try {

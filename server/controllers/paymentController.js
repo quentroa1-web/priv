@@ -169,38 +169,40 @@ exports.transferCoins = async (req, res, next) => {
         }
 
         // Create Transactions
-        await Transaction.create({
-            user: sender._id,
-            type: 'spend',
-            amount: coinsToTransfer,
-            coinsAmount: coinsToTransfer,
-            currency: 'COINS',
-            status: 'completed',
-            recipient: recipient._id,
-            description: reason || 'Transfer to user'
-        });
-
-        await Transaction.create({
-            user: recipient._id,
-            type: 'receive',
-            amount: finalAmount,
-            coinsAmount: finalAmount,
-            currency: 'COINS',
-            status: 'completed',
-            recipient: sender._id,
-            description: reason || 'Received from user'
-        });
-
-        // Send holographic system notifications directly into their private chat
         try {
+            await Transaction.create({
+                user: sender._id,
+                type: 'spend',
+                amount: coinsToTransfer,
+                coinsAmount: coinsToTransfer,
+                currency: 'COINS',
+                status: 'completed',
+                recipient: recipient._id,
+                description: reason || 'Transfer to user'
+            });
+
+            await Transaction.create({
+                user: recipient._id,
+                type: 'receive',
+                amount: finalAmount,
+                coinsAmount: finalAmount,
+                currency: 'COINS',
+                status: 'completed',
+                recipient: sender._id,
+                description: reason || 'Received from user'
+            });
+
+            // Send holographic system notifications
             await Message.create({
                 sender: sender._id,
                 recipient: recipient._id,
                 content: `💎 [TRANSACCIÓN VERIFICADA]\nHe pagado ${coinsToTransfer} monedas por tu servicio.\nConcepto: ${reason || 'Servicio'}\nID de Operación: ${Date.now().toString().slice(-8)}`,
                 isSystem: true
             });
-        } catch (msgErr) {
-            console.error('Error sending holographic notifications:', msgErr);
+        } catch (innerError) {
+            console.error('Non-critical transfer error (logging/notif):', innerError);
+            // We don't fail the whole transfer if just the notification or history log fails, 
+            // but in a production environment we should use transactions.
         }
 
         res.status(200).json({
@@ -211,8 +213,19 @@ exports.transferCoins = async (req, res, next) => {
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error: 'Transfer Failed' });
+        console.error('Transfer Critical Error:', error);
+
+        // Fail-safe: Refund sender if coins were deducted
+        try {
+            if (coinsToTransfer > 0) {
+                await User.findByIdAndUpdate(req.user.id, { $inc: { 'wallet.coins': coinsToTransfer } });
+                console.log('Safe-Refund: Monedas devueltas satisfactoriamente tras error crítico.');
+            }
+        } catch (refundError) {
+            console.error('CRITICAL: Falla masiva en reembolso de seguridad:', refundError);
+        }
+
+        res.status(500).json({ success: false, error: 'Transfer Failed: ' + error.message });
     }
 };
 
@@ -395,6 +408,7 @@ exports.boostAdWithCoins = async (req, res) => {
         }
 
         // Check for Diamond free boosts
+        const user = await User.findById(req.user.id);
         const isDiamond = user.premiumPlan === 'diamond' && user.premiumUntil && new Date(user.premiumUntil) > new Date();
         const hasFreeBoosts = isDiamond && (user.diamondBoosts > 0);
         const boostCost = hasFreeBoosts ? 0 : BOOST_COST;
