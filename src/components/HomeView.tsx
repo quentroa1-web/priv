@@ -48,30 +48,30 @@ export function HomeView({
 
     return (
         <>
-            {/* Compact Hero Banner */}
-            <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-500 bg-[length:200%_100%] animate-[gradient_8s_ease_infinite] rounded-2xl p-3 md:p-4 mb-5 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-3 overflow-hidden relative border border-white/10">
-                <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+            {/* Extreme Compact Hero Banner */}
+            <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-500 bg-[length:200%_100%] animate-[gradient_8s_ease_infinite] rounded-xl md:rounded-2xl p-2 md:p-4 mb-3 md:mb-5 text-white shadow-lg flex items-center justify-between gap-3 overflow-hidden relative border border-white/10">
+                <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute -left-6 -bottom-6 w-20 h-20 bg-white/10 rounded-full blur-2xl"></div>
 
-                <div className="flex items-center gap-3 relative z-10 w-full sm:w-auto">
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
-                        <Shield className="w-5 h-5 text-white drop-shadow-md" />
+                <div className="flex items-center gap-2 md:gap-3 relative z-10 min-w-0">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 backdrop-blur-md rounded-lg md:rounded-xl flex items-center justify-center border border-white/30 shrink-0 shadow-inner">
+                        <Shield className="w-4 h-4 md:w-5 md:h-5 text-white drop-shadow-md" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-base md:text-lg font-black tracking-tight drop-shadow-sm flex items-center gap-2">
+                        <h1 className="text-xs md:text-lg font-black tracking-tight drop-shadow-sm flex items-center gap-2">
                             {t('hero.safety')}
-                            <div className="flex items-center gap-1 bg-green-400/20 text-green-100 border border-green-400/30 px-2 py-0.5 rounded-full text-[8px] uppercase tracking-wider font-bold shrink-0">
+                            <div className="flex items-center gap-1 bg-green-400/20 text-green-100 border border-green-400/30 px-1.5 py-0.5 rounded-full text-[7px] md:text-[8px] uppercase tracking-wider font-bold shrink-0">
                                 <div className="w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
                                 IA Check
                             </div>
                         </h1>
-                        <p className="text-rose-50 text-[10px] md:text-xs font-medium opacity-90 truncate">
+                        <p className="text-rose-50 text-[9px] md:text-xs font-medium opacity-90 truncate">
                             {t('hero.safety_desc')}
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 relative z-10 bg-black/10 px-4 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm shrink-0">
+                <div className="hidden sm:flex items-center gap-4 relative z-10 bg-black/10 px-4 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm shrink-0">
                     <div className="flex flex-col items-center">
                         <span className="text-[8px] text-rose-100 uppercase tracking-widest font-bold leading-none mb-0.5">Trust</span>
                         <span className="text-sm font-black text-amber-300">4.9/5 ★</span>
@@ -84,21 +84,21 @@ export function HomeView({
                 </div>
             </div>
 
-            {/* Redesigned Compact Stats Bar */}
-            <div className="flex flex-wrap md:flex-nowrap gap-2 md:gap-3 mb-6">
+            {/* Extreme Compact Stats Bar - Horizontal Scroll on Mobile */}
+            <div className="flex overflow-x-auto md:flex-nowrap gap-2 md:gap-3 mb-5 md:mb-6 pb-1 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {stats.map((stat, index) => (
                     <div
                         key={index}
-                        className="flex-1 min-w-[100px] bg-white rounded-xl p-2.5 shadow-sm border border-gray-100 flex items-center gap-2.5 group transition-all hover:border-indigo-100 hover:shadow-md"
+                        className="flex-shrink-0 md:flex-1 min-w-[90px] md:min-w-[100px] bg-white rounded-lg md:rounded-xl p-1.5 md:p-2.5 shadow-sm border border-gray-100 flex items-center gap-2 group transition-all hover:border-indigo-100 hover:shadow-md"
                     >
-                        <div className={`w-8 h-8 ${stat.bg} rounded-lg flex items-center justify-center text-sm shrink-0 transition-transform group-hover:scale-110`}>
+                        <div className={`w-7 h-7 md:w-8 md:h-8 ${stat.bg} rounded-lg flex items-center justify-center text-xs md:text-sm shrink-0 transition-transform group-hover:scale-110`}>
                             {stat.icon}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className={`text-sm font-black ${stat.color} leading-none truncate`}>
+                            <span className={`text-[13px] md:text-sm font-black ${stat.color} leading-none truncate`}>
                                 {stat.value}
                             </span>
-                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider truncate">
+                            <span className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-wider truncate">
                                 {stat.label}
                             </span>
                         </div>

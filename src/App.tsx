@@ -7,11 +7,13 @@ import { UserDetailModal } from './components/UserDetailModal';
 import { StoreModal } from './components/wallet/StoreModal';
 import { COLOMBIA_LOCATIONS } from './data/colombiaLocations';
 import { User } from './types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FavoritesView } from './components/FavoritesView';
 import { HomeView } from './components/HomeView';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Footer } from './components/Footer';
+import { CookieConsent } from './components/CookieConsent';
 
 // Lazy load heavy components
 const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
@@ -23,7 +25,7 @@ const Messaging = lazy(() => import('./components/messaging/Messaging').then(mod
 const Reviews = lazy(() => import('./components/reviews/Reviews').then(module => ({ default: module.Reviews })));
 const WalletView = lazy(() => import('./components/wallet/WalletView').then(module => ({ default: module.WalletView })));
 
-type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'wallet';
+type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'wallet' | 'support' | 'legal' | 'privacy' | 'payments';
 
 function AppContent() {
   const { t } = useTranslation();
@@ -206,7 +208,7 @@ function AppContent() {
   }, [currentView === 'home', isLoggedIn, isAnnouncer]);
 
   const handleProtectedNavigation = (view: View) => {
-    if (!isLoggedIn && view !== 'home' && view !== 'login' && view !== 'register') {
+    if (!isLoggedIn && view !== 'home' && view !== 'login' && view !== 'register' && view !== 'support' && view !== 'legal' && view !== 'privacy' && view !== 'payments') {
       setCurrentView('login');
       return;
     }
@@ -304,6 +306,24 @@ function AppContent() {
     });
   }, [ads, searchFilters]);
 
+  const renderPlaceholderPage = (title: string, content: string) => (
+    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 min-h-[60vh] flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300">
+      <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-6">
+        <Shield className="w-8 h-8 text-rose-500" />
+      </div>
+      <h2 className="text-3xl font-black text-gray-900 mb-4">{title}</h2>
+      <p className="text-gray-500 max-w-lg mx-auto leading-relaxed mb-8">
+        {content}
+      </p>
+      <button
+        onClick={() => setCurrentView('home')}
+        className="px-8 py-3 bg-gray-900 text-white rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-lg shadow-gray-200"
+      >
+        VOLVER AL INICIO
+      </button>
+    </div>
+  );
+
   if (currentView === 'login') return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
       <Login
@@ -331,7 +351,7 @@ function AppContent() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header
         onMenuClick={() => setSidebarOpen(true)}
         isLoggedIn={isLoggedIn}
@@ -356,8 +376,8 @@ function AppContent() {
         currentView={currentView}
       />
 
-      <div className="flex">
-        {currentView !== 'messages' && (
+      <div className="flex flex-1">
+        {isLoggedIn && currentView !== 'messages' && (
           <Sidebar
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
@@ -369,9 +389,9 @@ function AppContent() {
           />
         )}
 
-        <main className={`flex-1 ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow-hidden`}>
+        <main className={`flex-1 flex flex-col ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow-x-hidden`}>
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
-            <div className={`${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full'}`}>
+            <div className={`flex-1 ${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full flex flex-col'}`}>
               {currentView === 'createAd' && isAnnouncer ? (
                 <CreateAd
                   onBack={() => {
@@ -438,6 +458,14 @@ function AppContent() {
                   onUserClick={setSelectedUser}
                   onToggleFavorite={toggleFavorite}
                 />
+              ) : currentView === 'support' ? (
+                renderPlaceholderPage("Soporte y Contacto", "Estamos aquí para ayudarte. Contacta con nuestro equipo de soporte para cualquier duda o inconveniente.")
+              ) : currentView === 'legal' ? (
+                renderPlaceholderPage("Términos y Condiciones", "Consulta las reglas y normas de uso de nuestra plataforma para garantizar una experiencia segura para todos.")
+              ) : currentView === 'privacy' ? (
+                renderPlaceholderPage("Política de Privacidad", "Tu privacidad es lo más importante. Aquí explicamos cómo protegemos y manejamos tus datos personales.")
+              ) : currentView === 'payments' ? (
+                renderPlaceholderPage("Pagos y Tarifas", "Información detallada sobre nuestros métodos de pago, costos de anuncios y planes premium.")
               ) : (
                 <HomeView
                   t={t}
@@ -450,6 +478,7 @@ function AppContent() {
                   onUserClick={setSelectedUser}
                 />
               )}
+              {currentView !== 'messages' && <Footer onNavigate={handleNavigate} />}
             </div>
           </Suspense>
         </main>
@@ -469,6 +498,8 @@ function AppContent() {
         isOpen={isStoreOpen}
         onClose={() => setIsStoreOpen(false)}
       />
+
+      <CookieConsent />
     </div>
   );
 }
