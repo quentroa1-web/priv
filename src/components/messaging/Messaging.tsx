@@ -847,9 +847,9 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                 </div>
                               )}
                               <div
-                                className={`flex ${isSystemMessage ? 'justify-center mx-auto w-full max-w-lg' : isOwn ? 'justify-end' : 'justify-start'} mb-1`}
+                                className={`flex ${isSystemMessage ? 'justify-center w-full my-2' : isOwn ? 'justify-end' : 'justify-start'} mb-1`}
                               >
-                                <div className={`max-w-[85%] rounded-2xl p-3 px-4 shadow-sm relative text-sm overflow-hidden ${isSystemMessage
+                                <div className={`${isSystemMessage ? 'w-full max-w-lg mx-4' : 'max-w-[85%] md:max-w-[75%]'} rounded-2xl p-3 px-4 shadow-sm relative text-sm overflow-hidden ${isSystemMessage
                                   ? 'animate-holo border-2 border-white/50 text-indigo-950 shadow-indigo-200/50'
                                   : isOwn
                                     ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-tr-none'
@@ -951,23 +951,23 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                               </button>
 
                               {showGiftMenu && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-0 mb-4 w-[260px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
+                                <div className="absolute bottom-full left-0 md:left-auto md:right-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
                                   <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
                                     <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
                                       <Gift className="w-3 h-3" /> Enviar Regalo
                                     </span>
                                     <button onClick={() => setShowGiftMenu(false)}><X className="w-4 h-4 text-gray-400" /></button>
                                   </div>
-                                  <div className="p-2 grid grid-cols-2 gap-2 max-h-[50dvh] overflow-y-auto scrollbar-hide">
+                                  <div className="p-2 grid grid-cols-3 gap-1.5 max-h-[40dvh] overflow-y-auto scrollbar-hide">
                                     {PREDEFINED_GIFTS.map((gift) => (
                                       <button
                                         key={gift.id}
                                         onClick={() => handleSendGift(gift)}
                                         className="flex-1 flex flex-col items-center justify-center p-3 rounded-xl hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-all group"
                                       >
-                                        <div className="text-3xl mb-1 group-hover:scale-110 transition-transform">{gift.icon}</div>
-                                        <div className="text-[10px] font-bold text-gray-700 text-center">{gift.label}</div>
-                                        <div className="text-[10px] font-black text-amber-600">{gift.price} 🪙</div>
+                                        <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">{gift.icon}</div>
+                                        <div className="text-[9px] font-bold text-gray-700 text-center leading-tight">{gift.label}</div>
+                                        <div className="text-[9px] font-black text-amber-600 mt-0.5">{gift.price} 🪙</div>
                                       </button>
                                     ))}
                                   </div>
@@ -991,7 +991,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                               </button>
 
                               {showPriceList && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
+                                <div className="absolute bottom-full left-0 md:left-auto md:right-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
                                   <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                                     <div className="flex flex-col">
                                       <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Centro de Contenido</span>
