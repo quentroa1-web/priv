@@ -8,6 +8,7 @@ import {
 import { User } from '../types';
 import { cn } from '../utils/cn';
 import { useAuth } from '../context/AuthContext';
+import { SEO } from './SEO';
 
 interface UserDetailModalProps {
   user: User | null;
@@ -65,6 +66,40 @@ export function UserDetailModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-0 md:p-4 lg:p-6 overflow-hidden selection:bg-indigo-100 selection:text-indigo-900">
+      <SEO
+        title={`${user.displayName || user.name} - Escort en ${city || 'Colombia'} | SafeConnect`}
+        description={user.bio || user.description || `Perfil verificado de ${user.name} en SafeConnect. Reserva ahora y disfruta de la mejor compañía.`}
+        type="profile"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": user.displayName || user.name,
+          "description": user.bio || user.description,
+          "provider": {
+            "@type": "Person",
+            "name": user.displayName || user.name,
+            "gender": user.gender,
+            "image": user.avatar,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": city || 'Colombia'
+            }
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": user.rating || 5,
+            "reviewCount": user.reviewCount || 1,
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": price?.replace(/[^0-9]/g, '') || "0",
+            "priceCurrency": "COP",
+            "availability": "https://schema.org/InStock"
+          }
+        }}
+      />
       {/* Editorial Backdrop */}
       <div
         className="absolute inset-0 bg-gray-50/80 backdrop-blur-sm transition-opacity animate-in fade-in duration-500"

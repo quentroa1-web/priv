@@ -2,6 +2,8 @@ import React from 'react';
 import { MapPin, Star, Clock, Heart, MessageCircle, Crown, BadgeCheck, Rocket } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
+import { hapticFeedback } from '../utils/haptics';
+import { formatPrice } from '../utils/formatters';
 
 interface UserCardProps {
   user: User;
@@ -14,9 +16,22 @@ interface UserCardProps {
 export const UserCard = React.memo(function UserCard({ user, onClick, variant = 'standard', isFavorite, onToggleFavorite }: UserCardProps) {
   const isVip = user.isVip;
 
+  const handleMouseEnter = () => {
+    // Speculative preloading of the main image
+    const mainImg = (user.gallery && user.gallery.length > 0) ? user.gallery[0] : user.avatar;
+    if (mainImg) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = mainImg;
+      document.head.appendChild(link);
+    }
+  };
+
   return (
     <div
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
       className={cn(
         "group relative bg-white rounded-3xl overflow-hidden transition-all duration-500 cursor-pointer border",
         (user.premiumPlan === 'diamond' || isVip)
@@ -87,6 +102,7 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
           <button
             onClick={(e) => {
               e.stopPropagation();
+              hapticFeedback(isFavorite ? 'light' : 'medium');
               onToggleFavorite?.(e);
             }}
             className={cn(
@@ -114,7 +130,7 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
           "absolute bottom-2 right-2 bg-white/95 text-rose-600 rounded-xl font-black shadow-2xl transform rotate-1",
           variant === 'compact' ? "px-2 py-0.5 text-[9px]" : "px-3 py-1 text-[10px] sm:text-xs"
         )}>
-          {user.price}
+          {formatPrice(user.price || 0)}
         </div>
       </div>
 

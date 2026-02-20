@@ -17,6 +17,7 @@ import {
   TrendingUp, CheckCircle, Crown, AlertCircle, Loader2,
   Trash2, PlusCircle, Rocket, Calendar, Star, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { SEO } from '../SEO';
 
 const GENDER_LABELS: Record<string, string> = {
   woman: 'Mujer',
@@ -374,6 +375,11 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
 
   return (
     <div className="animate-in fade-in duration-300">
+      <SEO
+        title={`Panel de Control | ${user.displayName || user.name} - SafeConnect`}
+        description="Gestiona tu perfil, anuncios y estadísticas en SafeConnect Colombia."
+        keywords="panel de control, mi perfil, gestionar anuncios, safeconnect"
+      />
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button

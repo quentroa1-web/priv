@@ -9,6 +9,7 @@ import { COLOMBIA_LOCATIONS } from './data/colombiaLocations';
 import { User } from './types';
 import { Loader2, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SEO } from './components/SEO';
 import { FavoritesView } from './components/FavoritesView';
 import { HomeView } from './components/HomeView';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -39,6 +40,18 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ads, setAds] = useState<User[]>([]);
   const [myAds, setMyAds] = useState<any[]>([]);
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        document.title = '¡Te extrañamos! - SafeConnect';
+      } else {
+        document.title = 'SafeConnect - Escorts y Clasificados Verificados';
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editingAd, setEditingAd] = useState<any | null>(null);
@@ -347,6 +360,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      <SEO />
       <Header
         onMenuClick={() => setSidebarOpen(true)}
         isLoggedIn={isLoggedIn}

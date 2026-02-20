@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { User } from '../types';
 import { UserCard } from './UserCard';
+import { UserCardSkeleton } from './UserCardSkeleton';
 import { FilterPanel } from './FilterPanel';
-import { Shield, Search, Loader2, SlidersHorizontal, X, Crown } from 'lucide-react';
+import { SEO } from './SEO';
+import { Shield, Search, SlidersHorizontal, X, Crown, MapPin as MapPinIcon, BadgeCheck as VerifiedIcon, Users as UsersIcon } from 'lucide-react';
 import { TFunction } from 'i18next';
 
 interface HomeViewProps {
@@ -48,6 +50,11 @@ export function HomeView({
 
     return (
         <>
+            <SEO
+                title={`${searchFilters.ciudad ? `Escorts y Acompañantes en ${searchFilters.ciudad}` : 'Escorts y Clasificados Verificados en Colombia'} | SafeConnect`}
+                description={`Encuentra los mejores anuncios de acompañantes y escorts en ${searchFilters.ciudad || 'toda Colombia'}. Perfiles 100% verificados, seguridad y discreción total.`}
+                keywords={`escorts ${searchFilters.ciudad || 'colombia'}, acompañantes ${searchFilters.ciudad || 'bogota'}, masajes ${searchFilters.ciudad || 'medellin'}, modelos independientes, clasificados adultos`}
+            />
             {/* Extreme Compact Hero Banner */}
             <div className="bg-gradient-to-r from-rose-500 via-pink-600 to-rose-500 bg-[length:200%_100%] animate-[gradient_8s_ease_infinite] rounded-xl md:rounded-2xl p-2 md:p-4 mb-3 md:mb-5 text-white shadow-lg flex items-center justify-between gap-3 overflow-hidden relative border border-white/10">
                 <div className="absolute -right-6 -top-6 w-20 h-20 bg-white/10 rounded-full blur-2xl"></div>
@@ -188,9 +195,10 @@ export function HomeView({
                     </div>
 
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20">
-                            <Loader2 className="w-12 h-12 text-rose-500 animate-spin mb-4" />
-                            <p className="text-gray-500 font-medium">Cargando anuncios...</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
+                            {[...Array(8)].map((_, i) => (
+                                <UserCardSkeleton key={i} />
+                            ))}
                         </div>
                     ) : filteredUsers.length > 0 ? (
                         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-6">
@@ -218,6 +226,55 @@ export function HomeView({
                     )}
                 </div>
             </div>
+
+            {/* SEO SEMANTIC CONTENT SECTION */}
+            <section className="mt-20 pt-12 border-t border-gray-100 pb-10">
+                <div className="max-w-4xl mx-auto space-y-8 opacity-60 hover:opacity-100 transition-opacity duration-500">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs leading-relaxed text-gray-500 font-medium">
+                        <article>
+                            <h2 className="text-sm font-black text-gray-900 mb-3 uppercase tracking-tighter">
+                                SafeConnect: La Revolución de los Clasificados en Colombia
+                            </h2>
+                            <p>
+                                SafeConnect nace con el objetivo de superar las limitaciones de plataformas tradicionales como <strong>mileroticos</strong> o <strong>skokka</strong>, ofreciendo un entorno donde la seguridad es la prioridad. En nuestro portal, cada anunciante pasa por un proceso de verificación riguroso, asegurando que los usuarios encuentren perfiles reales y servicios de alta calidad en ciudades como <strong>Bogotá</strong>, <strong>Medellín</strong>, <strong>Cali</strong> y <strong>Barranquilla</strong>.
+                            </p>
+                        </article>
+                        <article>
+                            <h2 className="text-sm font-black text-gray-900 mb-3 uppercase tracking-tighter">
+                                Escorts y Acompañantes Verificadas 24/7
+                            </h2>
+                            <p>
+                                Si buscas <strong>escorts en Colombia</strong> o <strong>modelos independientes</strong>, SafeConnect te ofrece herramientas avanzadas de filtrado. Puedes buscar por ubicación exacta, servicios específicos y disponibilidad inmediata. Nuestra tecnología de "Live Check" permite saber quién está en línea en este preciso momento, optimizando tu tiempo y garantizando discreción total.
+                            </p>
+                        </article>
+                    </div>
+
+                    <div className="bg-gray-50/50 rounded-3xl p-6 border border-gray-100">
+                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <MapPinIcon className="w-3 h-3" /> Directorio Regional de Clasificados
+                        </h3>
+                        <div className="flex flex-wrap gap-x-6 gap-y-2">
+                            {['Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena', 'Bucaramanga', 'Pereira', 'Manizales', 'Cúcuta', 'Ibagué'].map(city => (
+                                <a
+                                    key={city}
+                                    href={`#?city=${city}`}
+                                    className="text-[11px] font-bold text-gray-500 hover:text-rose-600 transition-colors"
+                                >
+                                    Acompañantes en {city}
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[9px] font-black text-gray-400 uppercase tracking-widest pt-4">
+                        <div className="flex items-center gap-4">
+                            <span className="flex items-center gap-1"><VerifiedIcon className="w-2.5 h-2.5" /> 100% Verified Profiles</span>
+                            <span className="flex items-center gap-1"><UsersIcon className="w-2.5 h-2.5" /> +5,000 active members</span>
+                        </div>
+                        <p>© 2026 SafeConnect Colombia</p>
+                    </div>
+                </div>
+            </section>
         </>
     );
 }

@@ -41,19 +41,51 @@ exports.requestVerification = async (req, res) => {
 // @access  Public
 exports.getUsers = async (req, res) => {
     try {
+        const { role, search, gender, page = 1, limit = 20 } = req.query;
+
         const query = { status: 'active' };
 
-        // Filter by role if provided
-        if (req.query.role) {
-            query.role = req.query.role;
+        // Security: Only allow public listing for specific roles
+        if (role && ['user', 'announcer'].includes(role)) {
+            query.role = role;
+        } else {
+            // Default: exclude admins from public directory
+            query.role = { $in: ['user', 'announcer'] };
         }
 
+        // Search logic (case-insensitive)
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { name: searchRegex },
+                { displayName: searchRegex },
+                { 'location.city': searchRegex },
+                { 'locationData.city': searchRegex }
+            ];
+        }
+
+        // Gender filter
+        if (gender) {
+            query.gender = gender;
+        }
+
+        // Pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
         const users = await User.find(query)
-            .select('name displayName avatar bio languages location age gender lastSeen verified role premium isOnline premiumPlan isVip rating reviewCount');
+            .select('name displayName avatar bio languages location locationData age gender lastSeen verified role premium isOnline premiumPlan isVip rating reviewCount')
+            .sort({ premium: -1, isVip: -1, lastSeen: -1 })
+            .skip(skip)
+            .limit(parseInt(limit));
+
+        const total = await User.countDocuments(query);
 
         res.status(200).json({
             success: true,
             count: users.length,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / limit),
             data: users
         });
     } catch (error) {

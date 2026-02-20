@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Exclude sensitive paths
+Disallow: /admin
+Disallow: /wallet
+Disallow: /messages
+Disallow: /profile
+
+Sitemap: https://safeconnect.co/sitemap.xml
