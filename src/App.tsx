@@ -20,6 +20,7 @@ import { LegalContent } from './components/info/LegalContent';
 import { PaymentContent } from './components/info/PaymentContent';
 import { AgeVerificationModal } from './components/AgeVerificationModal';
 import { HelpCircle, FileText, CreditCard } from 'lucide-react';
+import { UserListingView } from './components/UserListingView';
 
 // Lazy load heavy components
 const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
@@ -31,7 +32,7 @@ const Messaging = lazy(() => import('./components/messaging/Messaging').then(mod
 const Reviews = lazy(() => import('./components/reviews/Reviews').then(module => ({ default: module.Reviews })));
 const WalletView = lazy(() => import('./components/wallet/WalletView').then(module => ({ default: module.WalletView })));
 
-type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'wallet' | 'support' | 'legal' | 'privacy' | 'payments';
+type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'wallet' | 'support' | 'legal' | 'privacy' | 'payments' | 'clients' | 'announcers';
 
 function AppContent() {
   const { t } = useTranslation();
@@ -219,7 +220,7 @@ function AppContent() {
   }, [currentView === 'home', isLoggedIn, isAnnouncer]);
 
   const handleProtectedNavigation = (view: View) => {
-    if (!isLoggedIn && view !== 'home' && view !== 'login' && view !== 'register' && view !== 'support' && view !== 'legal' && view !== 'privacy' && view !== 'payments') {
+    if (!isLoggedIn && view !== 'home' && view !== 'login' && view !== 'register' && view !== 'support' && view !== 'legal' && view !== 'privacy' && view !== 'payments' && view !== 'clients' && view !== 'announcers') {
       setCurrentView('login');
       return;
     }
@@ -451,6 +452,18 @@ function AppContent() {
                   onNavigate={handleNavigate}
                   onUserClick={setSelectedUser}
                   onToggleFavorite={toggleFavorite}
+                />
+              ) : currentView === 'clients' ? (
+                <UserListingView
+                  role="user"
+                  onBack={() => setCurrentView('home')}
+                  onUserClick={setSelectedUser}
+                />
+              ) : currentView === 'announcers' ? (
+                <UserListingView
+                  role="announcer"
+                  onBack={() => setCurrentView('home')}
+                  onUserClick={setSelectedUser}
                 />
               ) : currentView === 'support' ? (
                 <InfoPage

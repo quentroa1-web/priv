@@ -1,4 +1,4 @@
-import { Home, Star, MessageCircle, X, User, LayoutDashboard, Wallet, Heart } from 'lucide-react';
+import { Home, Star, MessageCircle, X, User, LayoutDashboard, Wallet, Heart, Users, BadgeCheck } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,6 +13,8 @@ interface SidebarProps {
 const menuItems = [
   { id: 'home', label: 'Inicio', icon: Home, roles: ['user', 'announcer', 'admin'] },
   { id: 'profile', label: 'Mi Perfil', icon: User, roles: ['user', 'announcer', 'admin'] },
+  { id: 'clients', label: 'Clientes', icon: Users, roles: ['user', 'announcer', 'admin'] },
+  { id: 'announcers', label: 'Anunciantes', icon: BadgeCheck, roles: ['user', 'announcer', 'admin'] },
   { id: 'favorites', label: 'Favoritos', icon: Heart, roles: ['user', 'announcer', 'admin'] },
   { id: 'messages', label: 'Mensajes', icon: MessageCircle, roles: ['user', 'announcer', 'admin'] },
   { id: 'wallet', label: 'Billetera & Premium', icon: Wallet, roles: ['user', 'announcer'] },
