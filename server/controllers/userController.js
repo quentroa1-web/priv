@@ -35,3 +35,28 @@ exports.requestVerification = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+// @desc    Get all users (public with limited fields)
+// @route   GET /api/users
+// @access  Public
+exports.getUsers = async (req, res) => {
+    try {
+        const query = { status: 'active' };
+
+        // Filter by role if provided
+        if (req.query.role) {
+            query.role = req.query.role;
+        }
+
+        const users = await User.find(query)
+            .select('name displayName avatar bio languages location age gender lastSeen verified role premium isOnline premiumPlan isVip rating reviewCount');
+
+        res.status(200).json({
+            success: true,
+            count: users.length,
+            data: users
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
-const { requestVerification } = require('../controllers/userController');
+const { requestVerification, getUsers } = require('../controllers/userController');
 const { uploadDocs } = require('../config/cloudinary');
 
 // @desc    Get user profile
@@ -25,6 +25,11 @@ router.get('/:id', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// @desc    Get users list
+// @route   GET /api/users
+// @access  Public
+router.get('/', getUsers);
 
 // @desc    Request verification
 // @route   POST /api/users/verify

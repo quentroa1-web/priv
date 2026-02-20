@@ -91,6 +91,9 @@ export const uploadImages = (formData: FormData) => {
   });
 };
 
+export const getUsers = (filters?: any) =>
+  api.get('/users', { params: filters });
+
 // Ads
 export const getAds = (filters?: any) =>
   api.get('/ads', { params: filters });
@@ -184,6 +187,7 @@ export const apiService = {
   uploadAvatar,
   uploadProof,
   uploadImages,
+  getUsers,
   getAds,
   getAd,
   createAd,
