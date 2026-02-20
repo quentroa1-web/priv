@@ -143,8 +143,11 @@ export function UserListingView({ role, onUserClick, onBack }: UserListingViewPr
                         {userList.map((u) => (
                             <div
                                 key={u.id}
-                                onClick={() => onUserClick(u)}
-                                className="bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm hover:shadow-2xl hover:border-rose-200 transition-all duration-500 group cursor-pointer flex flex-col gap-5 relative overflow-hidden h-full"
+                                onClick={() => role !== 'user' && onUserClick(u)}
+                                className={cn(
+                                    "bg-white rounded-[2.5rem] p-6 border border-gray-100 shadow-sm transition-all duration-500 group flex flex-col gap-5 relative overflow-hidden h-full",
+                                    role !== 'user' ? "hover:shadow-2xl hover:border-rose-200 cursor-pointer" : "cursor-default"
+                                )}
                             >
                                 {u.premium && (
                                     <div className="absolute top-0 right-0 w-20 h-20 overflow-hidden pointer-events-none">

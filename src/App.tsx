@@ -125,6 +125,7 @@ function AppContent() {
   // Scroll to top on view change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    setSelectedUser(null);
   }, [currentView]);
 
   const handleNavigate = (view: View) => {
@@ -533,7 +534,7 @@ function AppContent() {
         </main>
       </div>
 
-      {(currentView === 'home' || currentView === 'favorites') && (
+      {(currentView === 'home' || currentView === 'favorites' || currentView === 'announcers') && (
         <UserDetailModal
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
