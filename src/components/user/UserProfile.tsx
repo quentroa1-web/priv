@@ -388,29 +388,32 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
         keywords="panel de control, mi perfil, gestionar anuncios, safeconnect"
       />
 
-      {/* Premium Header */}
-      <div className="relative mb-8 rounded-3xl overflow-hidden shadow-sm border border-gray-100 bg-white">
-        <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-50"></div>
-        <div className="relative p-6 px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-5">
+      <div className="mb-4">
+        <button
+          onClick={onBack}
+          className="p-3 rounded-xl bg-white shadow-sm border border-gray-100 hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all text-gray-700 inline-flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-xs font-bold">Volver</span>
+        </button>  
+        
+        {/* Banner Verification Promo - Super Compact */}
+        {!user.verified && user.verificationRequests?.status !== 'pending' && (
+          <div className="mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 text-white shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-blue-100 hidden sm:block" />
+              <div>
+                <h3 className="text-sm font-black m-0">Verifica tu cuenta y destaca</h3>
+              </div>
+            </div>
             <button
-              onClick={onBack}
-              className="p-3 rounded-2xl bg-white shadow-sm border border-gray-100 hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all text-gray-700"
+              onClick={() => setActiveTab('verification')}
+              className="px-3 py-1.5 bg-white text-blue-600 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition-all whitespace-nowrap"
             >
-              <ArrowLeft className="w-5 h-5" />
+              Verificar
             </button>
-            <div>
-              <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 tracking-tight">Panel de Control</h1>
-              <p className="text-sm font-medium text-gray-500 mt-1">Gestiona tu cuenta, anuncios y configuración de privacidad</p>
-            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="px-4 py-2 bg-rose-50/50 rounded-2xl border border-rose-100/50 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-rose-500" />
-              <span className="text-xs font-bold text-rose-700">{new Date().toLocaleDateString('es-ES', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="w-full max-w-7xl mx-auto">
@@ -493,9 +496,10 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
               </div>
 
               {/* Tabs */}
-              <nav className="space-y-2 relative z-10">
+              <nav className="grid grid-cols-4 gap-2 relative z-10">
                 {tabs.map(tab => {
                   const Icon = tab.icon;
+                  const shortLabel = tab.label.includes(' ') ? tab.label.split(' ')[1] : tab.label;
                   return (
                     <button
                       key={tab.id}
@@ -503,19 +507,14 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                         hapticFeedback('light');
                         setActiveTab(tab.id);
                       }}
-                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all relative overflow-hidden group ${activeTab === tab.id
-                        ? 'text-rose-700 bg-rose-50/50 shadow-sm ring-1 ring-rose-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      title={tab.label}
+                      className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all relative overflow-hidden group ${activeTab === tab.id
+                        ? 'text-rose-700 bg-rose-50 border border-rose-100 shadow-sm'
+                        : 'text-gray-500 bg-gray-50 border border-transparent hover:bg-gray-100 hover:text-gray-900'
                         }`}
                     >
-                      {activeTab === tab.id && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-rose-500 to-pink-500 rounded-r-full"></div>
-                      )}
-                      {activeTab === tab.id && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-transparent opacity-0 transition-opacity"></div>
-                      )}
-                      <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${activeTab === tab.id ? 'text-rose-600 drop-shadow-sm' : 'text-gray-400 group-hover:text-gray-600'}`} />
-                      <span className="relative z-10">{tab.label}</span>
+                      <Icon className={`w-5 h-5 mb-1 transition-transform group-hover:scale-110 ${activeTab === tab.id ? 'text-rose-600 drop-shadow-sm' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                      <span className="relative z-10 text-[8px] sm:text-[9px] font-bold leading-tight text-center truncate w-full">{shortLabel}</span>
                     </button>
                   );
                 })}
@@ -535,32 +534,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
           <div className="lg:col-span-8 xl:col-span-9">
             {activeTab === 'profile' && (
               <div className="space-y-6">
-                {/* Banner Verification Promo - Only if not verified and not pending */}
-                {!user.verified && user.verificationRequests?.status !== 'pending' && (
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
-                    <div className="relative z-10 flex items-center justify-between gap-6">
-                      <div className="flex-1">
-                        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold mb-3 border border-white/20">
-                          <Shield className="w-3.5 h-3.5" /> Verificación disponible
-                        </div>
-                        <h3 className="text-xl font-black mb-2">¡Verifica tu cuenta y destaca!</h3>
-                        <p className="text-blue-100 text-sm mb-4 leading-relaxed max-w-lg">
-                          Obtén tu insignia de verificado para generar más confianza, mejorar tu visibilidad en las búsquedas y acceder a soporte prioritario.
-                        </p>
-                        <button
-                          onClick={() => setActiveTab('verification')}
-                          className="px-5 py-2.5 bg-white text-blue-600 rounded-xl text-sm font-bold shadow-sm hover:shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                        >
-                          Verificar mi identidad <ArrowLeft className="w-4 h-4 rotate-180" />
-                        </button>
-                      </div>
-                      <div className="hidden sm:flex items-center justify-center w-16 h-16 bg-white/20 rounded-full backdrop-blur-sm border border-white/30 shrink-0">
-                        <CheckCircle className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                  </div>
-                )}
+                
 
                 {/* Profile Header */}
                 <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 mb-8 relative overflow-hidden">
@@ -768,28 +742,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                   </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                  {stats.map((stat, index) => {
-                    const Icon = stat.icon;
-                    const isPositive = stat.change.startsWith('+');
-                    return (
-                      <div key={index} className="group bg-white rounded-3xl shadow-sm border border-gray-100 p-5 hover:shadow-xl hover:shadow-rose-100/40 transition-all cursor-pointer relative overflow-hidden">
-                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out z-0"></div>
-                        <div className="relative z-10 flex items-center justify-between mb-4">
-                          <div className={`p-2.5 ${stat.color.replace('text-', 'bg-')}/10 rounded-2xl ring-1 ring-inset ring-${stat.color.replace('text-', '')}/20`}>
-                            <Icon className={`w-5 h-5 ${stat.color}`} />
-                          </div>
-                          <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                            {stat.change}
-                          </span>
-                        </div>
-                        <div className="relative z-10 text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 tracking-tight mb-1">{stat.value}</div>
-                        <div className="relative z-10 text-[10px] text-gray-500 font-bold uppercase tracking-widest">{stat.label}</div>
-                      </div>
-                    );
-                  })}
-                </div>
+                
               </div>
             )}
 
@@ -992,8 +945,30 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                   </div>
                 </div>
 
-                <div className="h-48 bg-gray-50 rounded-3xl flex items-center justify-center text-gray-400 font-bold text-sm italic">
-                  Gráfico de rendimiento (Próximamente)
+                
+                <div className="mb-0">
+                  <h3 className="text-xl font-black text-gray-900 mb-6">Métricas en Detalle</h3>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                    {stats.map((stat, index) => {
+                      const Icon = stat.icon;
+                      const isPositive = stat.change.startsWith('+');
+                      return (
+                        <div key={index} className="group bg-white rounded-3xl shadow-sm border border-gray-100 p-5 hover:shadow-xl hover:shadow-rose-100/40 transition-all cursor-pointer relative overflow-hidden">
+                          <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out z-0"></div>
+                          <div className="relative z-10 flex items-center justify-between mb-4">
+                            <div className={`p-2.5 ${stat.color.replace('text-', 'bg-')}/10 rounded-2xl ring-1 ring-inset ring-${stat.color.replace('text-', '')}/20`}>
+                              <Icon className={`w-5 h-5 ${stat.color}`} />
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                              {stat.change}
+                            </span>
+                          </div>
+                          <div className="relative z-10 text-2xl lg:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 tracking-tight mb-1">{stat.value}</div>
+                          <div className="relative z-10 text-[8px] sm:text-[9px] text-gray-500 font-bold uppercase tracking-widest">{stat.label}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
