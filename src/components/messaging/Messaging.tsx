@@ -7,7 +7,7 @@ import { apiService } from '../../services/api';
 import { transferCoins } from '../../services/payment';
 import {
   MessageCircle, Search, Send, Paperclip, X,
-  Smile, MoreVertical, Info, CheckCheck,
+  Smile, CheckCheck,
   ArrowLeft, Shield, ChevronRight, Crown, Lock, Unlock,
   Bell, Gift, Trash2, Calendar, Clock as ClockIcon
 } from 'lucide-react';
@@ -600,7 +600,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
   const myPacks = (currentUser as any).priceList || [];
 
   return (
-    <div className="animate-in fade-in duration-300 h-full">
+    <div className="animate-in fade-in duration-300 h-[calc(100vh-80px)] lg:h-[calc(100vh-120px)] min-h-[500px] flex flex-col -mt-4 lg:mt-0">
       {loading ? (
         <div className="flex items-center justify-center p-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
@@ -627,8 +627,8 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
               </div>
             </div>
           )}
-          <div className="w-full h-full">
-            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6 h-full relative`}>
+          <div className="w-full flex-1 flex flex-col min-h-0">
+            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6 flex-1 min-h-0 relative`}>
               {/* Conversations List */}
               <div className={`lg:col-span-1 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col ${activeConversation ? 'hidden lg:flex' : 'flex'}`}>
                 {/* Search */}
@@ -681,7 +681,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
-                                <h3 className={`font-bold truncate ${conv.id === SYSTEM_USER_ID ? 'text-blue-700' : conv.coins && conv.coins > 0 ? 'animate-gold-text brightness-110 drop-shadow-sm' : 'text-gray-900'} flex items-center gap-1.5`}>
+                                <h3 className={`font-bold truncate ${conv.id === SYSTEM_USER_ID ? 'text-blue-700' : conv.coins && conv.coins > 0 ? 'text-amber-700 font-bold' : 'text-gray-900'} flex items-center gap-1.5`}>
                                   {conv.userName}
                                   {conv.verified && (
                                     <CheckCheck className="w-3.5 h-3.5 text-blue-500" fill="currentColor" stroke="white" />
@@ -761,7 +761,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                           <div>
                             <div className="flex items-center gap-1.5">
                               <h3 className={`font-black text-sm md:text-base flex items-center gap-1.5 ${activeConversation.coins && activeConversation.coins > 0
-                                ? 'animate-gold-text drop-shadow-[0_0_2px_rgba(217,119,6,0.3)]'
+                                ? 'text-amber-700'
                                 : 'text-gray-900'
                                 }`}>
                                 {activeConversation.userName}
@@ -812,12 +812,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                             <Trash2 className="w-5 h-5" />
                           </button>
                         )}
-                        <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                          <Info className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
-                          <MoreVertical className="w-5 h-5" />
-                        </button>
+
                       </div>
                     </div>
 
@@ -975,14 +970,14 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                               </button>
 
                               {showGiftMenu && (
-                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
+                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
                                   <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
                                     <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
                                       <Gift className="w-3 h-3" /> Enviar Regalo
                                     </span>
                                     <button onClick={() => setShowGiftMenu(false)}><X className="w-4 h-4 text-gray-400" /></button>
                                   </div>
-                                  <div className="p-2 grid grid-cols-3 gap-1.5 max-h-[40dvh] overflow-y-auto scrollbar-hide">
+                                  <div className="p-2 grid grid-cols-3 gap-1.5 max-h-[250px] overflow-y-auto scrollbar-hide">
                                     {PREDEFINED_GIFTS.map((gift) => (
                                       <button
                                         key={gift.id}
@@ -1015,7 +1010,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                               </button>
 
                               {showPriceList && (
-                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[100] ring-1 ring-black/5">
+                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
                                   <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                                     <div className="flex flex-col">
                                       <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Centro de Contenido</span>
@@ -1026,7 +1021,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                     <button onClick={() => setShowPriceList(false)}><X className="w-4 h-4 text-gray-400" /></button>
                                   </div>
 
-                                  <div className="max-h-[50dvh] overflow-y-auto scrollbar-hide">
+                                  <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
                                     {activeConversation.role === 'announcer' ? (
                                       partnerPacks.length > 0 ? (
                                         partnerPacks.map((item: any, idx: number) => (
