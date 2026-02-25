@@ -73,6 +73,7 @@ interface UserProfileProps {
 export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditAd }: UserProfileProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [isUploading, setIsUploading] = useState(false);
   const [userAds, setUserAds] = useState<any[]>([]);
@@ -274,10 +275,13 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
 
   const handleSave = async () => {
     try {
+      setIsSaving(true);
       await onUpdateProfile(formData);
       setEditing(false);
     } catch (error) {
       alert('Error al guardar los cambios');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -548,13 +552,15 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     </div>
                     <button
                       onClick={() => editing ? handleSave() : setEditing(true)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm ${editing
-                        ? 'bg-green-500 text-white hover:bg-green-600 hover:shadow-green-100'
-                        : 'bg-rose-500 text-white hover:bg-rose-600 hover:shadow-rose-100'
+                      disabled={isSaving}
+                      aria-busy={isSaving}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${editing
+                        ? 'bg-green-500 text-white hover:bg-green-600 hover:shadow-green-100 focus-visible:ring-green-500'
+                        : 'bg-rose-500 text-white hover:bg-rose-600 hover:shadow-rose-100 focus-visible:ring-rose-500'
                         }`}
                     >
-                      {editing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-                      {editing ? 'Guardar cambios' : 'Editar perfil'}
+                      {isSaving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : (editing ? <Save className="w-4 h-4" aria-hidden="true" /> : <Edit className="w-4 h-4" aria-hidden="true" />)}
+                      {isSaving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Editar perfil')}
                     </button>
                   </div>
 
