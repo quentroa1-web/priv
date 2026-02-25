@@ -381,44 +381,57 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
 
 
   return (
-    <div className="animate-in fade-in duration-300">
+    <div className="animate-in fade-in duration-500 min-h-screen pb-12 bg-gray-50/20">
       <SEO
         title={`Panel de Control | ${user.displayName || user.name} - SafeConnect`}
         description="Gestiona tu perfil, anuncios y estadísticas en SafeConnect Colombia."
         keywords="panel de control, mi perfil, gestionar anuncios, safeconnect"
       />
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onBack}
-            className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-700" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-gray-900">Mi Perfil</h1>
-            <p className="text-sm text-gray-500">Gestiona tu cuenta y anuncios</p>
+
+      {/* Premium Header */}
+      <div className="relative mb-8 rounded-3xl overflow-hidden shadow-sm border border-gray-100 bg-white">
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-50 to-pink-50 opacity-50"></div>
+        <div className="relative p-6 px-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-5">
+            <button
+              onClick={onBack}
+              className="p-3 rounded-2xl bg-white shadow-sm border border-gray-100 hover:bg-gray-50 hover:scale-105 active:scale-95 transition-all text-gray-700"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 tracking-tight">Panel de Control</h1>
+              <p className="text-sm font-medium text-gray-500 mt-1">Gestiona tu cuenta, anuncios y configuración de privacidad</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="px-4 py-2 bg-rose-50/50 rounded-2xl border border-rose-100/50 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-rose-500" />
+              <span className="text-xs font-bold text-rose-700">{new Date().toLocaleDateString('es-ES', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 sticky top-6">
+          <div className="lg:col-span-4 xl:col-span-3">
+            <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/40 border border-white p-6 sticky top-6 ring-1 ring-gray-900/5 overflow-hidden">
+              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-gradient-to-br from-rose-400/20 to-pink-500/20 blur-2xl rounded-full pointer-events-none"></div>
               {/* User Card */}
-              <div className="text-center mb-6">
-                <div className="relative mx-auto w-24 h-24 mb-4">
+              <div className="relative text-center mb-8">
+                <div className="relative mx-auto w-28 h-28 mb-5 group">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-pink-500 rounded-3xl rotate-6 opacity-20 group-hover:rotate-12 transition-transform duration-300"></div>
                   {user.avatar && !user.avatar.includes('demo/image/upload') ? (
                     <img
                       src={user.avatar}
                       alt={user.displayName}
-                      className="w-full h-full rounded-2xl object-cover border-4 border-white shadow-lg"
+                      className="relative w-full h-full rounded-3xl object-cover border-4 border-white shadow-lg z-10"
                     />
                   ) : (
-                    <div className="w-full h-full rounded-2xl bg-rose-50 border-4 border-white shadow-lg flex items-center justify-center text-rose-300">
-                      <GenderIcon gender={user.gender} className="w-12 h-12" />
+                    <div className="relative w-full h-full rounded-3xl bg-gradient-to-br from-rose-50 to-pink-50 border-4 border-white shadow-lg flex items-center justify-center text-rose-400 z-10">
+                      <GenderIcon gender={user.gender} className="w-12 h-12 drop-shadow-sm" />
                     </div>
                   )}
                   <button
@@ -427,10 +440,10 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                       avatarInputRef.current?.click();
                     }}
                     disabled={isUploading}
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center border-2 border-white hover:scale-110 transition-transform disabled:opacity-50"
+                    className="absolute -bottom-3 -right-3 w-10 h-10 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-2xl flex items-center justify-center border-4 border-white hover:scale-105 active:scale-95 transition-all disabled:opacity-50 z-20 shadow-lg shadow-rose-200"
                     aria-label={t('nav.upload')}
                   >
-                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                    {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
                   </button>
                   <input
                     ref={avatarInputRef}
@@ -480,7 +493,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
               </div>
 
               {/* Tabs */}
-              <nav className="space-y-1">
+              <nav className="space-y-2 relative z-10">
                 {tabs.map(tab => {
                   const Icon = tab.icon;
                   return (
@@ -490,30 +503,36 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                         hapticFeedback('light');
                         setActiveTab(tab.id);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
-                        ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-200'
-                        : 'text-gray-700 hover:bg-gray-100'
+                      className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-sm font-bold transition-all relative overflow-hidden group ${activeTab === tab.id
+                        ? 'text-rose-700 bg-rose-50/50 shadow-sm ring-1 ring-rose-200'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                         }`}
                     >
-                      <Icon className="w-5 h-5" />
-                      {tab.label}
+                      {activeTab === tab.id && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-rose-500 to-pink-500 rounded-r-full"></div>
+                      )}
+                      {activeTab === tab.id && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 to-transparent opacity-0 transition-opacity"></div>
+                      )}
+                      <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${activeTab === tab.id ? 'text-rose-600 drop-shadow-sm' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                      <span className="relative z-10">{tab.label}</span>
                     </button>
                   );
                 })}
               </nav>
 
               {/* Stats Summary */}
-              <div className="mt-6 pt-6 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Visitas totales</span>
-                  <span className="text-lg font-black text-gray-900">1,247</span>
+              <div className="mt-8 pt-6 border-t border-gray-100/50 relative z-10">
+                <div className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-2xl shadow-sm border border-gray-100">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Visitas totales</span>
+                  <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">1,247</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-8 xl:col-span-9">
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 {/* Banner Verification Promo - Only if not verified and not pending */}
@@ -544,27 +563,29 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                 )}
 
                 {/* Profile Header */}
-                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-                  <div className="flex items-center justify-between mb-6">
+                <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 mb-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-gray-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 relative z-10">
                     <div>
-                      <h2 className="text-xl font-black text-gray-900">Información del Perfil</h2>
-                      <p className="text-sm text-gray-500">Actualiza tu información personal</p>
+                      <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">Información Personal</h2>
+                      <p className="text-sm font-medium text-gray-500 mt-1">Gestiona los detalles públicos y privados de tu cuenta</p>
                     </div>
                     <button
                       onClick={() => editing ? handleSave() : setEditing(true)}
                       disabled={isSaving}
                       aria-busy={isSaving}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${editing
-                        ? 'bg-green-500 text-white hover:bg-green-600 hover:shadow-green-100 focus-visible:ring-green-500'
-                        : 'bg-rose-500 text-white hover:bg-rose-600 hover:shadow-rose-100 focus-visible:ring-rose-500'
+                      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${editing
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:shadow-lg hover:shadow-emerald-200 hover:-translate-y-0.5 focus-visible:ring-emerald-500'
+                        : 'bg-white text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md hover:-translate-y-0.5 focus-visible:ring-gray-300'
                         }`}
                     >
                       {isSaving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : (editing ? <Save className="w-4 h-4" aria-hidden="true" /> : <Edit className="w-4 h-4" aria-hidden="true" />)}
-                      {isSaving ? 'Guardando...' : (editing ? 'Guardar cambios' : 'Editar perfil')}
+                      {isSaving ? 'Guardando...' : (editing ? 'Guardar Cambios' : 'Editar Perfil')}
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                     {/* Basic Info */}
                     <div className="space-y-4">
                       <div>
@@ -748,19 +769,23 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
                   {stats.map((stat, index) => {
                     const Icon = stat.icon;
+                    const isPositive = stat.change.startsWith('+');
                     return (
-                      <div key={index} className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 hover:scale-[1.02] transition-transform cursor-pointer">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className={`p-2 ${stat.color.replace('text-', 'bg-')} bg-opacity-10 rounded-lg`}>
+                      <div key={index} className="group bg-white rounded-3xl shadow-sm border border-gray-100 p-5 hover:shadow-xl hover:shadow-rose-100/40 transition-all cursor-pointer relative overflow-hidden">
+                        <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out z-0"></div>
+                        <div className="relative z-10 flex items-center justify-between mb-4">
+                          <div className={`p-2.5 ${stat.color.replace('text-', 'bg-')}/10 rounded-2xl ring-1 ring-inset ring-${stat.color.replace('text-', '')}/20`}>
                             <Icon className={`w-5 h-5 ${stat.color}`} />
                           </div>
-                          <span className="text-xs font-bold text-green-600">{stat.change}</span>
+                          <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                            {stat.change}
+                          </span>
                         </div>
-                        <div className="text-2xl font-black text-gray-900 mb-1">{stat.value}</div>
-                        <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">{stat.label}</div>
+                        <div className="relative z-10 text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 tracking-tight mb-1">{stat.value}</div>
+                        <div className="relative z-10 text-[10px] text-gray-500 font-bold uppercase tracking-widest">{stat.label}</div>
                       </div>
                     );
                   })}
@@ -769,11 +794,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
             )}
 
             {activeTab === 'ads' && (
-              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 animate-in slide-in-from-right duration-300">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 animate-in slide-in-from-right duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between mb-8 gap-6 relative z-10">
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900">Mis Anuncios</h2>
-                    <p className="text-sm text-gray-500">Gestiona tus publicaciones activas</p>
+                    <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">Mis Anuncios</h2>
+                    <p className="text-sm font-medium text-gray-500 mt-1">Gestiona tus publicaciones activas y destaca tu perfil</p>
                   </div>
 
                   <div className="flex flex-wrap gap-4">
@@ -934,11 +960,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
             )}
 
             {activeTab === 'stats' && (
-              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 animate-in slide-in-from-right duration-300">
-                <div className="flex items-center justify-between mb-8">
+              <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 animate-in slide-in-from-right duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative z-10">
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900">Estadísticas</h2>
-                    <p className="text-sm text-gray-500">Analiza el rendimiento de tu perfil</p>
+                    <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">Estadísticas</h2>
+                    <p className="text-sm font-medium text-gray-500 mt-1">Analiza el rendimiento y alcance de tu perfil</p>
                   </div>
                   <div className="flex gap-2">
                     <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200 transition-all">7 días</button>
@@ -975,56 +1002,65 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
               <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 animate-in slide-in-from-right duration-300">
                 <h2 className="text-2xl font-black text-gray-900 mb-6">Configuración</h2>
 
-                {/* Password Change Section */}
-                <div className="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-6 h-6 text-rose-500" />
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">Cambiar Contraseña</h3>
-                        <p className="text-sm text-gray-500">Actualiza tu contraseña de acceso</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setShowPasswordModal(true)}
-                      className="px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                </div>
+                {/* Settings Header */}
+                <div className="mb-8 bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-gray-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
 
-                {/* MFA Section */}
-                <div className="mb-8 p-6 bg-gray-50 rounded-2xl border border-gray-100">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-6 h-6 text-rose-500" />
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">Autenticación de Dos Factores (MFA)</h3>
-                        <p className="text-sm text-gray-500">Agrega una capa extra de seguridad</p>
+                  {/* Password Change Section */}
+                  <div className="mb-6 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm relative z-10">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-rose-50 rounded-xl text-rose-500">
+                          <Shield className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-gray-900">Cambiar Contraseña</h3>
+                          <p className="text-sm font-medium text-gray-500">Actualiza tu clave de acceso periódico</p>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => setShowPasswordModal(true)}
+                        className="px-5 py-2.5 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm active:scale-95 transition-all w-full sm:w-auto"
+                      >
+                        Actualizar
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setMfaEnabled(!mfaEnabled)}
-                      className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${mfaEnabled ? 'bg-rose-500' : 'bg-gray-300'
-                        }`}
-                    >
-                      <span
-                        className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${mfaEnabled ? 'translate-x-7' : 'translate-x-1'
-                          }`}
-                      />
-                    </button>
                   </div>
-                  {mfaEnabled && (
-                    <div className="mt-4 p-4 bg-white rounded-xl border border-gray-200">
-                      <p className="text-sm text-gray-600 mb-2">
-                        <strong>Estado:</strong> MFA Activado (Frontend Only)
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        La implementación del backend será completada posteriormente.
-                      </p>
+
+                  {/* MFA Section */}
+                  <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm relative z-10">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-blue-50 rounded-xl text-blue-500">
+                          <Shield className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-black text-gray-900">Autenticación de Dos Factores (MFA)</h3>
+                          <p className="text-sm font-medium text-gray-500">Agrega una capa de protección adicional</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setMfaEnabled(!mfaEnabled)}
+                        className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${mfaEnabled ? 'bg-rose-500' : 'bg-gray-300'
+                          }`}
+                      >
+                        <span
+                          className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${mfaEnabled ? 'translate-x-7' : 'translate-x-1'
+                            }`}
+                        />
+                      </button>
                     </div>
-                  )}
+                    {mfaEnabled && (
+                      <div className="mt-4 p-4 bg-white rounded-xl border border-gray-200">
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Estado:</strong> MFA Activado (Frontend Only)
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          La implementación del backend será completada posteriormente.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Account Deletion Section */}
@@ -1301,11 +1337,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
             )}
 
             {activeTab === 'services' && (
-              <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 animate-in slide-in-from-right duration-300">
-                <div className="flex items-center justify-between mb-8">
+              <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 animate-in slide-in-from-right duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative z-10">
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900">Mis Servicios y Precios</h2>
-                    <p className="text-sm text-gray-500">Define los paquetes que puedes ofrecer en el chat</p>
+                    <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">Mis Servicios y Precios</h2>
+                    <p className="text-sm font-medium text-gray-500 mt-1">Define los paquetes que puedes ofrecer en el chat</p>
                   </div>
                   <button
                     onClick={() => {
@@ -1362,11 +1399,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
 
             {activeTab === 'appointments' && (
               <div className="space-y-6 animate-in slide-in-from-right duration-300">
-                <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 relative z-10">
                     <div>
-                      <h2 className="text-2xl font-black text-gray-900 mb-1">Mis Citas</h2>
-                      <p className="text-sm text-gray-500">Gestiona tus encuentros y califica a los usuarios</p>
+                      <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">Mis Citas</h2>
+                      <p className="text-sm font-medium text-gray-500 mt-1">Gestiona tus encuentros y califica a los usuarios</p>
                     </div>
 
                     <div className="flex bg-gray-100 p-1 rounded-xl">
