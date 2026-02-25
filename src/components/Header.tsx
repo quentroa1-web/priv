@@ -1,6 +1,7 @@
 import { Shield, Bell, User, Menu, LogOut, PlusCircle, Coins } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AdvancedSearchBar } from './AdvancedSearchBar';
+import { hapticFeedback } from '../utils/haptics';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -42,6 +43,7 @@ export function Header({
   const isMessagingView = currentView === 'messages';
 
   const handleLanguageChange = () => {
+    hapticFeedback('light');
     const newLang = i18n.language === 'es' ? 'en' : 'es';
     i18n.changeLanguage(newLang);
     localStorage.setItem('language', newLang);
@@ -60,8 +62,12 @@ export function Header({
           {/* Logo */}
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={onMenuClick}
+              onClick={() => {
+                hapticFeedback('light');
+                onMenuClick();
+              }}
               className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label={t('nav.toggleMenu')}
             >
               <Menu className="w-5 h-5 text-gray-700" />
             </button>
@@ -88,6 +94,7 @@ export function Header({
             <button
               onClick={handleLanguageChange}
               className="px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-[10px] sm:text-xs font-bold text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              aria-label={t('nav.changeLanguage')}
             >
               {i18n.language === 'es' ? 'EN' : 'ES'}
             </button>
@@ -96,26 +103,38 @@ export function Header({
               <>
                 {(role === 'announcer' || role === 'admin') && (
                   <button
-                    onClick={onCreateAdClick}
+                    onClick={() => {
+                      hapticFeedback('light');
+                      onCreateAdClick?.();
+                    }}
                     className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                    aria-label={t('nav.publishAd')}
                   >
                     <PlusCircle className="w-3.5 h-3.5" />
-                    <span className="hidden lg:inline">Publicar</span>
+                    <span className="hidden lg:inline">{t('nav.publishAd')}</span>
                   </button>
                 )}
 
                 {/* Wallet Button */}
                 <button
-                  onClick={onWalletClick}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    onWalletClick?.();
+                  }}
                   className="flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-bold hover:bg-amber-200 transition-colors mr-1"
+                  aria-label={`${t('nav.wallet')}: ${coins?.toLocaleString() || 0}`}
                 >
                   <Coins className="w-4 h-4" />
                   <span>{coins?.toLocaleString() || 0}</span>
                 </button>
 
                 <button
-                  onClick={() => onNavigate?.('messages')}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    onNavigate?.('messages');
+                  }}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                  aria-label={t('nav.messages')}
                 >
                   <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                   {unreadCount > 0 && (
@@ -124,11 +143,15 @@ export function Header({
                 </button>
                 <div className="flex items-center gap-1 pl-1.5 ml-1 border-l border-gray-200">
                   <button
-                    onClick={onProfileClick}
+                    onClick={() => {
+                      hapticFeedback('light');
+                      onProfileClick?.();
+                    }}
                     className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border border-gray-100 hover:ring-2 hover:ring-rose-500/20 transition-all"
+                    aria-label={t('nav.profile')}
                   >
                     {user?.avatar ? (
-                      <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                      <img src={user.avatar} alt={t('nav.profile')} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-rose-100 flex items-center justify-center text-rose-600">
                         <User className="w-4 h-4" />
@@ -136,9 +159,13 @@ export function Header({
                     )}
                   </button>
                   <button
-                    onClick={onLogoutClick}
+                    onClick={() => {
+                      hapticFeedback('medium');
+                      onLogoutClick();
+                    }}
                     className="p-2 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-colors text-gray-500"
                     title={t('auth.logout')}
+                    aria-label={t('auth.logout')}
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -147,20 +174,30 @@ export function Header({
             ) : (
               <>
                 <button
-                  onClick={onRegisterClick}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    onRegisterClick();
+                  }}
                   className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                  aria-label={t('nav.publishAd')}
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
-                  <span className="hidden lg:inline">Publicar</span>
+                  <span className="hidden lg:inline">{t('nav.publishAd')}</span>
                 </button>
                 <button
-                  onClick={onLoginClick}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    onLoginClick();
+                  }}
                   className="px-2 sm:px-3 py-1.5 text-gray-700 font-bold hover:bg-gray-100 rounded-lg transition-all text-xs sm:text-sm"
                 >
                   {t('auth.login')}
                 </button>
                 <button
-                  onClick={onRegisterClick}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    onRegisterClick();
+                  }}
                   className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg font-bold hover:shadow-lg transition-all text-xs sm:text-sm whitespace-nowrap"
                 >
                   {t('auth.register')}

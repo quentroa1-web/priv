@@ -1,4 +1,18 @@
 {
+  "nav": {
+    "toggleMenu": "Abrir menú",
+    "changeLanguage": "Cambiar idioma",
+    "publishAd": "Publicar Anuncio",
+    "wallet": "Billetera",
+    "messages": "Mensajes",
+    "profile": "Perfil",
+    "delete": "Eliminar",
+    "upload": "Subir",
+    "back": "Volver",
+    "send": "Enviar",
+    "attach": "Adjuntar",
+    "emojis": "Emojis"
+  },
   "common": {
     "language": "Idioma",
     "search": "Buscar",
@@ -120,6 +134,7 @@
     "noAccount": "¿No tienes cuenta?",
     "haveAccount": "¿Ya tienes cuenta?",
     "signUp": "Regístrate aquí",
-    "backToHome": "Volver al Inicio"
+    "backToHome": "Volver al Inicio",
+    "logout": "Cerrar sesión"
   }
 }

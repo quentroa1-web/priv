@@ -1,4 +1,18 @@
 {
+  "nav": {
+    "toggleMenu": "Toggle menu",
+    "changeLanguage": "Change language",
+    "publishAd": "Publish Ad",
+    "wallet": "Wallet",
+    "messages": "Messages",
+    "profile": "Profile",
+    "delete": "Delete",
+    "upload": "Upload",
+    "back": "Back",
+    "send": "Send",
+    "attach": "Attach",
+    "emojis": "Emojis"
+  },
   "common": {
     "language": "Language",
     "search": "Search",
@@ -103,6 +117,7 @@
     "noAccount": "Don't have an account?",
     "haveAccount": "Already have an account?",
     "signUp": "Sign up here",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "logout": "Logout"
   }
 }

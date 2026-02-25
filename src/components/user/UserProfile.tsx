@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { User } from '../../types';
+import { hapticFeedback } from '../../utils/haptics';
+import { useTranslation } from 'react-i18next';
 import {
   uploadAvatar,
   getMyAds,
@@ -69,6 +71,7 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditAd }: UserProfileProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [isUploading, setIsUploading] = useState(false);
@@ -415,9 +418,13 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     </div>
                   )}
                   <button
-                    onClick={() => avatarInputRef.current?.click()}
+                    onClick={() => {
+                      hapticFeedback('light');
+                      avatarInputRef.current?.click();
+                    }}
                     disabled={isUploading}
                     className="absolute bottom-0 right-0 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center border-2 border-white hover:scale-110 transition-transform disabled:opacity-50"
+                    aria-label={t('nav.upload')}
                   >
                     {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
                   </button>
@@ -475,7 +482,10 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                   return (
                     <button
                       key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => {
+                        hapticFeedback('light');
+                        setActiveTab(tab.id);
+                      }}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${activeTab === tab.id
                         ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-200'
                         : 'text-gray-700 hover:bg-gray-100'
@@ -866,8 +876,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                             {ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date() ? 'Impulsado' : 'Impulsar'}
                           </button>
                           <button
-                            onClick={() => handleDeleteAd(ad._id || ad.id)}
+                            onClick={() => {
+                              hapticFeedback('medium');
+                              handleDeleteAd(ad._id || ad.id);
+                            }}
                             className="w-10 h-10 flex items-center justify-center bg-white text-gray-400 rounded-xl shadow-sm border border-gray-100 hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
+                            aria-label={t('nav.delete')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

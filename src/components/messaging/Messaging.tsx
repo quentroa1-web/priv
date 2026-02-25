@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { User } from '../../types';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { hapticFeedback } from '../../utils/haptics';
 import { apiService } from '../../services/api';
 import { transferCoins } from '../../services/payment';
 import {
@@ -94,6 +96,7 @@ const transformMessage = (data: any): Message => ({
 
 
 export function Messaging({ currentUser, onBack, targetUserId, targetUser, targetAdId, onTargetUserCleared }: MessagingProps) {
+  const { t } = useTranslation();
   const { refreshUser } = useAuth();
 
   // Helper to get robust User ID
@@ -608,8 +611,12 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
             <div className="mb-6 flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm border-b border-gray-100 lg:bg-transparent lg:border-none lg:p-0">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={onBack}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    onBack();
+                  }}
                   className="p-2 rounded-xl bg-white lg:bg-gray-100 hover:bg-gray-200 transition-all shadow-sm lg:shadow-none"
+                  aria-label={t('nav.back')}
                 >
                   <ArrowLeft className="w-5 h-5 text-gray-700" />
                 </button>
@@ -645,7 +652,10 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                       {filteredConversations.map(conv => (
                         <button
                           key={conv.id}
-                          onClick={() => setActiveConversation(conv)}
+                          onClick={() => {
+                            hapticFeedback('light');
+                            setActiveConversation(conv);
+                          }}
                           className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${activeConversation?.id === conv.id ? 'bg-blue-50 ring-1 ring-blue-100' : 'hover:bg-gray-50'} ${conv.id === SYSTEM_USER_ID && activeConversation?.id !== conv.id ? 'bg-blue-50/30' : ''}`}
                         >
                           <div className="flex items-center gap-3">
@@ -728,8 +738,12 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                     <div className="p-4 bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center justify-between shadow-sm z-30 shrink-0">
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => setActiveConversation(null)}
+                          onClick={() => {
+                            hapticFeedback('light');
+                            setActiveConversation(null);
+                          }}
                           className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                          aria-label={t('nav.back')}
                         >
                           <ArrowLeft className="w-5 h-5 text-gray-700" />
                         </button>
@@ -787,9 +801,13 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                         )}
                         {activeConversation.id !== SYSTEM_USER_ID && (
                           <button
-                            onClick={handleDeleteConversation}
+                            onClick={() => {
+                              hapticFeedback('medium');
+                              handleDeleteConversation();
+                            }}
                             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                            title="Eliminar conversación"
+                            title={t('nav.delete')}
+                            aria-label={t('nav.delete')}
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -930,10 +948,16 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <button className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors">
+                          <button
+                            className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors"
+                            aria-label={t('nav.emojis')}
+                          >
                             <Smile className="w-5 h-5 md:w-6 h-6" />
                           </button>
-                          <button className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors">
+                          <button
+                            className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors"
+                            aria-label={t('nav.attach')}
+                          >
                             <Paperclip className="w-5 h-5 md:w-6 h-6" />
                           </button>
 
@@ -1092,9 +1116,13 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
 
 
                           <button
-                            onClick={() => handleSendMessage()}
+                            onClick={() => {
+                              hapticFeedback('medium');
+                              handleSendMessage();
+                            }}
                             disabled={!newMessage.trim()}
                             className="p-3 md:p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:bg-gray-200 disabled:shadow-none active:scale-95 flex items-center justify-center group"
+                            aria-label={t('nav.send')}
                           >
                             <Send className={`w-4 h-4 md:w-5 h-5 ${newMessage.trim() ? 'translate-x-0.5 -translate-y-0.5' : ''} transition-transform`} />
                           </button>
