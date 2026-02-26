@@ -191,13 +191,13 @@ export function UserDetailModal({
                   </div>
 
                   {gallery.length > 1 && (
-                    <div className="hidden md:flex items-center gap-1.5 p-1.5 bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-xl">
-                      {gallery.slice(0, 4).map((img, idx) => (
+                    <div className="flex items-center gap-1.5 p-1.5 bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-xl overflow-x-auto max-w-full">
+                      {gallery.slice(0, 5).map((img, idx) => (
                         <button
                           key={idx}
                           onClick={() => setActiveImgIndex(idx)}
                           className={cn(
-                            "w-11 h-11 rounded-xl overflow-hidden border-2 transition-all active:scale-90",
+                            "w-9 h-9 md:w-11 md:h-11 shrink-0 rounded-xl overflow-hidden border-2 transition-all active:scale-90",
                             activeImgIndex === idx ? "border-white scale-105 shadow-md" : "border-transparent opacity-60 hover:opacity-100"
                           )}
                         >
@@ -211,10 +211,10 @@ export function UserDetailModal({
                 {/* Nav Arrows - Only if > 1 img */}
                 {gallery.length > 1 && (
                   <>
-                    <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:bg-black/40">
+                    <button onClick={prevImg} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all border border-white/10 hover:bg-black/40">
                       <ChevronLeft className="w-5 h-5" />
                     </button>
-                    <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all border border-white/10 hover:bg-black/40">
+                    <button onClick={nextImg} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all border border-white/10 hover:bg-black/40">
                       <ChevronRight className="w-5 h-5" />
                     </button>
                   </>
@@ -316,13 +316,13 @@ export function UserDetailModal({
           <button
             onClick={onToggleFavorite}
             className={cn(
-              "w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 relative border border-white backdrop-blur-md",
+              "w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 relative border border-white backdrop-blur-md",
               isFavorite
                 ? "bg-rose-500 text-white border-rose-600 shadow-rose-200"
                 : "bg-white/90 text-gray-500 hover:text-rose-600"
             )}
           >
-            <Heart className={cn("w-5 h-5 md:w-6 md:h-6 transition-transform", isFavorite && "fill-current")} />
+            <Heart className={cn("w-6 h-6 md:w-7 md:h-7 transition-transform", isFavorite && "fill-current")} />
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center border border-rose-500 text-[8px] font-black text-rose-500">
               {isFavorite ? '!' : '+'}
             </span>
@@ -335,9 +335,9 @@ export function UserDetailModal({
                 href={`https://wa.me/${user.whatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 md:w-14 md:h-14 bg-[#25D366] text-white rounded-[1.25rem] flex items-center justify-center hover:scale-105 transition-all shadow-md group/wa"
+                className="w-14 h-14 md:w-16 md:h-16 bg-[#25D366] text-white rounded-[1.5rem] flex items-center justify-center hover:scale-105 transition-all shadow-md group/wa"
               >
-                <svg className="w-6 h-6 md:w-8 md:h-8 fill-current" viewBox="0 0 24 24">
+                <svg className="w-7 h-7 md:w-8 md:h-8 fill-current" viewBox="0 0 24 24">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.224-3.52c1.54.914 3.382 1.403 5.26 1.404.006 0 0 0 0 0 5.464 0 9.903-4.439 9.906-9.903.001-2.648-1.03-5.136-2.903-7.01s-4.362-2.903-7.011-2.903c-5.463 0-9.903 4.44-9.906 9.903-.001 2.074.547 4.1 1.584 5.867l-1.035 3.784 3.882-1.018zm11.366-7.44c-.312-.156-1.848-.912-2.134-1.017-.286-.104-.494-.156-.701.156s-.805 1.017-.986 1.222-.364.234-.676.078c-.312-.156-1.316-.484-2.508-1.548-.928-.827-1.554-1.85-1.736-2.16-.182-.312-.019-.481.137-.636.141-.14.312-.364.468-.546s.208-.312.312-.52c.104-.208.052-.39-.026-.546s-.701-1.691-.962-2.313c-.254-.607-.513-.526-.701-.536-.182-.009-.39-.011-.597-.011s-.546.078-.831.39c-.286.312-1.091 1.067-1.091 2.6s1.117 3.016 1.274 3.224 2.193 3.352 5.313 4.697c.742.32 1.32.511 1.768.653.746.237 1.424.204 1.961.124.598-.089 1.848-.755 2.108-1.483.26-.728.26-1.353.182-1.483-.078-.13-.286-.234-.598-.39z" />
                 </svg>
               </a>
@@ -345,9 +345,9 @@ export function UserDetailModal({
             <button
               onClick={() => onMessage?.(user.uid || user.id || '', user.id || user._id)}
               disabled={isOwner}
-              className="w-12 h-12 md:w-14 md:h-14 bg-gray-950 text-white rounded-[1.25rem] flex items-center justify-center hover:scale-105 transition-all shadow-md active:rotate-12 disabled:opacity-30 group/msg"
+              className="w-14 h-14 md:w-16 md:h-16 bg-gray-950 text-white rounded-[1.5rem] flex items-center justify-center hover:scale-105 transition-all shadow-md active:rotate-12 disabled:opacity-30 group/msg"
             >
-              <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+              <MessageCircle className="w-7 h-7 md:w-8 md:h-8" />
             </button>
           </div>
         </div>
