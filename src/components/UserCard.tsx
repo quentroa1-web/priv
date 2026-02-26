@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Star, Clock, Heart, MessageCircle, Crown, BadgeCheck, Rocket } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { User } from '../types';
 import { cn } from '../utils/cn';
 import { hapticFeedback } from '../utils/haptics';
@@ -14,6 +15,7 @@ interface UserCardProps {
 }
 
 export const UserCard = React.memo(function UserCard({ user, onClick, variant = 'standard', isFavorite, onToggleFavorite }: UserCardProps) {
+  const { t } = useTranslation();
   const isVip = user.isVip;
 
   const handleMouseEnter = () => {
@@ -105,6 +107,7 @@ export const UserCard = React.memo(function UserCard({ user, onClick, variant = 
               hapticFeedback(isFavorite ? 'light' : 'medium');
               onToggleFavorite?.(e);
             }}
+            aria-label={isFavorite ? t('common.unfavorite') : t('common.favorite')}
             className={cn(
               "p-2.5 rounded-full backdrop-blur-lg transition-all shadow-xl active:scale-75 group/fav",
               isFavorite

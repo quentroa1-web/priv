@@ -176,6 +176,7 @@ export const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({ onSearch }
 
         <button
           onClick={handleSearch}
+          aria-label={t('common.search')}
           className="bg-rose-500 text-white p-2 rounded-full hover:bg-rose-600 transition-colors shadow-sm"
         >
           <Search className="w-3.5 h-3.5" />

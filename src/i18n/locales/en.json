@@ -1,5 +1,13 @@
 {
   "nav": {
+    "menuTitle": "Menu",
+    "home": "Home",
+    "clients": "Clients",
+    "announcers": "Advertisers",
+    "favorites": "Favorites",
+    "walletAndPremium": "Wallet & Premium",
+    "reviews": "Reviews",
+    "adminPanel": "Admin Panel",
     "toggleMenu": "Toggle menu",
     "changeLanguage": "Change language",
     "publishAd": "Publish Ad",
@@ -14,6 +22,8 @@
     "emojis": "Emojis"
   },
   "common": {
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
     "language": "Language",
     "search": "Search",
     "filter": "Filter",

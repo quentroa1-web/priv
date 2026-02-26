@@ -1,4 +1,5 @@
 import { Home, Star, MessageCircle, X, User, LayoutDashboard, Wallet, Heart, Users, BadgeCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -11,18 +12,19 @@ interface SidebarProps {
 }
 
 const menuItems = [
-  { id: 'home', label: 'Inicio', icon: Home, roles: ['user', 'announcer', 'admin'] },
-  { id: 'profile', label: 'Mi Perfil', icon: User, roles: ['user', 'announcer', 'admin'] },
-  { id: 'clients', label: 'Clientes', icon: Users, roles: ['user', 'announcer', 'admin'] },
-  { id: 'announcers', label: 'Anunciantes', icon: BadgeCheck, roles: ['user', 'announcer', 'admin'] },
-  { id: 'favorites', label: 'Favoritos', icon: Heart, roles: ['user', 'announcer', 'admin'] },
-  { id: 'messages', label: 'Mensajes', icon: MessageCircle, roles: ['user', 'announcer', 'admin'] },
-  { id: 'wallet', label: 'Billetera & Premium', icon: Wallet, roles: ['user', 'announcer'] },
-  { id: 'reviews', label: 'Reseñas', icon: Star, roles: ['announcer', 'admin'] },
-  { id: 'admin', label: 'Panel Admin', icon: LayoutDashboard, roles: ['admin'] },
+  { id: 'home', labelKey: 'nav.home', icon: Home, roles: ['user', 'announcer', 'admin'] },
+  { id: 'profile', labelKey: 'nav.profile', icon: User, roles: ['user', 'announcer', 'admin'] },
+  { id: 'clients', labelKey: 'nav.clients', icon: Users, roles: ['user', 'announcer', 'admin'] },
+  { id: 'announcers', labelKey: 'nav.announcers', icon: BadgeCheck, roles: ['user', 'announcer', 'admin'] },
+  { id: 'favorites', labelKey: 'nav.favorites', icon: Heart, roles: ['user', 'announcer', 'admin'] },
+  { id: 'messages', labelKey: 'nav.messages', icon: MessageCircle, roles: ['user', 'announcer', 'admin'] },
+  { id: 'wallet', labelKey: 'nav.walletAndPremium', icon: Wallet, roles: ['user', 'announcer'] },
+  { id: 'reviews', labelKey: 'nav.reviews', icon: Star, roles: ['announcer', 'admin'] },
+  { id: 'admin', labelKey: 'nav.adminPanel', icon: LayoutDashboard, roles: ['admin'] },
 ];
 
 export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role, unreadCount = 0 }: SidebarProps) {
+  const { t } = useTranslation();
   return (
     <>
       {/* Overlay for mobile */}
@@ -42,7 +44,7 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
         <div className="flex flex-col h-full">
           {/* Mobile Header */}
           <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold uppercase tracking-tighter">Menú</h2>
+            <h2 className="text-lg font-semibold uppercase tracking-tighter">{t('nav.menuTitle')}</h2>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -70,7 +72,7 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
                   `}
                 >
                   <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-400'}`} />
-                  <span>{item.label}</span>
+                  <span>{t(item.labelKey)}</span>
                   {item.id === 'messages' && unreadCount > 0 && (
                     <span className="ml-auto bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black">
                       {unreadCount}
