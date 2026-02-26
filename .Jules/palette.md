@@ -9,3 +9,8 @@
 **Learning:** Profile save action had no loading states causing user uncertainty during async saves. Missing `aria-busy` and `aria-hidden` attributes failed to convey button's state to screen readers.
 
 **Action:** Always wrap async form save actions with `isSaving` state. Provide `disabled` states + `aria-busy` when processing, and add `focus-visible` ring indicators for explicit keyboard navigation feedback. Use `<Loader2 />` from Lucide to communicate async operations visually.
+
+## 2026-03-10 - [Localized ARIA Labels & Sidebar Internationalization]
+**Learning:** Found that icon-only buttons like Favorites (Heart) and Search were missing ARIA labels, and the Sidebar had hardcoded labels. This breaks screen readers and prevents full internationalization support.
+
+**Action:** Ensure all icon-only buttons have dynamic `aria-label` attributes using localized strings (e.g., `aria-label={isFavorite ? t('common.unfavorite') : t('common.favorite')}`). Always use `useTranslation` hook and `t()` for sidebar navigation labels to support multi-language seamlessly.

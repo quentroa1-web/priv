@@ -1,5 +1,13 @@
 {
   "nav": {
+    "menuTitle": "Menú",
+    "home": "Inicio",
+    "clients": "Clientes",
+    "announcers": "Anunciantes",
+    "favorites": "Favoritos",
+    "walletAndPremium": "Billetera & Premium",
+    "reviews": "Reseñas",
+    "adminPanel": "Panel Admin",
     "toggleMenu": "Abrir menú",
     "changeLanguage": "Cambiar idioma",
     "publishAd": "Publicar Anuncio",
@@ -14,6 +22,8 @@
     "emojis": "Emojis"
   },
   "common": {
+    "favorite": "Agregar a favoritos",
+    "unfavorite": "Quitar de favoritos",
     "language": "Idioma",
     "search": "Buscar",
     "filter": "Filtrar",
