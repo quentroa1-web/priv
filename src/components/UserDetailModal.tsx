@@ -311,15 +311,15 @@ export function UserDetailModal({
         </div>
 
         {/* FLOATING ACTIONS */}
-        <div className="absolute bottom-8 right-8 z-[70] flex flex-col items-end gap-5 group/actions shadow-2xl">
-          {/* Favorite Bubble */}
+        <div className="absolute bottom-6 right-6 md:bottom-8 md:right-8 z-[70] flex flex-col gap-3 p-2.5 bg-white/30 backdrop-blur-2xl rounded-full border border-white/40 shadow-2xl group/actions">
+          {/* Favorite */}
           <button
             onClick={onToggleFavorite}
             className={cn(
-              "w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-2xl transition-all active:scale-90 relative border border-white backdrop-blur-md",
+              "w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-xl transition-all active:scale-90 relative border border-white",
               isFavorite
                 ? "bg-rose-500 text-white border-rose-600 shadow-rose-200"
-                : "bg-white/90 text-gray-500 hover:text-rose-600"
+                : "bg-white text-gray-500 hover:text-rose-600"
             )}
           >
             <Heart className={cn("w-6 h-6 md:w-7 md:h-7 transition-transform", isFavorite && "fill-current")} />
@@ -328,28 +328,28 @@ export function UserDetailModal({
             </span>
           </button>
 
-          {/* Contacts Stack */}
-          <div className="flex flex-col gap-3 p-2.5 bg-white/60 backdrop-blur-2xl rounded-[2rem] border border-white/40 shadow-2xl transform transition-all group-hover/actions:-translate-y-1">
-            {user.whatsapp && (
-              <a
-                href={`https://wa.me/${user.whatsapp.replace(/\D/g, '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-14 h-14 md:w-16 md:h-16 bg-[#25D366] text-white rounded-[1.5rem] flex items-center justify-center hover:scale-105 transition-all shadow-md group/wa"
-              >
-                <svg className="w-7 h-7 md:w-8 md:h-8 fill-current" viewBox="0 0 24 24">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.224-3.52c1.54.914 3.382 1.403 5.26 1.404.006 0 0 0 0 0 5.464 0 9.903-4.439 9.906-9.903.001-2.648-1.03-5.136-2.903-7.01s-4.362-2.903-7.011-2.903c-5.463 0-9.903 4.44-9.906 9.903-.001 2.074.547 4.1 1.584 5.867l-1.035 3.784 3.882-1.018zm11.366-7.44c-.312-.156-1.848-.912-2.134-1.017-.286-.104-.494-.156-.701.156s-.805 1.017-.986 1.222-.364.234-.676.078c-.312-.156-1.316-.484-2.508-1.548-.928-.827-1.554-1.85-1.736-2.16-.182-.312-.019-.481.137-.636.141-.14.312-.364.468-.546s.208-.312.312-.52c.104-.208.052-.39-.026-.546s-.701-1.691-.962-2.313c-.254-.607-.513-.526-.701-.536-.182-.009-.39-.011-.597-.011s-.546.078-.831.39c-.286.312-1.091 1.067-1.091 2.6s1.117 3.016 1.274 3.224 2.193 3.352 5.313 4.697c.742.32 1.32.511 1.768.653.746.237 1.424.204 1.961.124.598-.089 1.848-.755 2.108-1.483.26-.728.26-1.353.182-1.483-.078-.13-.286-.234-.598-.39z" />
-                </svg>
-              </a>
-            )}
-            <button
-              onClick={() => onMessage?.(user.uid || user.id || '', user.id || user._id)}
-              disabled={isOwner}
-              className="w-14 h-14 md:w-16 md:h-16 bg-gray-950 text-white rounded-[1.5rem] flex items-center justify-center hover:scale-105 transition-all shadow-md active:rotate-12 disabled:opacity-30 group/msg"
+          {/* WhatsApp */}
+          {user.whatsapp && (
+            <a
+              href={`https://wa.me/${user.whatsapp.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-14 h-14 md:w-16 md:h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-xl group/wa border border-white/20"
             >
-              <MessageCircle className="w-7 h-7 md:w-8 md:h-8" />
-            </button>
-          </div>
+              <svg className="w-7 h-7 md:w-8 md:h-8 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.224-3.52c1.54.914 3.382 1.403 5.26 1.404.006 0 0 0 0 0 5.464 0 9.903-4.439 9.906-9.903.001-2.648-1.03-5.136-2.903-7.01s-4.362-2.903-7.011-2.903c-5.463 0-9.903 4.44-9.906 9.903-.001 2.074.547 4.1 1.584 5.867l-1.035 3.784 3.882-1.018zm11.366-7.44c-.312-.156-1.848-.912-2.134-1.017-.286-.104-.494-.156-.701.156s-.805 1.017-.986 1.222-.364.234-.676.078c-.312-.156-1.316-.484-2.508-1.548-.928-.827-1.554-1.85-1.736-2.16-.182-.312-.019-.481.137-.636.141-.14.312-.364.468-.546s.208-.312.312-.52c.104-.208.052-.39-.026-.546s-.701-1.691-.962-2.313c-.254-.607-.513-.526-.701-.536-.182-.009-.39-.011-.597-.011s-.546.078-.831.39c-.286.312-1.091 1.067-1.091 2.6s1.117 3.016 1.274 3.224 2.193 3.352 5.313 4.697c.742.32 1.32.511 1.768.653.746.237 1.424.204 1.961.124.598-.089 1.848-.755 2.108-1.483.26-.728.26-1.353.182-1.483-.078-.13-.286-.234-.598-.39z" />
+              </svg>
+            </a>
+          )}
+
+          {/* Chat */}
+          <button
+            onClick={() => onMessage?.(user.uid || user.id || '', user.id || user._id)}
+            disabled={isOwner}
+            className="w-14 h-14 md:w-16 md:h-16 bg-gray-950 text-white rounded-full flex items-center justify-center hover:scale-105 transition-all shadow-xl active:rotate-12 disabled:opacity-30 group/msg border border-white/10"
+          >
+            <MessageCircle className="w-7 h-7 md:w-8 md:h-8" />
+          </button>
         </div>
       </div>
     </div>
