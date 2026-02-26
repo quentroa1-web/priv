@@ -126,9 +126,13 @@
 
 /* Glassmorphism Sidebar */
 .glass-sidebar {
-  background: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+.mobile-sidebar-bg {
+  background: #ffffff !important;
 }
 
 /* Iridescent / Tornasol effect */
