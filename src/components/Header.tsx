@@ -81,9 +81,9 @@ export function Header({
             </div>
           </div>
 
-          {/* Search Bar - SOLO Desktop (md+) */}
+          {/* Search Bar - SOLO Desktop (lg+) */}
           {!isMessagingView && (
-            <div className="hidden md:block flex-1 max-w-xl mx-auto px-4">
+            <div className="hidden lg:block flex-1 max-w-xl mx-auto px-4">
               <AdvancedSearchBar onSearch={handleSearch} />
             </div>
           )}
@@ -209,7 +209,7 @@ export function Header({
 
         {/* === FILA INFERIOR MÓVIL: Barra de búsqueda === */}
         {!isMessagingView && (
-          <div className="md:hidden pb-3">
+          <div className="lg:hidden pb-3">
             <AdvancedSearchBar onSearch={handleSearch} />
           </div>
         )}
