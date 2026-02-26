@@ -83,13 +83,13 @@ export function Header({
 
           {/* Search Bar - SOLO Desktop (lg+) */}
           {!isMessagingView && (
-            <div className="hidden lg:block flex-1 max-w-xl mx-auto px-4">
+            <div className="hidden lg:block flex-1 max-w-sm xl:max-w-xl mx-auto px-4">
               <AdvancedSearchBar onSearch={handleSearch} />
             </div>
           )}
 
           {/* Acciones */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto overflow-visible">
             {/* Idioma */}
             <button
               onClick={handleLanguageChange}
@@ -189,7 +189,7 @@ export function Header({
                     hapticFeedback('light');
                     onLoginClick();
                   }}
-                  className="px-2 sm:px-3 py-1.5 text-gray-700 font-bold hover:bg-gray-100 rounded-lg transition-all text-xs sm:text-sm"
+                  className="px-2 sm:px-3 py-1.5 text-gray-700 font-bold hover:bg-gray-100 rounded-lg transition-all text-xs sm:text-sm whitespace-nowrap"
                 >
                   {t('auth.login')}
                 </button>
