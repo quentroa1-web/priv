@@ -104,28 +104,31 @@ export function Header({
             {isLoggedIn ? (
               <>
                 {(role === 'announcer' || role === 'admin') && (
-                  <div className="hidden sm:flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    {/* Servicios — visible en todos los tamaños */}
                     <button
                       onClick={() => {
                         hapticFeedback('light');
                         onServicesClick?.();
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
+                      className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
                       aria-label="Gestionar Servicios"
                       title="Gestionar Servicios"
                     >
-                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       <span className="hidden lg:inline">Servicios</span>
                     </button>
+                    {/* Publicar — visible en todos los tamaños */}
                     <button
                       onClick={() => {
                         hapticFeedback('light');
                         onCreateAdClick?.();
                       }}
-                      className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                      className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
                       aria-label={t('nav.publishAd')}
+                      title={t('nav.publishAd')}
                     >
-                      <PlusCircle className="w-3.5 h-3.5" />
+                      <PlusCircle className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                       <span className="hidden lg:inline">{t('nav.publishAd')}</span>
                     </button>
                   </div>
