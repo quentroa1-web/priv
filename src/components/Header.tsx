@@ -1,4 +1,4 @@
-import { Shield, Bell, User, Menu, LogOut, PlusCircle, Coins } from 'lucide-react';
+import { Shield, Bell, User, Menu, LogOut, PlusCircle, Coins, ShoppingBag } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AdvancedSearchBar } from './AdvancedSearchBar';
 import { hapticFeedback } from '../utils/haptics';
@@ -10,6 +10,7 @@ interface HeaderProps {
   onRegisterClick: () => void;
   onLogoutClick: () => void;
   onCreateAdClick?: () => void;
+  onServicesClick?: () => void;
   onProfileClick?: () => void;
   onSearch?: (filters: any) => void;
   role?: 'user' | 'announcer' | 'admin';
@@ -28,6 +29,7 @@ export function Header({
   onRegisterClick,
   onLogoutClick,
   onCreateAdClick,
+  onServicesClick,
   onProfileClick,
   onSearch,
   role,
@@ -102,17 +104,31 @@ export function Header({
             {isLoggedIn ? (
               <>
                 {(role === 'announcer' || role === 'admin') && (
-                  <button
-                    onClick={() => {
-                      hapticFeedback('light');
-                      onCreateAdClick?.();
-                    }}
-                    className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
-                    aria-label={t('nav.publishAd')}
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" />
-                    <span className="hidden lg:inline">{t('nav.publishAd')}</span>
-                  </button>
+                  <div className="hidden sm:flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        hapticFeedback('light');
+                        onServicesClick?.();
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
+                      aria-label="Gestionar Servicios"
+                      title="Gestionar Servicios"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span className="hidden lg:inline">Servicios</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        hapticFeedback('light');
+                        onCreateAdClick?.();
+                      }}
+                      className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                      aria-label={t('nav.publishAd')}
+                    >
+                      <PlusCircle className="w-3.5 h-3.5" />
+                      <span className="hidden lg:inline">{t('nav.publishAd')}</span>
+                    </button>
+                  </div>
                 )}
 
                 {/* Wallet Button */}

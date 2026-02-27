@@ -1000,95 +1000,128 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                           {(activeConversation.role === 'announcer' || currentUser.role === 'announcer') && activeConversation.id !== SYSTEM_USER_ID && (
                             <div className="relative">
                               <button
-                                className={`p-2 md:p-3 rounded-xl transition-all ${showPriceList ? 'bg-rose-500 text-white shadow-lg' : 'text-rose-500 hover:bg-rose-50'}`}
+                                className={`p-2 md:p-3 rounded-xl transition-all ${showPriceList ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'text-rose-500 hover:bg-rose-50'}`}
                                 onClick={() => {
                                   setShowPriceList(!showPriceList);
                                   setShowGiftMenu(false);
                                 }}
+                                title="Servicios y Packs"
+                                aria-label="Servicios y Packs"
                               >
                                 {activeConversation.role === 'announcer' ? <Lock className="w-5 h-5 md:w-6 h-6" /> : <Crown className="w-5 h-5 md:w-6 h-6" />}
                               </button>
 
                               {showPriceList && (
-                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
-                                  <div className="p-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                      <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest leading-none mb-1">Centro de Contenido</span>
-                                      <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">
-                                        {activeConversation.role === 'announcer' ? 'Tienda del Anunciante' : 'Tu Catálogo de Venta'}
-                                      </span>
+                                <div className="absolute bottom-full left-0 mb-4 w-[300px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
+                                  {/* Panel Header */}
+                                  <div className="relative p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
+                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Ccircle cx='23' cy='23' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
+                                    <div className="relative z-10 flex items-center justify-between">
+                                      <div>
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-white/50 leading-none mb-1">
+                                          {activeConversation.role === 'announcer' ? '🛍️ Tienda del Anunciante' : '💼 Tu Catálogo'}
+                                        </div>
+                                        <div className="font-black text-sm text-white">
+                                          {activeConversation.role === 'announcer' ? activeConversation.userName : 'Mis Servicios'}
+                                        </div>
+                                      </div>
+                                      <button onClick={() => setShowPriceList(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-all">
+                                        <X className="w-4 h-4 text-white/60" />
+                                      </button>
                                     </div>
-                                    <button onClick={() => setShowPriceList(false)}><X className="w-4 h-4 text-gray-400" /></button>
                                   </div>
 
                                   <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
                                     {activeConversation.role === 'announcer' ? (
                                       partnerPacks.length > 0 ? (
-                                        partnerPacks.map((item: any, idx: number) => (
-                                          <button
-                                            key={idx}
-                                            onClick={() => {
-                                              handleBuyPack(item);
-                                              setShowPriceList(false);
-                                            }}
-                                            className="w-full p-4 text-left hover:bg-rose-50 transition-colors border-b border-gray-50 flex items-center justify-between group"
-                                          >
-                                            <div className="flex-1 pr-2">
-                                              <div className="text-[11px] font-black text-gray-900 group-hover:text-rose-600 truncate">{item.label}</div>
-                                              <div className="text-[9px] text-gray-500 mt-0.5">Comprar contenido</div>
-                                            </div>
-                                            <div className="text-rose-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0">
-                                              {item.price} 🪙
-                                            </div>
-                                          </button>
-                                        ))
+                                        <div>
+                                          {partnerPacks.map((item: any, idx: number) => {
+                                            const typeIcon = item.type === 'photos' ? '📸' : item.type === 'videos' ? '🎬' : '✨';
+                                            const typeLabel = item.type === 'photos' ? 'Fotos' : item.type === 'videos' ? 'Videos' : 'Servicio';
+                                            const qty = item.quantity && item.type !== 'service' ? `${item.quantity} ${item.type === 'photos' ? 'fotos' : 'videos'}` : null;
+                                            return (
+                                              <button
+                                                key={idx}
+                                                onClick={() => {
+                                                  handleBuyPack(item);
+                                                  setShowPriceList(false);
+                                                }}
+                                                className="w-full p-3.5 text-left hover:bg-rose-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
+                                              >
+                                                <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-lg">
+                                                  {typeIcon}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="text-[11px] font-black text-gray-900 group-hover:text-rose-600 truncate">{item.label}</div>
+                                                  <div className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                                    <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
+                                                    {qty && <span>{qty}</span>}
+                                                  </div>
+                                                </div>
+                                                <div className="text-rose-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
+                                                  <span>{item.price} 🪙</span>
+                                                  <span className="text-[9px] text-gray-400 font-medium">Comprar</span>
+                                                </div>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
                                       ) : (
                                         <div className="p-8 text-center bg-gray-50/30">
-                                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                            <Lock className="w-5 h-5 text-gray-300" />
-                                          </div>
+                                          <div className="text-4xl mb-3">📦</div>
                                           <p className="text-[11px] text-gray-500 font-bold leading-relaxed px-4">
-                                            Este anunciante aún no ha configurado su contenido para la venta
+                                            Este anunciante aún no ha configurado packs para la venta
                                           </p>
                                         </div>
                                       )
                                     ) : (
-                                      /* Current user is announcer selling to a normal user */
-                                      myPacks.map((item: any, idx: number) => (
-                                        <button
-                                          key={idx}
-                                          onClick={() => {
-                                            handleSendMessage(item.label, { isLocked: true, price: item.price });
-                                            setShowPriceList(false);
-                                          }}
-                                          className="w-full p-4 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 flex items-center justify-between group"
-                                        >
-                                          <div className="flex-1 pr-2">
-                                            <div className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 truncate">{item.label}</div>
-                                            <div className="text-[9px] text-gray-500 mt-0.5">Enviar oferta de pack</div>
-                                          </div>
-                                          <div className="text-blue-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0">
-                                            {item.price} 🪙
-                                          </div>
-                                        </button>
-                                      ))
+                                      /* Current user is announcer selling */
+                                      myPacks.length > 0 ? (
+                                        <div>
+                                          {myPacks.map((item: any, idx: number) => {
+                                            const typeIcon = item.type === 'photos' ? '📸' : item.type === 'videos' ? '🎬' : '✨';
+                                            const typeLabel = item.type === 'photos' ? 'Fotos' : item.type === 'videos' ? 'Videos' : 'Servicio';
+                                            return (
+                                              <button
+                                                key={idx}
+                                                onClick={() => {
+                                                  handleSendMessage(item.label, { isLocked: true, price: item.price });
+                                                  setShowPriceList(false);
+                                                }}
+                                                className="w-full p-3.5 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
+                                              >
+                                                <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg">
+                                                  {typeIcon}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <div className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 truncate">{item.label}</div>
+                                                  <div className="text-[9px] text-gray-400 mt-0.5">
+                                                    <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
+                                                  </div>
+                                                </div>
+                                                <div className="text-blue-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
+                                                  <span>{item.price} 🪙</span>
+                                                  <span className="text-[9px] text-gray-400 font-medium">Enviar oferta</span>
+                                                </div>
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : (
+                                        <div className="p-8 text-center bg-gray-50/30">
+                                          <div className="text-4xl mb-3">🛍️</div>
+                                          <p className="text-[11px] text-gray-500 font-bold leading-relaxed px-4">
+                                            Aún no has creado packs. Usa el botón <strong>"Servicios"</strong> en la barra superior para crearlos.
+                                          </p>
+                                        </div>
+                                      )
                                     )}
                                   </div>
                                   {currentUser.role === 'announcer' && (
-                                    <div className="p-3 bg-rose-50">
-                                      <button
-                                        onClick={() => {
-                                          const price = prompt('Precio personalizado:');
-                                          const label = prompt('Contenido:');
-                                          if (price && label) {
-                                            handleSendMessage(label, { isLocked: true, price: parseInt(price) });
-                                            setShowPriceList(false);
-                                          }
-                                        }}
-                                        className="w-full py-2.5 bg-white text-rose-600 rounded-xl text-[10px] font-black shadow-sm border border-rose-200 hover:bg-rose-600 hover:text-white transition-all active:scale-95"
-                                      >
-                                        + Nuevo Cobro Directo
-                                      </button>
+                                    <div className="p-3 border-t border-gray-100 bg-gray-50/50">
+                                      <p className="text-[9px] text-gray-400 text-center font-bold uppercase tracking-widest">
+                                        💡 Gestiona tus packs desde el botón "Servicios" en el menú principal
+                                      </p>
                                     </div>
                                   )}
                                 </div>

@@ -23,6 +23,7 @@ import { PaymentContent } from './components/info/PaymentContent';
 import { AgeVerificationModal } from './components/AgeVerificationModal';
 import { HelpCircle, FileText, CreditCard } from 'lucide-react';
 import { UserListingView } from './components/UserListingView';
+import { ServicesManager } from './components/ServicesManager';
 
 // Lazy load heavy components
 const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
@@ -59,6 +60,7 @@ function AppContent() {
   const [editingAd, setEditingAd] = useState<any | null>(null);
   const [currentView, setCurrentView] = useState<View>('home');
   const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
   const [messageTargetUser, setMessageTargetUser] = useState<string | null>(null);
   const [messageTargetAdId, setMessageTargetAdId] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -376,6 +378,7 @@ function AppContent() {
           setEditingAd(null);
           handleProtectedNavigation('createAd');
         }}
+        onServicesClick={() => setIsServicesOpen(true)}
         onProfileClick={() => {
           setEditingAd(null);
           handleProtectedNavigation('profile');
@@ -554,6 +557,15 @@ function AppContent() {
         onMessage={(userId) => {
           setViewingPublicProfile(null);
           handleOpenMessage(userId);
+        }}
+      />
+
+      <ServicesManager
+        isOpen={isServicesOpen}
+        onClose={() => setIsServicesOpen(false)}
+        user={user}
+        onSave={async (packs) => {
+          await updateUser({ priceList: packs });
         }}
       />
 

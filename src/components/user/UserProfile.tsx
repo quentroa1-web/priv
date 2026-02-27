@@ -320,7 +320,6 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     { id: 'appointments', label: 'Mis Citas', icon: Calendar },
     { id: 'stats', label: 'Estadísticas', icon: TrendingUp },
     { id: 'settings', label: 'Configuración', icon: Settings },
-    ...(user.role === 'announcer' || (user as any).accountType === 'announcer' ? [{ id: 'services', label: 'Servicios/Precios', icon: Crown }] : []),
     { id: 'verification', label: 'Verificación', icon: Shield },
     { id: 'billing', label: 'Facturación', icon: CreditCard }
   ];
@@ -395,8 +394,8 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="text-xs font-bold">Volver</span>
-        </button>  
-        
+        </button>
+
         {/* Banner Verification Promo - Super Compact */}
         {!user.verified && user.verificationRequests?.status !== 'pending' && (
           <div className="mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-3 text-white shadow-sm flex items-center justify-between gap-4">
@@ -534,7 +533,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
           <div className="lg:col-span-8 xl:col-span-9">
             {activeTab === 'profile' && (
               <div className="space-y-6">
-                
+
 
                 {/* Profile Header */}
                 <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 mb-8 relative overflow-hidden">
@@ -742,7 +741,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                   </div>
                 </div>
 
-                
+
               </div>
             )}
 
@@ -945,7 +944,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                   </div>
                 </div>
 
-                
+
                 <div className="mb-0">
                   <h3 className="text-xl font-black text-gray-900 mb-6">Métricas en Detalle</h3>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
@@ -1307,67 +1306,6 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                       )}
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'services' && (
-              <div className="bg-white/90 backdrop-blur-xl rounded-[2rem] shadow-xl shadow-gray-200/30 border border-gray-100 p-8 animate-in slide-in-from-right duration-300 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-50 to-transparent rounded-full opacity-50 pointer-events-none -mr-32 -mt-32"></div>
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative z-10">
-                  <div>
-                    <h2 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">Mis Servicios y Precios</h2>
-                    <p className="text-sm font-medium text-gray-500 mt-1">Define los paquetes que puedes ofrecer en el chat</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const label = prompt('Nombre del servicio (ej: Pack 5 fotos):');
-                      const price = parseInt(prompt('Precio en monedas:', '100') || '0');
-                      if (label && price > 0) {
-                        const newList = [...(formData.priceList || []), { label, price, description: '' }];
-                        setFormData({ ...formData, priceList: newList });
-                      }
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition-all"
-                  >
-                    <PlusCircle className="w-4 h-4" /> Agregar Servicio
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(formData.priceList || []).map((item: any, idx: number) => (
-                    <div key={idx} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between group">
-                      <div>
-                        <div className="font-black text-gray-900">{item.label}</div>
-                        <div className="flex items-center gap-1 text-rose-600 font-black">
-                          <Crown className="w-3 h-3" /> {item.price} monedas
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const newList = formData.priceList.filter((_: any, i: number) => i !== idx);
-                          setFormData({ ...formData, priceList: newList });
-                        }}
-                        className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                  {(formData.priceList || []).length === 0 && (
-                    <div className="md:col-span-2 py-10 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
-                      <p className="text-gray-400 font-bold italic">No has definido servicios aún. Agrégalos para vender contenido en el chat.</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-8 flex justify-end">
-                  <button
-                    onClick={handleSave}
-                    className="px-8 py-3 bg-green-500 text-white rounded-xl font-black hover:bg-green-600 shadow-lg shadow-green-100 transition-all"
-                  >
-                    Guardar Precios
-                  </button>
                 </div>
               </div>
             )}
