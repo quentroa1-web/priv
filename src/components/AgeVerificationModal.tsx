@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, LogOut, CheckCircle2 } from 'lucide-react';
+import { hapticFeedback } from '../utils/haptics';
 
 export function AgeVerificationModal() {
     const [isVisible, setIsVisible] = useState(false);
@@ -16,12 +17,14 @@ export function AgeVerificationModal() {
 
     const handleVerify = () => {
         if (!isAccepted) return;
+        hapticFeedback('medium');
         localStorage.setItem('age_verified', 'true');
         setIsVisible(false);
         document.body.style.overflow = 'auto';
     };
 
     const handleExit = () => {
+        hapticFeedback('medium');
         window.location.href = 'https://www.google.com';
     };
 
@@ -98,9 +101,23 @@ export function AgeVerificationModal() {
                         </div>
 
                         {/* Mandatory Checkbox */}
-                        <div
-                            className="flex items-center justify-center bg-rose-50/50 p-4 rounded-xl border border-rose-100/50 hover:bg-rose-50 transition-colors cursor-pointer"
-                            onClick={() => setIsAccepted(!isAccepted)}
+                        <button
+                            type="button"
+                            role="checkbox"
+                            aria-checked={isAccepted}
+                            aria-label="Aceptar todos los términos y declarar mayoría de edad"
+                            className="w-full flex items-center justify-center bg-rose-50/50 p-4 rounded-xl border border-rose-100/50 hover:bg-rose-50 transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none"
+                            onClick={() => {
+                                hapticFeedback('light');
+                                setIsAccepted(!isAccepted);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === ' ' || e.key === 'Enter') {
+                                    e.preventDefault();
+                                    hapticFeedback('light');
+                                    setIsAccepted(!isAccepted);
+                                }
+                            }}
                         >
                             <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center transition-all flex-shrink-0 ${isAccepted ? 'bg-rose-600 border-rose-600' : 'bg-white border-gray-300'}`}>
                                 {isAccepted && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
@@ -108,7 +125,7 @@ export function AgeVerificationModal() {
                             <span className="text-[10px] sm:text-[11px] font-black text-gray-700 uppercase tracking-tight text-left">
                                 ACEPTO TODOS LOS TÉRMINOS Y DECLARO MI MAYORÍA DE EDAD
                             </span>
-                        </div>
+                        </button>
                     </div>
                 </div>
 
@@ -117,7 +134,7 @@ export function AgeVerificationModal() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                         <button
                             onClick={handleExit}
-                            className="flex items-center justify-center gap-2 px-6 py-3 sm:py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-xs uppercase tracking-widest transition-all group"
+                            className="flex items-center justify-center gap-2 px-6 py-3 sm:py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-xs uppercase tracking-widest transition-all group focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none"
                         >
                             <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                             SALIR
@@ -125,7 +142,7 @@ export function AgeVerificationModal() {
                         <button
                             onClick={handleVerify}
                             disabled={!isAccepted}
-                            className={`flex items-center justify-center gap-2 px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-xs uppercase tracking-widest transition-all shadow-xl shadow-gray-200 ${isAccepted
+                            className={`flex items-center justify-center gap-2 px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black text-[11px] sm:text-xs uppercase tracking-widest transition-all shadow-xl shadow-gray-200 focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none ${isAccepted
                                 ? 'bg-gray-900 hover:bg-black text-white hover:scale-[1.02] active:scale-95'
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50'
                                 }`}
