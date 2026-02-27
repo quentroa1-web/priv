@@ -122,16 +122,13 @@ app.use(async (req, res, next) => {
 });
 
 // General Rate limiting
+// SECURITY: Relying on trust proxy (line 44) for safe IP detection via req.ip
 const generalLimiter = rateLimit({
-
   windowMs: 10 * 60 * 1000, // 10 mins
   max: 1000, // Increased to allow high-frequency polling for chat
   standardHeaders: true,
   legacyHeaders: false,
-  validate: false, // COMPLETELY disable all validation checks
-  keyGenerator: (req) => {
-    return req.headers['x-forwarded-for'] || req.ip;
-  }
+  validate: false // COMPLETELY disable all validation checks
 });
 app.use('/api', generalLimiter);
 
@@ -145,16 +142,28 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: false, // COMPLETELY disable all validation checks
-  keyGenerator: (req) => {
-    return req.headers['x-forwarded-for'] || req.ip;
-  }
+  validate: false // COMPLETELY disable all validation checks
 });
 
-
+// Sensitive operations Rate limiting (strictest)
+const sensitiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 mins
+  max: 10, // Limit each IP to 10 requests per windowMs
+  message: {
+    success: false,
+    error: 'Demasiados intentos en operaciones sensibles, intente más tarde'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false
+});
 
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/updatepassword', sensitiveLimiter);
+app.use('/api/payment/transfer', sensitiveLimiter);
+app.use('/api/payment/withdraw', sensitiveLimiter);
+app.use('/api/payment/submit-proof', sensitiveLimiter);
 // Mount routers
 app.use('/api/auth', auth);
 app.use('/api/users', users);
