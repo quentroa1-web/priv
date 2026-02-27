@@ -14,3 +14,8 @@
 **Learning:** Found that icon-only buttons like Favorites (Heart) and Search were missing ARIA labels, and the Sidebar had hardcoded labels. This breaks screen readers and prevents full internationalization support.
 
 **Action:** Ensure all icon-only buttons have dynamic `aria-label` attributes using localized strings (e.g., `aria-label={isFavorite ? t('common.unfavorite') : t('common.favorite')}`). Always use `useTranslation` hook and `t()` for sidebar navigation labels to support multi-language seamlessly.
+
+## 2025-05-20 - [Semantic Elements for Mandatory Interactions]
+**Learning:** Using a non-semantic `div` for a mandatory checkbox in the `AgeVerificationModal` prevents keyboard accessibility and fails to communicate state to screen readers. Relying only on `onClick` on a `div` excludes users who navigate via keyboard.
+
+**Action:** Convert interactive elements to semantic `<button>` or `<input>` tags. For custom checkboxes, use `role="checkbox"` and `aria-checked`. Always implement `onKeyDown` handlers for Space/Enter and provide `focus-visible` styles to ensure the focus state is clearly visible during keyboard navigation.
