@@ -83,19 +83,18 @@ exports.login = async (req, res) => {
 
     // Check for user
     const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({ success: false, error: 'El correo electrónico no está registrado' });
+
+    // Check if password matches (if user exists)
+    const isMatch = user ? await user.matchPassword(password) : false;
+
+    if (!user || !isMatch) {
+      // SECURITY: Uniform error message to prevent user enumeration
+      return res.status(401).json({ success: false, error: 'Correo electrónico o contraseña incorrectos' });
     }
 
     // Check if user is banned
     if (user.status === 'banned') {
       return res.status(403).json({ success: false, error: 'Tu cuenta ha sido suspendida. Contacta al administrador.' });
-    }
-
-    // Check if password matches
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, error: 'La contraseña es incorrecta' });
     }
 
     logger('activity', `Sesión iniciada: ${user.email}`);

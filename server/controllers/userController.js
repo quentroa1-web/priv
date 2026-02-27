@@ -54,8 +54,10 @@ exports.getUsers = async (req, res) => {
         }
 
         // Search logic (case-insensitive)
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
+        if (search && typeof search === 'string') {
+            // SECURITY: Escape special characters to prevent Regex Injection (ReDoS)
+            const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(escapedSearch, 'i');
             query.$or = [
                 { name: searchRegex },
                 { displayName: searchRegex },
