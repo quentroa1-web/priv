@@ -1,5 +1,6 @@
 import { Home, Star, MessageCircle, X, User, LayoutDashboard, Wallet, Heart, Users, BadgeCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { hapticFeedback } from '../utils/haptics';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -55,11 +56,18 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
                   <span className="text-sm font-black text-gray-900 leading-none">SafeConnect</span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Online</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">{t('common.online')}</span>
                   </div>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 bg-gray-100/50 hover:bg-gray-100 rounded-xl transition-colors">
+              <button
+                onClick={() => {
+                  hapticFeedback('light');
+                  onClose();
+                }}
+                className="p-2 bg-gray-100/50 hover:bg-gray-100 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 outline-none"
+                aria-label={t('nav.close')}
+              >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -70,8 +78,8 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
                   <Wallet className="w-4 h-4 text-amber-600" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none">Balance</span>
-                  <span className="text-xs font-black text-gray-900">Tokens</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none">{t('nav.balance')}</span>
+                  <span className="text-xs font-black text-gray-900">{t('nav.tokens')}</span>
                 </div>
               </div>
               <div className="flex-1 bg-white border border-gray-100 rounded-xl p-2.5 flex items-center gap-2 shadow-sm">
@@ -79,8 +87,8 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
                   <BadgeCheck className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none">Status</span>
-                  <span className="text-xs font-black text-gray-900 uppercase">Verified</span>
+                  <span className="text-[9px] font-black text-gray-400 uppercase leading-none">{t('nav.status')}</span>
+                  <span className="text-xs font-black text-gray-900 uppercase">{t('common.verified')}</span>
                 </div>
               </div>
             </div>
@@ -88,7 +96,7 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
 
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-            <h3 className="px-3 pb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden lg:block">Navegación</h3>
+            <h3 className="px-3 pb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden lg:block">{t('nav.navigation')}</h3>
             {menuItems.filter(item => role && item.roles.includes(role)).map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -97,11 +105,12 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
                 <button
                   key={item.id}
                   onClick={() => {
+                    hapticFeedback('light');
                     onSectionChange(item.id);
                     onClose();
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3.5 lg:py-2.5 rounded-2xl font-black text-[13px] lg:text-xs transition-all uppercase tracking-tight group
+                    w-full flex items-center gap-3 px-4 py-3.5 lg:py-2.5 rounded-2xl font-black text-[13px] lg:text-xs transition-all uppercase tracking-tight group focus-visible:ring-2 focus-visible:ring-rose-500 outline-none
                     ${isActive
                       ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-200 scale-[1.02]'
                       : 'text-gray-500 hover:bg-rose-50 hover:text-rose-600'

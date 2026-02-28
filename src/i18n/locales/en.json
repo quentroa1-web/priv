@@ -19,7 +19,12 @@
     "back": "Back",
     "send": "Send",
     "attach": "Attach",
-    "emojis": "Emojis"
+    "emojis": "Emojis",
+    "balance": "Balance",
+    "tokens": "Tokens",
+    "status": "Status",
+    "navigation": "Navigation",
+    "close": "Close sidebar"
   },
   "common": {
     "favorite": "Add to favorites",
