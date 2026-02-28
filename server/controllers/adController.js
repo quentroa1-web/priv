@@ -72,7 +72,7 @@ exports.getAds = async (req, res) => {
 // @access  Public
 exports.getAd = async (req, res) => {
   try {
-    const ad = await Ad.findById(req.params.id).populate('user', 'name avatar bio role priceList verified wallet');
+    const ad = await Ad.findById(req.params.id).populate('user', 'name avatar bio role priceList verified');
 
     if (!ad) {
       return res.status(404).json({ success: false, error: 'Ad not found' });
@@ -156,8 +156,18 @@ exports.createAd = async (req, res) => {
     } = req.body;
 
     const adData = {
-      title, description, category, age, phone, whatsapp, location,
-      services, customServices, pricing, attendsTo, availability,
+      title,
+      description,
+      category,
+      age,
+      phone,
+      whatsapp,
+      location,
+      services,
+      customServices,
+      pricing,
+      attendsTo,
+      availability,
       photos: processedPhotos,
       user: userId,
       isVerified: false,
@@ -300,7 +310,7 @@ exports.boostAd = async (req, res) => {
   try {
     const BOOST_COST = 100; // Fixed: Match with paymentController
     const ad = await Ad.findById(req.params.id);
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('+wallet.coins');
 
     if (!ad) {
       return res.status(404).json({ success: false, error: 'Ad not found' });

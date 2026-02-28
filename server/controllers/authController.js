@@ -54,7 +54,8 @@ exports.register = async (req, res) => {
     logger('activity', `Nuevo usuario registrado: ${user.email} con rol ${user.role}`);
 
     // Fetch the full user document (minus password) so the client gets all fields
-    const fullUser = await User.findById(user._id).select('-password');
+    // SECURITY: Explicitly include +wallet.coins for the registered user
+    const fullUser = await User.findById(user._id).select('-password +wallet.coins');
 
     res.status(201).json({
       success: true,
@@ -97,7 +98,8 @@ exports.login = async (req, res) => {
     logger('activity', `Sesión iniciada: ${user.email}`);
 
     // Fetch the full user document (minus password) so the client gets all fields (wallet, priceList, etc.)
-    const fullUser = await User.findById(user._id).select('-password');
+    // SECURITY: Explicitly include +wallet.coins for the logged in user
+    const fullUser = await User.findById(user._id).select('-password +wallet.coins');
 
     res.status(200).json({
       success: true,
@@ -114,7 +116,7 @@ exports.login = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('+priceList.content');
+    const user = await User.findById(req.user.id).select('+priceList.content +wallet.coins');
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
@@ -149,7 +151,7 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateDetails = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('+priceList.content');
+    const user = await User.findById(req.user.id).select('+priceList.content +wallet.coins');
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
@@ -173,7 +175,7 @@ exports.updateDetails = async (req, res) => {
 
     // Re-fetch or just return the saved user with necessary fields
     // Ensure we select priceList.content again if save() doesn't preserve selection on the returned doc
-    const updatedUser = await User.findById(user._id).select('-password +priceList.content');
+    const updatedUser = await User.findById(user._id).select('-password +priceList.content +wallet.coins');
 
     res.status(200).json({
       success: true,

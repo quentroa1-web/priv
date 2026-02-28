@@ -104,7 +104,8 @@ const UserSchema = new mongoose.Schema({
     coins: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
+      select: false
     }
   },
   verificationRequests: {
