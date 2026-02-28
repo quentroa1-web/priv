@@ -220,7 +220,7 @@ exports.transferCoins = async (req, res, next) => {
             await Message.create({
                 sender: sender._id,
                 recipient: recipient._id,
-                content: `💎 [TRANSACCIÓN VERIFICADA]\nHe pagado ${coinsToTransfer} monedas por tu servicio.\nConcepto: ${reason || 'Servicio'}\nID de Operación: ${Date.now().toString().slice(-8)}\n\nEl contenido se ha enviado automáticamente si correspondía a un pack.`,
+                content: `💎 Transacción exitosa: ${coinsToTransfer} coins por ${reason || 'Servicio'}. Contenido entregado.`,
                 isSystem: true
             });
         } catch (innerError) {
@@ -396,7 +396,7 @@ exports.buySubscriptionWithCoins = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: `Plan ${planId} activado correctamente`,
+            message: `Plan ${planId} activo`,
             newBalance: updatedUser.wallet.coins
         });
 
@@ -483,7 +483,7 @@ exports.boostAdWithCoins = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: hasFreeBoosts ? `¡Boost GRATUITO de ${boostDurationHours}h aplicado!` : `Anuncio impulsado por ${boostDurationHours} horas`,
+            message: hasFreeBoosts ? `¡Boost GRATIS!` : `Anuncio impulsado`,
             newBalance: updatedUser.wallet.coins,
             diamondBoosts: updatedUser.diamondBoosts
         });

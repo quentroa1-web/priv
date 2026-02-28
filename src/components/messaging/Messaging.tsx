@@ -403,7 +403,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
         // SEND NOTIFICATION TO ADVERTISER FROM SYSTEM
         try {
           await apiService.sendMessage(activeConversation?.userId || '',
-            `📢 ¡VENTA REALIZADA! El usuario ${currentUser.name} ha comprado tu servicio por ${price} monedas. Por favor, realiza la entrega del contenido en este chat.`,
+            `📢 ¡VENTA! ${currentUser.name} pagó ${price} coins.`,
             { isLocked: false }
           );
           // Note: Ideally the backend would send this from 'system' sender, 
@@ -551,7 +551,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
           }
         }
 
-        alert('¡Compra realizada con éxito! El contenido ha sido entregado en el chat.');
+        alert('¡Éxito! Pack entregado.');
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para comprar este pack.';
@@ -878,13 +878,12 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                       {/* Security Pattern Background */}
                                       <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")` }} />
 
-                                      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-indigo-200/30 relative z-10 select-none">
-                                        <div className="bg-indigo-600 p-1 rounded-md shadow-inner">
-                                          <Shield className="w-3 h-3 text-white" />
+                                      <div className="flex items-center gap-1 mb-1.5 pb-1.5 border-b border-indigo-200/20 relative z-10 select-none">
+                                        <div className="bg-indigo-600 p-0.5 rounded shadow-inner">
+                                          <Shield className="w-2.5 h-2.5 text-white" />
                                         </div>
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-1">
-                                          <span className="w-1 h-1 bg-indigo-400 rounded-full animate-pulse" />
-                                          SafeConnect Official Transaction
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-1">
+                                          SafeConnect Receipt
                                         </span>
                                       </div>
                                     </>
@@ -941,7 +940,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                       <div className="absolute inset-0 z-10 select-none pointer-events-none" />
                                     </div>
                                   ) : (
-                                    <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic' : ''}`}>
+                                    <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic text-[11px]' : ''}`}>
                                       {msg.content}
                                     </p>
                                   )}
