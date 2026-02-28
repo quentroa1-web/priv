@@ -149,6 +149,12 @@ exports.getMe = async (req, res) => {
 // @access  Private
 exports.updateDetails = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id).select('+priceList.content');
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+    }
+
     // Only allow these fields to be updated by the user
     // CRITICAL SECURITY: Never allow 'role', 'wallet', 'premium', 'isVip', or 'diamondBoosts' here
     const allowedFields = [
@@ -157,23 +163,24 @@ exports.updateDetails = async (req, res) => {
       'gender', 'avatar', 'priceList', 'paymentMethods'
     ];
 
-    const fieldsToUpdate = {};
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {
-        fieldsToUpdate[field] = req.body[field];
+        user[field] = req.body[field];
       }
     });
 
-    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
-      new: true,
-      runValidators: true
-    }).select('-password +priceList.content');
+    await user.save();
+
+    // Re-fetch or just return the saved user with necessary fields
+    // Ensure we select priceList.content again if save() doesn't preserve selection on the returned doc
+    const updatedUser = await User.findById(user._id).select('-password +priceList.content');
 
     res.status(200).json({
       success: true,
-      user
+      user: updatedUser
     });
   } catch (error) {
+    console.error('Update Details Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

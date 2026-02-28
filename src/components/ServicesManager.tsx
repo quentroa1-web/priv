@@ -136,6 +136,7 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
 
     // Track all blob URLs created so we can revoke them on unmount (memory leak fix)
     const blobUrlsRef = useRef<string[]>([]);
+    const hasLoadedRef = useRef(false);
 
     // Cleanup blob URLs on unmount or when modal closes
     useEffect(() => {
@@ -153,9 +154,9 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
 
     // Load user's current packs on open
     useEffect(() => {
-        if (isOpen && user) {
+        if (isOpen && user && !hasLoadedRef.current) {
             const existing: ServicePack[] = (user.priceList || []).map((p: any, i: number) => ({
-                id: p._id || `pack-loaded-${i}`,
+                id: p._id || p.id || `pack-loaded-${i}`,
                 label: String(p.label || '').slice(0, 200),
                 price: validatePrice(Number(p.price) || 1),
                 type: (['photos', 'videos', 'service'].includes(p.type) ? p.type : 'service') as ServicePack['type'],
@@ -168,6 +169,11 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
             setStep(existing.length > 0 ? 'manage' : 'intro');
             setSaveError(null);
             setSaveSuccess(false);
+            hasLoadedRef.current = true;
+        }
+
+        if (!isOpen) {
+            hasLoadedRef.current = false;
         }
     }, [isOpen, user]);
 
