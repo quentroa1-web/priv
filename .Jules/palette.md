@@ -19,3 +19,8 @@
 **Learning:** Using a non-semantic `div` for a mandatory checkbox in the `AgeVerificationModal` prevents keyboard accessibility and fails to communicate state to screen readers. Relying only on `onClick` on a `div` excludes users who navigate via keyboard.
 
 **Action:** Convert interactive elements to semantic `<button>` or `<input>` tags. For custom checkboxes, use `role="checkbox"` and `aria-checked`. Always implement `onKeyDown` handlers for Space/Enter and provide `focus-visible` styles to ensure the focus state is clearly visible during keyboard navigation.
+
+## 2026-03-25 - [Sidebar Internationalization & Accessibility]
+**Learning:** Hardcoded strings in navigation components like Sidebars break the experience for international users and exclude screen reader users if buttons lack descriptive ARIA labels. Additionally, keyboard navigation is often overlooked in sidebars, requiring explicit focus-visible styles.
+
+**Action:** Always verify that all strings in navigation components are wrapped in `t()` for i18n. Provide `aria-label` for all icon-only or close buttons. Ensure all interactive elements have `focus-visible` ring styles and use haptic feedback for mobile interactions to improve the tactile experience.

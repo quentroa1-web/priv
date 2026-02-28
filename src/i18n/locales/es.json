@@ -19,7 +19,12 @@
     "back": "Volver",
     "send": "Enviar",
     "attach": "Adjuntar",
-    "emojis": "Emojis"
+    "emojis": "Emojis",
+    "balance": "Saldo",
+    "tokens": "Tokens",
+    "status": "Estado",
+    "navigation": "Navegación",
+    "close": "Cerrar menú"
   },
   "common": {
     "favorite": "Agregar a favoritos",
