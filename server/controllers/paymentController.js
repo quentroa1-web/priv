@@ -17,7 +17,7 @@ const packages = {
 // @access  Private
 exports.getWallet = async (req, res, next) => {
     try {
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.id).select('+wallet.coins');
         const transactions = await Transaction.find({
             $or: [{ user: req.user.id }, { recipient: req.user.id }]
         }).sort({ createdAt: -1 });
@@ -148,7 +148,7 @@ exports.transferCoins = async (req, res, next) => {
             { _id: req.user.id, 'wallet.coins': { $gte: coinsToTransfer } },
             { $inc: { 'wallet.coins': -coinsToTransfer } },
             { new: true }
-        );
+        ).select('+wallet.coins');
 
         if (!sender) {
             return res.status(400).json({ success: false, error: 'Insufficient funds' });
@@ -349,7 +349,7 @@ exports.buySubscriptionWithCoins = async (req, res) => {
         if (!cost) return res.status(400).json({ success: false, error: 'Plan inválido' });
 
         // 1. Fetch user to check current plan status
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.id).select('+wallet.coins');
         if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
         let newExpiryDate = new Date();
@@ -376,7 +376,7 @@ exports.buySubscriptionWithCoins = async (req, res) => {
                 }
             },
             { new: true }
-        );
+        ).select('+wallet.coins');
 
         if (!updatedUser) {
             return res.status(400).json({ success: false, error: 'Monedas insuficientes. Necesitas ' + cost + ' monedas.' });
@@ -431,7 +431,7 @@ exports.boostAdWithCoins = async (req, res) => {
         }
 
         // Check for Diamond free boosts
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.id).select('+wallet.coins');
         const isDiamond = user.premiumPlan === 'diamond' && user.premiumUntil && new Date(user.premiumUntil) > new Date();
         const hasFreeBoosts = isDiamond && (user.diamondBoosts > 0);
         const boostCost = hasFreeBoosts ? 0 : BOOST_COST;
@@ -450,7 +450,7 @@ exports.boostAdWithCoins = async (req, res) => {
             updateOps.$inc['diamondBoosts'] = -1;
         }
 
-        const updatedUser = await User.findOneAndUpdate(updateQuery, updateOps, { new: true });
+        const updatedUser = await User.findOneAndUpdate(updateQuery, updateOps, { new: true }).select('+wallet.coins');
 
         if (!updatedUser) {
             return res.status(400).json({ success: false, error: `Necesitas ${boostCost} monedas para un boost.` });

@@ -7,3 +7,8 @@
 **Vulnerability:** IP Spoofing in Rate Limiter due to manual `x-forwarded-for` extraction.
 **Learning:** Manually extracting `x-forwarded-for` in `keyGenerator` without validation allows attackers to bypass rate limits by spoofing headers.
 **Prevention:** Use `app.set('trust proxy', 1)` and rely on `req.ip` for rate limiting to ensure the IP is correctly identified by the first trusted proxy.
+
+## 2025-05-17 - [Sensitive Data Exposure via Automatic Population]
+**Vulnerability:** Public exposure of sensitive user data (e.g., wallet balance) through API endpoints that populate user objects.
+**Learning:** Relying on controller-level `select` exclusion is error-prone and doesn't scale as more endpoints are added. Authenticated fields like financial data should be protected at the model level.
+**Prevention:** Use `select: false` in the Mongoose schema for sensitive fields. This makes them hidden by default across the entire application, requiring explicit opt-in via `.select('+field')` only when strictly necessary for specific business logic.

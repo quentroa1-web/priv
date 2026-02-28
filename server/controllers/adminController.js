@@ -152,7 +152,7 @@ exports.handlePayment = async (req, res) => {
 
     await transaction.save();
 
-    const user = await User.findById(transaction.user);
+    const user = await User.findById(transaction.user).select('+wallet.coins');
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
