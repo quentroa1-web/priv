@@ -51,7 +51,7 @@ router.post('/proof', protect, (req, res) => {
 // @route   POST /api/upload/multiple
 // @access  Private
 router.post('/multiple', protect, (req, res) => {
-    upload.array('images', 10)(req, res, (err) => {
+    upload.array('images', 100)(req, res, (err) => {
         if (err) {
             return res.status(400).json({ success: false, error: err.message });
         }

@@ -114,7 +114,7 @@ exports.login = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('+priceList.content');
 
     if (!user) {
       return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
@@ -167,7 +167,7 @@ exports.updateDetails = async (req, res) => {
     const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
       new: true,
       runValidators: true
-    }).select('-password');
+    }).select('-password +priceList.content');
 
     res.status(200).json({
       success: true,

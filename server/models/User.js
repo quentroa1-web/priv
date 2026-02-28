@@ -133,7 +133,11 @@ const UserSchema = new mongoose.Schema({
       default: 1,
       min: 1,
       max: 100
-    }
+    },
+    content: {
+      type: [String],
+      select: false
+    } // URLs of the files to be delivered automatically, hidden from public queries
   }],
   paymentMethods: [{
     type: { type: String },

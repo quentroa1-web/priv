@@ -532,23 +532,22 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
         recipientId: activeConversation?.userId,
         amount: pack.price,
         reason: `Compra de pack: ${pack.label}`,
-        messageId: `pack-${Date.now()}`
+        packId: pack._id || pack.id // Backend ID for automatic delivery
       }) as any;
 
       if (res.data.success) {
         setShowPriceList(false);
-
-        // Update Wallet Balance
         refreshUser();
 
-        // Reload messages to show the official holographic receipt from backend
+        // Reload messages to show the content + holographic receipt from backend
         if (activeConversation) {
           const msgRes = await apiService.getMessages(activeConversation.userId) as any;
           if (msgRes.data.success && msgRes.data.data) {
             setMessages(msgRes.data.data.map(transformMessage));
           }
         }
-        alert('¡Compra realizada con éxito! El anunciante ha sido notificado.');
+
+        alert('¡Compra realizada con éxito! El contenido ha sido entregado en el chat.');
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para comprar este pack.';

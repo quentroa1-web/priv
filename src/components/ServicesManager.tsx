@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
     X, Plus, Trash2, Image as ImageIcon, Video, Package,
     Crown, Upload, CheckCircle, Sparkles, ShoppingBag,
     ChevronRight, Info, Loader2, Save, Edit2, AlertCircle
 } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface ServicePack {
     id: string;
@@ -12,17 +13,21 @@ interface ServicePack {
     type: 'photos' | 'videos' | 'service';
     quantity: number;
     description?: string;
-    // previewFiles only lives in component state (not persisted)
-    previewFiles?: { url: string; name: string }[];
+    // content stores the actual server-side URLs of the delivered content
+    content?: string[];
+    // previewFiles is temporary - used while editing in the modal
+    previewFiles?: { url: string; name: string; file?: File }[];
 }
 
 // What gets sent to the API (clean, no blob URLs, no internal ids)
 interface SerializedPack {
+    _id?: string;
     label: string;
     price: number;
     type: 'photos' | 'videos' | 'service';
     quantity: number;
     description: string;
+    content: string[];
 }
 
 interface ServicesManagerProps {
@@ -132,7 +137,14 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
     // Track all blob URLs created so we can revoke them on unmount (memory leak fix)
     const blobUrlsRef = useRef<string[]>([]);
 
-    // Cleanup blob URLs on unmount
+    // Cleanup blob URLs on unmount or when modal closes
+    useEffect(() => {
+        if (!isOpen) {
+            blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+            blobUrlsRef.current = [];
+        }
+    }, [isOpen]);
+
     useEffect(() => {
         return () => {
             blobUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
@@ -143,13 +155,14 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
     useEffect(() => {
         if (isOpen && user) {
             const existing: ServicePack[] = (user.priceList || []).map((p: any, i: number) => ({
-                id: `pack-loaded-${i}`,
+                id: p._id || `pack-loaded-${i}`,
                 label: String(p.label || '').slice(0, 200),
                 price: validatePrice(Number(p.price) || 1),
                 type: (['photos', 'videos', 'service'].includes(p.type) ? p.type : 'service') as ServicePack['type'],
                 quantity: validateQuantity(Number(p.quantity) || 1),
                 description: String(p.description || '').slice(0, 200),
-                previewFiles: [], // Don't restore blob URLs — they're temporary
+                content: p.content || [],
+                previewFiles: (p.content || []).map((url: string) => ({ url, name: url.split('/').pop() || 'file' })),
             }));
             setPacks(existing);
             setStep(existing.length > 0 ? 'manage' : 'intro');
@@ -158,46 +171,32 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
         }
     }, [isOpen, user]);
 
-    const revokePreviews = useCallback((files: { url: string }[]) => {
-        files.forEach(f => {
-            URL.revokeObjectURL(f.url);
-            blobUrlsRef.current = blobUrlsRef.current.filter(u => u !== f.url);
-        });
-    }, []);
 
     // Handle multi-file selection — respect the quantity field
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (!files.length) return;
 
-        const maxFiles = form.type === 'service' ? 1 : form.quantity;
-        const allowed = files.slice(0, maxFiles);
-
-        // Revoke old previews before creating new ones
-        revokePreviews(previewFiles);
+        const maxFilesForType = form.type === 'service' ? 1 : form.quantity;
+        const remainingSlots = maxFilesForType - previewFiles.length;
+        const allowed = files.slice(0, remainingSlots);
 
         const newPreviews = allowed.map(file => {
             const url = URL.createObjectURL(file);
             blobUrlsRef.current.push(url);
-            return { url, name: file.name };
+            return { url, name: file.name, file };
         });
-        setPreviewFiles(newPreviews);
+        setPreviewFiles(prev => [...prev, ...newPreviews]);
 
         // Reset value so same file can be re-selected
         e.target.value = '';
     };
 
     const removePreview = (index: number) => {
-        const removed = previewFiles[index];
-        if (removed) {
-            URL.revokeObjectURL(removed.url);
-            blobUrlsRef.current = blobUrlsRef.current.filter(u => u !== removed.url);
-        }
         setPreviewFiles(prev => prev.filter((_, i) => i !== index));
     };
 
     const resetForm = () => {
-        revokePreviews(previewFiles);
         setPreviewFiles([]);
         setForm({ ...EMPTY_FORM });
         setEditingPackId(null);
@@ -263,8 +262,6 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
     };
 
     const handleDelete = (id: string) => {
-        const pack = packs.find(p => p.id === id);
-        if (pack?.previewFiles) revokePreviews(pack.previewFiles);
         setPacks(prev => prev.filter(p => p.id !== id));
     };
 
@@ -283,21 +280,62 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
         setSaveSuccess(false);
         try {
             setIsSaving(true);
-            // SECURITY: Serialize cleanly — strip id, previewFiles (blob URLs), never send client-side internals
-            const serialized: SerializedPack[] = packs.map(({ label, price, type, quantity, description }) => ({
-                label: sanitizeText(label),
-                price: validatePrice(price),
-                type,
-                quantity: type === 'service' ? 1 : validateQuantity(quantity),
-                description: sanitizeText(description || ''),
-            }));
-            await onSave(serialized);
+
+            // 1. Process all packs and upload files if needed
+            const finalSerializedPacks: SerializedPack[] = [];
+
+            for (const pack of packs) {
+                let contentUrls = pack.content || [];
+
+                // Find files that need uploading (those that have a 'file' property)
+                const filesToUpload = pack.previewFiles?.filter(f => f.file).map(f => f.file as File) || [];
+
+                if (filesToUpload.length > 0) {
+                    const formData = new FormData();
+                    filesToUpload.forEach(file => formData.append('images', file));
+
+                    try {
+                        const uploadRes = await apiService.uploadImages(formData) as any;
+                        if (uploadRes.data.success && uploadRes.data.urls) {
+                            // Merge new uploaded URLs with existing ones that were kept
+                            const existingUrls = pack.previewFiles?.filter(f => !f.file).map(f => f.url) || [];
+                            contentUrls = [...existingUrls, ...uploadRes.data.urls];
+                        }
+                    } catch (uploadErr) {
+                        console.error("Upload failed for pack:", pack.label, uploadErr);
+                        throw new Error(`Error al subir archivos para el pack "${pack.label}"`);
+                    }
+                } else {
+                    // No new files, just use the filter to keep existing ones that weren't removed
+                    contentUrls = pack.previewFiles?.filter(f => !f.file).map(f => f.url) || [];
+                }
+
+                const serializedPack: SerializedPack = {
+                    label: sanitizeText(pack.label),
+                    price: validatePrice(pack.price),
+                    type: pack.type,
+                    quantity: pack.type === 'service' ? 1 : validateQuantity(pack.quantity),
+                    description: sanitizeText(pack.description || ''),
+                    content: contentUrls
+                };
+
+                // Preserve original ID if it's not a temporary one
+                if (pack.id && !pack.id.startsWith('pack-')) {
+                    serializedPack._id = pack.id;
+                }
+
+                finalSerializedPacks.push(serializedPack);
+            }
+
+            // 2. Save everything to the profile
+            await onSave(finalSerializedPacks);
+
             setSaveSuccess(true);
             setTimeout(() => {
                 onClose();
             }, 800);
         } catch (err: any) {
-            setSaveError(err?.response?.data?.error || 'Error al guardar los servicios. Inténtalo de nuevo.');
+            setSaveError(err.message || err?.response?.data?.error || 'Error al guardar los servicios. Inténtalo de nuevo.');
         } finally {
             setIsSaving(false);
         }
@@ -413,7 +451,7 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                                         return (
                                             <div key={key} className={`${cfg.bg} ${cfg.border} border rounded-2xl p-3 text-center`}>
                                                 <Icon className={`w-5 h-5 ${cfg.text} mx-auto mb-1.5`} />
-                                                <div className={`text-[10px] font-black ${cfg.text} leading-tight`}>{cfg.label}</div>
+                                                <div className={`text-[10px] font-black text-center leading-tight ${cfg.text}`}>{cfg.label}</div>
                                             </div>
                                         );
                                     })}
@@ -632,7 +670,6 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                                                 onClick={() => {
                                                     setForm({ ...form, type: key as ServicePack['type'] });
                                                     // When type changes, clear previews
-                                                    revokePreviews(previewFiles);
                                                     setPreviewFiles([]);
                                                 }}
                                                 className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl border-2 transition-all ${isSelected
@@ -677,8 +714,6 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                                                 setForm({ ...form, quantity: q });
                                                 // Trim previews if needed
                                                 if (previewFiles.length > q) {
-                                                    const toRemove = previewFiles.slice(q);
-                                                    revokePreviews(toRemove);
                                                     setPreviewFiles(prev => prev.slice(0, q));
                                                 }
                                             }}
@@ -709,8 +744,12 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                                         type="number"
                                         min={1}
                                         max={99999}
-                                        value={form.price}
-                                        onChange={e => setForm({ ...form, price: validatePrice(parseInt(e.target.value) || 1) })}
+                                        value={form.price || ''}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setForm({ ...form, price: val === '' ? 0 : parseInt(val) });
+                                        }}
+                                        onBlur={() => setForm({ ...form, price: validatePrice(form.price) })}
                                         className="w-full pl-10 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-xl focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-100 outline-none transition-all text-sm font-black"
                                     />
                                 </div>
@@ -735,16 +774,16 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                             <div>
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
                                     {form.type === 'photos'
-                                        ? `Subir hasta ${maxFilesForType} fotos de muestra`
+                                        ? `Contenido del Pack (${maxFilesForType} fotos)`
                                         : form.type === 'videos'
-                                            ? `Subir hasta ${maxFilesForType} videos de muestra`
-                                            : 'Imagen de portada (opcional)'}
-                                    <span className="ml-1 text-gray-300 font-medium normal-case">(opcional · solo tú las ves)</span>
+                                            ? `Contenido del Pack (${maxFilesForType} videos)`
+                                            : 'Archivo/Imagen de entrega'}
+                                    <span className="ml-1 text-gray-300 font-medium normal-case">(se enviará automáticamente al comprador)</span>
                                 </label>
                                 <p className="text-[10px] text-gray-400 mb-3">
                                     {form.type !== 'service'
-                                        ? `Puedes subir hasta ${maxFilesForType} ${form.type === 'photos' ? 'fotos' : 'videos'} para recordarte cuáles enviarás al cliente. No se publican.`
-                                        : 'Imagen de referencia interna.'}
+                                        ? `Sube las ${form.quantity} ${form.type === 'photos' ? 'fotos' : 'videos'} que se enviarán al cliente inmediatamente después del pago.`
+                                        : 'Archivo o imagen que recibirá el cliente al comprar este servicio.'}
                                 </p>
 
                                 {/* Preview grid */}

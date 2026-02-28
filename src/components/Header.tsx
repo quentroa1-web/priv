@@ -197,7 +197,7 @@ export function Header({
                     hapticFeedback('light');
                     onRegisterClick();
                   }}
-                  className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                  className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
                   aria-label={t('nav.publishAd')}
                 >
                   <PlusCircle className="w-3.5 h-3.5" />

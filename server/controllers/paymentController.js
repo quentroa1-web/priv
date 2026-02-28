@@ -129,7 +129,7 @@ exports.getMyTransactions = async (req, res) => {
 exports.transferCoins = async (req, res, next) => {
     let coinsToTransfer = 0; // Declared outside try for catch-block access
     try {
-        const { recipientId, amount, reason, messageId } = req.body;
+        const { recipientId, amount, reason, messageId, packId } = req.body;
         coinsToTransfer = parseInt(amount);
         if (isNaN(coinsToTransfer) || coinsToTransfer <= 0) return res.status(400).json({ success: false, error: 'Invalid amount' });
 
@@ -154,7 +154,7 @@ exports.transferCoins = async (req, res, next) => {
             return res.status(400).json({ success: false, error: 'Insufficient funds' });
         }
 
-        const recipient = await User.findById(recipientId);
+        const recipient = await User.findById(recipientId).select('+priceList.content');
         if (!recipient) {
             // Refund sender if recipient not found (though this is rare)
             await User.findByIdAndUpdate(req.user.id, { $inc: { 'wallet.coins': coinsToTransfer } });
@@ -170,11 +170,25 @@ exports.transferCoins = async (req, res, next) => {
             $inc: { 'wallet.coins': finalAmount }
         });
 
-        // If messageId provided and it's a valid ObjectId, unlock it
+        // 1. If messageId provided and it's a valid ObjectId, unlock it
         if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
             await Message.findByIdAndUpdate(messageId, {
                 $addToSet: { unlockedBy: sender._id }
             });
+        }
+
+        // 2. AUTOMATIC CONTENT DELIVERY (for priceList packs)
+        if (packId && mongoose.Types.ObjectId.isValid(packId)) {
+            const pack = recipient.priceList.id(packId);
+            if (pack && pack.content && pack.content.length > 0) {
+                for (const url of pack.content) {
+                    await Message.create({
+                        sender: recipient._id,
+                        recipient: sender._id,
+                        content: url
+                    });
+                }
+            }
         }
 
         // Create Transactions
@@ -205,13 +219,12 @@ exports.transferCoins = async (req, res, next) => {
             await Message.create({
                 sender: sender._id,
                 recipient: recipient._id,
-                content: `💎 [TRANSACCIÓN VERIFICADA]\nHe pagado ${coinsToTransfer} monedas por tu servicio.\nConcepto: ${reason || 'Servicio'}\nID de Operación: ${Date.now().toString().slice(-8)}`,
+                content: `💎 [TRANSACCIÓN VERIFICADA]\nHe pagado ${coinsToTransfer} monedas por tu servicio.\nConcepto: ${reason || 'Servicio'}\nID de Operación: ${Date.now().toString().slice(-8)}\n\nEl contenido se ha enviado automáticamente si correspondía a un pack.`,
                 isSystem: true
             });
         } catch (innerError) {
             console.error('Non-critical transfer error (logging/notif):', innerError);
-            // We don't fail the whole transfer if just the notification or history log fails, 
-            // but in a production environment we should use transactions.
+            // We don't fail the whole transfer if just the notification or history log fails
         }
 
         res.status(200).json({

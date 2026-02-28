@@ -87,7 +87,7 @@ export interface User {
   };
   premiumPlan?: 'none' | 'gold' | 'diamond';
   premiumUntil?: string;
-  priceList?: Array<{ label: string; price: number; description?: string }>;
+  priceList?: Array<{ _id?: string; label: string; price: number; type: string; quantity: number; description?: string; content?: string[] }>;
   priority?: number;
   lastBumpDate?: string;
 }
