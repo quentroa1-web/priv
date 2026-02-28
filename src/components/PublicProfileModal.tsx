@@ -3,7 +3,7 @@ import {
     X, MapPin, Star, BadgeCheck, Camera,
     Heart, Share2, MoreHorizontal,
     Info, Shield, Users, Clock,
-    ShieldCheck, AlertCircle, LayoutGrid
+    ShieldCheck, AlertCircle, LayoutGrid, MessageCircle
 } from 'lucide-react';
 import { User } from '../types';
 import { cn } from '../utils/cn';
@@ -14,7 +14,7 @@ interface PublicProfileModalProps {
     user: User | null;
     ads?: User[];
     onClose: () => void;
-    onMessage?: (userId: string) => void;
+    onMessage?: (userId: string, adId?: string) => void;
 }
 
 export function PublicProfileModal({ user, ads = [], onClose, onMessage }: PublicProfileModalProps) {
@@ -25,7 +25,7 @@ export function PublicProfileModal({ user, ads = [], onClose, onMessage }: Publi
     const isAnnouncer = user.role === 'announcer';
     const roleLabel = user.role === 'announcer' ? 'Anunciante' : 'Cliente';
     const userName = user.displayName || user.name || 'Usuario';
-    const displayId = user.id || user._id || user.uid || '';
+    const displayId = user.uid || user.id || user._id || '';
 
     return (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 md:p-6 overflow-hidden selection:bg-rose-100 selection:text-rose-600">
@@ -235,7 +235,11 @@ export function PublicProfileModal({ user, ads = [], onClose, onMessage }: Publi
                         <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-400">
                             {ads.length > 0 ? (
                                 ads.map((ad) => (
-                                    <div key={ad.id} className="bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm flex gap-4 group hover:border-rose-200 transition-all">
+                                    <div
+                                        key={ad.id}
+                                        onClick={() => onMessage?.(displayId, ad.id || ad._id)}
+                                        className="bg-white p-4 rounded-[2rem] border border-gray-100 shadow-sm flex gap-4 group hover:border-rose-200 transition-all cursor-pointer relative"
+                                    >
                                         <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden shrink-0">
                                             <img src={ad.avatar} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={ad.name} />
                                         </div>
@@ -251,6 +255,10 @@ export function PublicProfileModal({ user, ads = [], onClose, onMessage }: Publi
                                                 <span className="text-xs font-black text-rose-500">{formatPrice(ad.price || 0)}</span>
                                                 <div className="bg-emerald-50 text-emerald-600 text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Activo</div>
                                             </div>
+                                        </div>
+                                        {/* Floating Message Icon for Ad */}
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-gray-50 rounded-2xl text-rose-500 opacity-0 group-hover:opacity-100 group-hover:bg-rose-50 transition-all translate-x-4 group-hover:translate-x-0">
+                                            <MessageCircle className="w-5 h-5" />
                                         </div>
                                     </div>
                                 ))

@@ -129,8 +129,12 @@ function AppContent() {
   // Scroll to top on view change
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    setSelectedUser(null);
-    setViewingPublicProfile(null);
+    // Don't clear selectedUser if we are going to messages, 
+    // as Messaging component needs it for temporary conversations
+    if (currentView !== 'messages') {
+      setSelectedUser(null);
+      setViewingPublicProfile(null);
+    }
   }, [currentView]);
 
   const handleNavigate = (view: View) => {
@@ -254,7 +258,7 @@ function AppContent() {
   const handleOpenMessage = (userId: string, adId?: string) => {
     setMessageTargetUser(userId);
     setMessageTargetAdId(adId || null);
-    setCurrentView('messages');
+    handleProtectedNavigation('messages');
   };
 
   const filteredUsers = useMemo(() => {

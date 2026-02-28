@@ -233,7 +233,10 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
       if (targetConv) {
         // Conversation exists, open it
         setActiveConversation(targetConv);
-        if (targetAdId) setSelectedAdId(targetAdId);
+        // CRITICAL: Update selectedAdId even if conversation exists
+        if (targetAdId) {
+          setSelectedAdId(targetAdId);
+        }
       } else if (targetUser) {
         // No conversation exists, create temporary one
         const tempConv: Conversation = {
