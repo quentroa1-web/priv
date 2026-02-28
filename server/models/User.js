@@ -122,7 +122,18 @@ const UserSchema = new mongoose.Schema({
   priceList: [{
     label: String,
     price: Number,
-    description: String
+    description: String,
+    type: {
+      type: String,
+      enum: ['photos', 'videos', 'service'],
+      default: 'service'
+    },
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 100
+    }
   }],
   paymentMethods: [{
     type: { type: String },

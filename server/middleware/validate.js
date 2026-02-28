@@ -58,6 +58,8 @@ const updateDetailsSchema = Joi.object({
         label: Joi.string().required(),
         price: Joi.number().min(0).required(),
         description: Joi.string().allow('', null),
+        type: Joi.string().valid('photos', 'videos', 'service').default('service'),
+        quantity: Joi.number().min(1).max(100).default(1),
         _id: Joi.any(),
         id: Joi.any()
     }).unknown(true)),

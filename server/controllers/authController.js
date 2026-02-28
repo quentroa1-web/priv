@@ -53,16 +53,13 @@ exports.register = async (req, res) => {
 
     logger('activity', `Nuevo usuario registrado: ${user.email} con rol ${user.role}`);
 
+    // Fetch the full user document (minus password) so the client gets all fields
+    const fullUser = await User.findById(user._id).select('-password');
+
     res.status(201).json({
       success: true,
       token: generateToken(user._id),
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar
-      }
+      user: fullUser
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -99,16 +96,13 @@ exports.login = async (req, res) => {
 
     logger('activity', `Sesión iniciada: ${user.email}`);
 
+    // Fetch the full user document (minus password) so the client gets all fields (wallet, priceList, etc.)
+    const fullUser = await User.findById(user._id).select('-password');
+
     res.status(200).json({
       success: true,
       token: generateToken(user._id),
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar
-      }
+      user: fullUser
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
