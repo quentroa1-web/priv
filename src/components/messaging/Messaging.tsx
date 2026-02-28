@@ -9,7 +9,7 @@ import {
   MessageCircle, Search, Send, Paperclip, X,
   Smile, CheckCheck,
   ArrowLeft, Shield, ChevronRight, Crown, Lock, Unlock,
-  Bell, Gift, Trash2, Calendar, Clock as ClockIcon
+  Bell, Gift, Trash2, Calendar, Clock as ClockIcon, Play, Expand
 } from 'lucide-react';
 
 const SYSTEM_USER_ID = '6989549ede1ca80e285692a8';
@@ -22,7 +22,7 @@ interface Message {
   content: string;
   timestamp: Date;
   read: boolean;
-  type: 'text' | 'image' | 'file';
+  type: 'text' | 'image' | 'file' | 'media';
   isLocked?: boolean;
   price?: number;
   isUnlocked?: boolean;
@@ -125,6 +125,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
   const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
   const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
   const [showAnimation, setShowAnimation] = useState<string | null>(null);
+  const [viewingMedia, setViewingMedia] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -906,6 +907,39 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                         {msg.price || 100} Coins
                                       </button>
                                     </div>
+                                  ) : msg.type === 'media' ? (
+                                    <div
+                                      className="relative group cursor-pointer overflow-hidden rounded-xl border border-white/20 shadow-inner"
+                                      onClick={() => setViewingMedia(msg.content)}
+                                      onContextMenu={(e) => e.preventDefault()}
+                                    >
+                                      {msg.content.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                                        <div className="relative">
+                                          <video
+                                            src={msg.content}
+                                            className="max-h-60 w-auto object-cover rounded-xl"
+                                          />
+                                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                            <div className="w-10 h-10 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40">
+                                              <Play className="w-5 h-5 text-white fill-current" />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <img
+                                          src={msg.content}
+                                          alt="Media"
+                                          className="max-h-60 w-auto object-cover rounded-xl transition-transform group-hover:scale-105"
+                                          onContextMenu={(e) => e.preventDefault()}
+                                          draggable={false}
+                                        />
+                                      )}
+                                      <div className="absolute top-2 right-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Expand className="w-3.5 h-3.5 text-white" />
+                                      </div>
+                                      {/* Security Overlay to block right-click save as */}
+                                      <div className="absolute inset-0 z-10 select-none pointer-events-none" />
+                                    </div>
                                   ) : (
                                     <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic' : ''}`}>
                                       {msg.content}
@@ -1271,6 +1305,54 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
             </div>
           )}
         </>
+      )}
+
+      {/* Media Viewer Modal */}
+      {viewingMedia && (
+        <div
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 animate-in fade-in duration-300"
+          onContextMenu={(e) => e.preventDefault()}
+          onClick={() => setViewingMedia(null)}
+        >
+          <div className="absolute top-4 right-4 flex items-center gap-3 z-[210]">
+            <button
+              onClick={() => setViewingMedia(null)}
+              className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-all active:scale-90"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="relative max-w-5xl w-full max-h-[85vh] flex items-center justify-center group" onClick={(e) => e.stopPropagation()}>
+            {viewingMedia.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+              <video
+                src={viewingMedia}
+                className="max-w-full max-h-full rounded-2xl shadow-2xl"
+                onContextMenu={(e) => e.preventDefault()}
+                autoPlay
+                loop
+                playsInline
+                style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
+              />
+            ) : (
+              <div className="relative">
+                <img
+                  src={viewingMedia}
+                  alt="Exclusive Content"
+                  className="max-w-full max-h-full rounded-2xl shadow-2xl select-none"
+                  draggable={false}
+                  onContextMenu={(e) => e.preventDefault()}
+                />
+                <div className="absolute inset-0 pointer-events-none select-none border-4 border-white/5 rounded-2xl" />
+              </div>
+            )}
+
+            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] whitespace-nowrap">
+              <Shield className="w-3 h-3" />
+              Contenido Protegido por SafeConnect
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

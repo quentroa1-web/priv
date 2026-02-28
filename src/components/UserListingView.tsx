@@ -160,6 +160,7 @@ export function UserListingView({ role, onUserClick, onBack }: UserListingViewPr
                                             src={u.avatar || `https://ui-avatars.com/api/?name=${u.name}&background=random`}
                                             className="w-full h-full object-cover"
                                             alt={u.name}
+                                            loading="lazy"
                                         />
                                     </div>
                                     <div className="min-w-0">

@@ -41,6 +41,11 @@ exports.getAds = async (req, res) => {
     // OR just ensure the population includes the status for the frontend to handle if they slipped through.
     // Actually, let's stick to populating first.
 
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 20;
+    const skip = (page - 1) * limit;
+
     const ads = await Ad.find(query)
       .populate({
         path: 'user',
@@ -52,14 +57,21 @@ exports.getAds = async (req, res) => {
         priority: -1,
         lastBumpDate: -1,
         createdAt: -1
-      });
+      })
+      .skip(skip)
+      .limit(limit);
 
     // Post-filter banned users
     const activeAds = ads.filter(ad => ad.user && ad.user.status !== 'banned');
 
+    const total = await Ad.countDocuments(query);
+
     res.status(200).json({
       success: true,
       count: activeAds.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
       data: activeAds
     });
   } catch (error) {
@@ -136,7 +148,9 @@ exports.createAd = async (req, res) => {
     // Process Photos: Convert Base64 to Files (Cloudinary or Local)
     let processedPhotos = [];
     if (req.body.photos && Array.isArray(req.body.photos)) {
-      processedPhotos = await Promise.all(req.body.photos.map(async (photo, index) => {
+      // SECURITY: Limit number of photos to prevent DoS
+      const photosToProcess = req.body.photos.slice(0, 20);
+      processedPhotos = await Promise.all(photosToProcess.map(async (photo, index) => {
         try {
           const url = await saveBase64Image(photo.url || photo, 'ads');
           return {
@@ -145,9 +159,11 @@ exports.createAd = async (req, res) => {
           };
         } catch (err) {
           logger('error', `Error saving photo for user ${userId}: ${err.message}`);
-          return photo; // Keep original if error
+          return null;
         }
       }));
+      // Filter out failed uploads
+      processedPhotos = processedPhotos.filter(p => p !== null);
     }
 
     const {
@@ -225,7 +241,9 @@ exports.updateAd = async (req, res) => {
 
     // Process Photos if updated
     if (updates.photos && Array.isArray(updates.photos)) {
-      updates.photos = await Promise.all(updates.photos.map(async (photo, index) => {
+      // SECURITY: Limit number of photos
+      const photosToProcess = updates.photos.slice(0, 20);
+      updates.photos = await Promise.all(photosToProcess.map(async (photo, index) => {
         try {
           // If it's already a URL (local or cloudinary), don't re-save
           const photoUrl = typeof photo === 'string' ? photo : (photo.url || '');
@@ -240,9 +258,10 @@ exports.updateAd = async (req, res) => {
           };
         } catch (err) {
           logger('error', `Error updating photo for ad ${ad._id}: ${err.message}`);
-          return photo;
+          return null;
         }
       }));
+      updates.photos = updates.photos.filter(p => p !== null);
     }
 
     ad = await Ad.findByIdAndUpdate(req.params.id, updates, {

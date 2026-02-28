@@ -185,7 +185,8 @@ exports.transferCoins = async (req, res, next) => {
                     await Message.create({
                         sender: recipient._id,
                         recipient: sender._id,
-                        content: url
+                        content: url,
+                        type: 'media'
                     });
                 }
             }
