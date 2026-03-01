@@ -2,12 +2,9 @@ const mongoose = require('mongoose');
 const Message = require('../models/Message');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const { sanitizeString } = require('../utils/sanitize');
 
-// Simple HTML sanitizer to prevent XSS
-const sanitize = (str) => {
-  if (!str || typeof str !== 'string') return '';
-  return str.replace(/<[^>]*>/g, '').trim();
-};
+// No need for local sanitize, using utils/sanitize instead
 
 // @desc    Get all conversations for logged in user
 // @route   GET /api/messages
@@ -182,7 +179,7 @@ exports.sendMessage = async (req, res) => {
     }
 
     // Sanitize content to prevent XSS
-    const safeContent = sanitize(content);
+    const safeContent = sanitizeString(content, 5000);
     if (!safeContent || safeContent.length < 1) {
       return res.status(400).json({ success: false, error: 'El mensaje no puede estar vacío' });
     }

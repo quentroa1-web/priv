@@ -50,7 +50,14 @@ const saveBase64Image = async (base64Data, subfolder = 'ads') => {
         throw new Error('Formato de imagen Base64 inválido');
     }
 
-    const extension = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const detectedExt = matches[1].toLowerCase();
+    const extension = detectedExt === 'jpeg' ? 'jpg' : detectedExt;
+
+    if (!allowedExtensions.includes(extension)) {
+        throw new Error('Tipo de archivo no permitido. Solo se aceptan imágenes (jpg, png, gif, webp).');
+    }
+
     const data = matches[2];
     const buffer = Buffer.from(data, 'base64');
 

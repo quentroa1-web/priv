@@ -4,6 +4,7 @@ const Message = require('../models/Message');
 const Ad = require('../models/Ad');
 const mongoose = require('mongoose');
 const stripe = null; // Stripe removed
+const { sanitizeString } = require('../utils/sanitize');
 const packages = {
     'coins_100': { coins: 100, amount: 12000, type: 'deposit', currency: 'COP' },
     'coins_500': { coins: 500, amount: 55000, type: 'deposit', currency: 'COP' },
@@ -49,6 +50,10 @@ exports.getWallet = async (req, res, next) => {
 exports.submitPaymentProof = async (req, res, next) => {
     try {
         const { packageId, proofUrl, bankName, referenceId, paymentDate } = req.body;
+
+        const safeProofUrl = sanitizeString(proofUrl, 500);
+        const safeBankName = sanitizeString(bankName, 100);
+        const safeReferenceId = sanitizeString(referenceId, 100);
 
         if (!proofUrl) {
             return res.status(400).json({ success: false, error: 'Comprobante de pago requerido' });
@@ -263,18 +268,10 @@ exports.transferCoins = async (req, res, next) => {
 
     } catch (error) {
         console.error('Transfer Critical Error:', error);
-
-        // Fail-safe: Refund sender if coins were deducted
-        try {
-            if (coinsToTransfer > 0) {
-                await User.findByIdAndUpdate(req.user.id, { $inc: { 'wallet.coins': coinsToTransfer } });
-                console.log('Safe-Refund: Monedas devueltas satisfactoriamente tras error crítico.');
-            }
-        } catch (refundError) {
-            console.error('CRITICAL: Falla masiva en reembolso de seguridad:', refundError);
-        }
-
-        res.status(500).json({ success: false, error: 'Error en la transferencia: ' + error.message });
+        // NO REFUND HERE unless we are absolutely sure recipient was NOT credited
+        // If the sender was deducted but recipient wasn't, we'd need a way to track the state.
+        // For now, it's safer to fail but avoid double-spending.
+        res.status(500).json({ success: false, error: 'Error en la transferencia. Es posible que el saldo deba ser verificado por un administrador.' });
     }
 };
 

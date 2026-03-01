@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
+const { sanitizeString, sanitizePriceList } = require('../utils/sanitize');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -42,11 +43,11 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      name,
+      name: sanitizeString(name, 50),
       email,
       password,
       role: safeRole,
-      phone,
+      phone: sanitizeString(phone, 20),
       age: age ? Number(age) : undefined,
       gender: gender || undefined
     });
@@ -167,7 +168,13 @@ exports.updateDetails = async (req, res) => {
 
     allowedFields.forEach(field => {
       if (req.body[field] !== undefined) {
-        user[field] = req.body[field];
+        if (field === 'priceList') {
+          user[field] = sanitizePriceList(req.body[field]);
+        } else if (typeof req.body[field] === 'string') {
+          user[field] = sanitizeString(req.body[field], field === 'bio' ? 1000 : 200);
+        } else {
+          user[field] = req.body[field];
+        }
       }
     });
 

@@ -2,6 +2,7 @@ const Ad = require('../models/Ad');
 const User = require('../models/User');
 const { saveBase64Image } = require('../utils/fileHandler');
 const logger = require('../utils/logger');
+const { sanitizeString } = require('../utils/sanitize');
 
 // @desc    Get all ads
 // @route   GET /api/ads
@@ -168,22 +169,33 @@ exports.createAd = async (req, res) => {
 
     const {
       title, description, category, age, phone, whatsapp, location,
-      services, customServices, pricing, attendsTo, availability, photos
+      services, customServices, pricing, attendsTo, availability
     } = req.body;
 
+    // Sanitize services
+    const safeServices = Array.isArray(services) ? services.map(s => sanitizeString(s, 100)) : [];
+    const safeCustomServices = Array.isArray(customServices) ? customServices.map(s => sanitizeString(s, 100)) : [];
+    const safePricing = Array.isArray(pricing) ? pricing.map(p => ({
+      label: sanitizeString(p.label, 100),
+      price: Number(p.price) || 0
+    })) : [];
+
     const adData = {
-      title,
-      description,
-      category,
-      age,
-      phone,
-      whatsapp,
-      location,
-      services,
-      customServices,
-      pricing,
-      attendsTo,
-      availability,
+      title: sanitizeString(title, 100),
+      description: sanitizeString(description, 1500),
+      category: sanitizeString(category, 50),
+      age: Number(age) || 18,
+      phone: sanitizeString(phone, 20),
+      whatsapp: sanitizeString(whatsapp, 20),
+      location: {
+        department: sanitizeString(location?.department, 100),
+        city: sanitizeString(location?.city, 100)
+      },
+      services: safeServices,
+      customServices: safeCustomServices,
+      pricing: safePricing,
+      attendsTo: Array.isArray(attendsTo) ? attendsTo.map(a => sanitizeString(a, 50)) : [],
+      availability: sanitizeString(availability, 200),
       photos: processedPhotos,
       user: userId,
       isVerified: false,
