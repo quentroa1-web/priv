@@ -398,7 +398,7 @@ function AppContent() {
       />
 
       <div className="flex flex-1">
-        {isLoggedIn && currentView !== 'messages' && (
+        {isLoggedIn && (
           <Sidebar
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
@@ -410,7 +410,7 @@ function AppContent() {
           />
         )}
 
-        <main className={`flex-1 flex flex-col ${currentView === 'messages' ? 'p-0 md:p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow-x-hidden`}>
+        <main className={`flex-1 flex flex-col ${currentView === 'messages' ? 'p-0 h-[calc(100dvh-56px)] sm:h-[calc(100dvh-64px)]' : 'p-4 md:p-6'} overflow-x-hidden`}>
           <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-10 h-10 animate-spin text-rose-500" /></div>}>
             <div className={`flex-1 ${currentView === 'messages' ? 'w-full h-full' : 'max-w-7xl mx-auto w-full flex flex-col'}`}>
               {currentView === 'createAd' && isAnnouncer ? (

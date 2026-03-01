@@ -28,23 +28,23 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
   const { t } = useTranslation();
   return (
     <>
-      {/* Overlay for mobile */}
+      {/* Overlay for all sizes */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-[60]"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:sticky top-0 left-0 h-screen lg:h-[calc(100vh-2rem)] w-72 lg:w-48 bg-white lg:glass-sidebar border-r border-gray-100/50 
-        transform transition-all duration-300 ease-in-out z-50 lg:z-0 lg:mt-4 lg:ml-4 lg:rounded-3xl
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        fixed top-0 left-0 h-screen w-72 bg-white border-r border-gray-100/50 
+        transform transition-all duration-300 ease-in-out z-[70]
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
           {/* Mobile Profile Header */}
-          <div className="lg:hidden p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 flex flex-col gap-4">
+          <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-600 p-0.5 shadow-lg">
@@ -96,7 +96,7 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
 
           {/* Menu Items */}
           <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-            <h3 className="px-3 pb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden lg:block">{t('nav.navigation')}</h3>
+            <h3 className="px-3 pb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('nav.navigation')}</h3>
             {menuItems.filter(item => role && item.roles.includes(role)).map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -110,14 +110,14 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
                     onClose();
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3.5 lg:py-2.5 rounded-2xl font-black text-[13px] lg:text-xs transition-all uppercase tracking-tight group focus-visible:ring-2 focus-visible:ring-rose-500 outline-none
+                    w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-black text-[13px] transition-all uppercase tracking-tight group focus-visible:ring-2 focus-visible:ring-rose-500 outline-none
                     ${isActive
                       ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-200 scale-[1.02]'
                       : 'text-gray-500 hover:bg-rose-50 hover:text-rose-600'
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 lg:w-4 lg:h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-rose-500'}`} />
+                  <Icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-rose-500'}`} />
                   <span>{t(item.labelKey)}</span>
                   {item.id === 'messages' && unreadCount > 0 && (
                     <span className="ml-auto bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black ring-2 ring-white">
@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, onClose, activeSection, onSectionChange, role,
           </nav>
 
           {/* Mobile Footer */}
-          <div className="lg:hidden p-6 mt-auto border-t border-gray-100 bg-gray-50/50">
+          <div className="p-6 mt-auto border-t border-gray-100 bg-gray-50/50">
             <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest">
               <span>SafeConnect © 2024</span>
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />

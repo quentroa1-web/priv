@@ -68,7 +68,7 @@ export function Header({
                 hapticFeedback('light');
                 onMenuClick();
               }}
-              className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
               aria-label={t('nav.toggleMenu')}
             >
               <Menu className="w-5 h-5 text-gray-700" />
@@ -77,21 +77,22 @@ export function Header({
               <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-rose-200">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <h1 className="hidden sm:block text-lg font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-lg font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
                 SafeConnect
               </h1>
             </div>
           </div>
 
-          {/* Search Bar - SOLO Desktop (lg+) */}
-          {!isMessagingView && (
+          {/* Search Bar - HIDDEN in top row for all sizes as we want mobile design */}
+          {/* {!isMessagingView && (
             <div className="hidden lg:block flex-1 max-w-sm xl:max-w-xl mx-auto px-4">
               <AdvancedSearchBar onSearch={handleSearch} />
             </div>
-          )}
+          )} */}
 
           {/* Acciones */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto overflow-visible">
+            {/* ... acciones remain same ... */}
             {/* Idioma */}
             <button
               onClick={handleLanguageChange}
@@ -116,7 +117,7 @@ export function Header({
                       title="Gestionar Servicios"
                     >
                       <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden lg:inline">Servicios</span>
+                      <span className="hidden sm:inline">Servicios</span>
                     </button>
                     {/* Publicar — visible en todos los tamaños */}
                     <button
@@ -129,7 +130,7 @@ export function Header({
                       title={t('nav.publishAd')}
                     >
                       <PlusCircle className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden lg:inline">{t('nav.publishAd')}</span>
+                      <span className="hidden sm:inline">{t('nav.publishAd')}</span>
                     </button>
                   </div>
                 )}
@@ -197,11 +198,11 @@ export function Header({
                     hapticFeedback('light');
                     onRegisterClick();
                   }}
-                  className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
                   aria-label={t('nav.publishAd')}
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
-                  <span className="hidden lg:inline">{t('nav.publishAd')}</span>
+                  <span className="hidden sm:inline">{t('nav.publishAd')}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -226,9 +227,9 @@ export function Header({
           </div>
         </div>
 
-        {/* === FILA INFERIOR MÓVIL: Barra de búsqueda === */}
+        {/* === FILA INFERIOR: Barra de búsqueda (visible en todos) === */}
         {!isMessagingView && (
-          <div className="lg:hidden pb-3">
+          <div className="pb-3">
             <AdvancedSearchBar onSearch={handleSearch} />
           </div>
         )}
