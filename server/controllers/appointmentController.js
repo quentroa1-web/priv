@@ -5,6 +5,7 @@ const Message = require('../models/Message');
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
+const { sanitizeString } = require('../utils/sanitize');
 const SYSTEM_USER_ID = process.env.SYSTEM_USER_ID || '6989549ede1ca80e285692a8';
 
 // @desc    Create appointment request
@@ -13,6 +14,10 @@ const SYSTEM_USER_ID = process.env.SYSTEM_USER_ID || '6989549ede1ca80e285692a8';
 exports.createAppointment = async (req, res) => {
     try {
         const { announcerId, adId, date, time, location, details } = req.body;
+
+        const safeLocation = sanitizeString(location, 200);
+        const safeDetails = sanitizeString(details, 500);
+        const safeTime = sanitizeString(time, 50);
 
         // Validate ObjectId
         if (!mongoose.Types.ObjectId.isValid(announcerId)) {
@@ -60,16 +65,16 @@ exports.createAppointment = async (req, res) => {
             announcer: announcerId,
             ad: adId || null,
             date,
-            time,
-            location,
-            details
+            time: safeTime,
+            location: safeLocation,
+            details: safeDetails
         });
 
         // Send a system message to the announcer
         await Message.create({
             sender: SYSTEM_USER_ID,
             recipient: announcerId,
-            content: `📅 Solicitud de Cita: El usuario ${req.user.name} ha solicitado una cita para el ${new Date(date).toLocaleDateString()} a las ${time}. Lugar: ${location}.`,
+            content: `📅 Solicitud de Cita: El usuario ${req.user.name} ha solicitado una cita para el ${new Date(date).toLocaleDateString()} a las ${safeTime}. Lugar: ${safeLocation}.`,
             isSystem: true
         });
 

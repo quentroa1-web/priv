@@ -67,7 +67,7 @@ exports.getUsers = async (req, res) => {
         }
 
         // Gender filter
-        if (gender) {
+        if (gender && typeof gender === 'string') {
             query.gender = gender;
         }
 

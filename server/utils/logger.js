@@ -30,7 +30,8 @@ const logger = (type, message) => {
         }
 
         const logFile = path.join(logDir, `${type}.log`);
-        const logEntry = `[${timestamp}] ${message}\n`;
+        const safeMessage = message.toString().replace(/\n|\r/g, ' ');
+        const logEntry = `[${timestamp}] ${safeMessage}\n`;
 
         fs.appendFileSync(logFile, logEntry);
     } catch (err) {

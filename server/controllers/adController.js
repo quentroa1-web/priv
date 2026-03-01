@@ -172,12 +172,13 @@ exports.createAd = async (req, res) => {
       services, customServices, pricing, attendsTo, availability
     } = req.body;
 
-    // Sanitize services
-    const safeServices = Array.isArray(services) ? services.map(s => sanitizeString(s, 100)) : [];
-    const safeCustomServices = Array.isArray(customServices) ? customServices.map(s => sanitizeString(s, 100)) : [];
-    const safePricing = Array.isArray(pricing) ? pricing.map(p => ({
+    // Sanitize and LIMIT services/arrays (Anti-DoS)
+    const safeServices = Array.isArray(services) ? services.slice(0, 50).map(s => sanitizeString(s, 100)) : [];
+    const safeCustomServices = Array.isArray(customServices) ? customServices.slice(0, 50).map(s => sanitizeString(s, 100)) : [];
+    const safePricing = Array.isArray(pricing) ? pricing.slice(0, 50).map(p => ({
       label: sanitizeString(p.label, 100),
-      price: Number(p.price) || 0
+      price: Math.floor(Math.abs(Number(p.price) || 0)),
+      priceType: ['hora', 'sesion', 'noche', 'negociable'].includes(p.priceType) ? p.priceType : 'hora'
     })) : [];
 
     const adData = {
@@ -233,23 +234,30 @@ exports.updateAd = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Not authorized to update this ad' });
     }
 
-    // Protected fields that shouldn't be updated by owner directly
-    const updates = { ...req.body };
-    delete updates.user;
+    // CRITICAL SECURITY: Whitelist-only updates (Avoid Prototype Pollution & Internal fields)
+    const allowedUpdates = [
+      'title', 'description', 'category', 'age', 'phone', 'whatsapp',
+      'location', 'services', 'customServices', 'pricing', 'attendsTo',
+      'availability', 'photos', 'isActive'
+    ];
 
-    // Si no es admin, no puede modificar estos campos sensibles
-    if (req.user.role !== 'admin') {
-      delete updates.plan;
-      delete updates.priority;
-      delete updates.lastBumpDate;
-      delete updates.isVerified;
-      delete updates.views;
-      delete updates.isBoosted;
-      delete updates.boostedUntil;
-      delete updates.lastBoostDate;
-      delete updates.createdAt;
-      delete updates.expiresAt;
-    }
+    const updates = {};
+    allowedUpdates.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    // Sanitization & Limits for Updates
+    if (updates.title) updates.title = sanitizeString(updates.title, 100);
+    if (updates.description) updates.description = sanitizeString(updates.description, 1500);
+    if (updates.services) updates.services = Array.isArray(updates.services) ? updates.services.slice(0, 50).map(s => sanitizeString(s, 100)) : [];
+    if (updates.customServices) updates.customServices = Array.isArray(updates.customServices) ? updates.customServices.slice(0, 50).map(s => sanitizeString(s, 100)) : [];
+    if (updates.pricing) updates.pricing = Array.isArray(updates.pricing) ? updates.pricing.slice(0, 50).map(p => ({
+      label: sanitizeString(p.label, 100),
+      price: Math.floor(Math.abs(Number(p.price) || 0)),
+      priceType: ['hora', 'sesion', 'noche', 'negociable'].includes(p.priceType) ? p.priceType : 'hora'
+    })) : [];
 
     // Process Photos if updated
     if (updates.photos && Array.isArray(updates.photos)) {

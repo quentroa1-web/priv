@@ -28,7 +28,7 @@ const sanitizeString = (str, maxLength = 2000) => {
 const sanitizePriceList = (priceList) => {
     if (!Array.isArray(priceList)) return [];
 
-    return priceList.map(item => ({
+    return priceList.slice(0, 50).map(item => ({
         label: sanitizeString(item.label, 100),
         price: Math.floor(Math.abs(Number(item.price) || 0)),
         description: sanitizeString(item.description, 200),
