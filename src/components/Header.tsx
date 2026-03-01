@@ -77,7 +77,7 @@ export function Header({
               <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-rose-200">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-lg font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="hidden min-[450px]:block text-lg font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
                 SafeConnect
               </h1>
             </div>
@@ -112,12 +112,12 @@ export function Header({
                         hapticFeedback('light');
                         onServicesClick?.();
                       }}
-                      className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
+                      className="flex items-center gap-1 p-2 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
                       aria-label="Gestionar Servicios"
                       title="Gestionar Servicios"
                     >
                       <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden sm:inline">Servicios</span>
+                      <span className="hidden min-[550px]:inline">Servicios</span>
                     </button>
                     {/* Publicar — visible en todos los tamaños */}
                     <button
@@ -125,12 +125,12 @@ export function Header({
                         hapticFeedback('light');
                         onCreateAdClick?.();
                       }}
-                      className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                      className="flex items-center gap-1 p-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg text-xs font-bold hover:shadow-lg transition-all"
                       aria-label={t('nav.publishAd')}
                       title={t('nav.publishAd')}
                     >
                       <PlusCircle className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden sm:inline">{t('nav.publishAd')}</span>
+                      <span className="hidden min-[550px]:inline">{t('nav.publishAd')}</span>
                     </button>
                   </div>
                 )}
@@ -211,7 +211,8 @@ export function Header({
                   }}
                   className="px-2 sm:px-3 py-1.5 text-gray-700 font-bold hover:bg-gray-100 rounded-lg transition-all text-xs sm:text-sm whitespace-nowrap"
                 >
-                  {t('auth.login')}
+                  <span className="min-[450px]:inline hidden">{t('auth.login')}</span>
+                  <User className="w-4 h-4 min-[450px]:hidden" />
                 </button>
                 <button
                   onClick={() => {
@@ -220,7 +221,8 @@ export function Header({
                   }}
                   className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg font-bold hover:shadow-lg transition-all text-xs sm:text-sm whitespace-nowrap"
                 >
-                  {t('auth.register')}
+                  <span className="min-[450px]:inline hidden">{t('auth.register')}</span>
+                  <PlusCircle className="w-4 h-4 min-[450px]:hidden" />
                 </button>
               </>
             )}
