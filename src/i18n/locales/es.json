@@ -24,7 +24,9 @@
     "tokens": "Tokens",
     "status": "Estado",
     "navigation": "Navegación",
-    "close": "Cerrar menú"
+    "close": "Cerrar menú",
+    "manageServices": "Gestionar Servicios",
+    "services": "Servicios"
   },
   "common": {
     "favorite": "Agregar a favoritos",
@@ -151,5 +153,19 @@
     "signUp": "Regístrate aquí",
     "backToHome": "Volver al Inicio",
     "logout": "Cerrar sesión"
+  },
+  "footer": {
+    "description": "Conexiones seguras y verificadas. Tu seguridad es nuestra prioridad.",
+    "support": "Soporte",
+    "helpCenter": "Centro de Ayuda",
+    "contact247": "Contacto 24/7",
+    "legal": "Legal",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "services": "Servicios",
+    "paymentsAndFees": "Pagos y Tarifas",
+    "verification": "Verificación",
+    "allRightsReserved": "Todos los derechos reservados.",
+    "colombia": "Colombia"
   }
 }

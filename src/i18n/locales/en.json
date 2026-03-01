@@ -24,7 +24,9 @@
     "tokens": "Tokens",
     "status": "Status",
     "navigation": "Navigation",
-    "close": "Close sidebar"
+    "close": "Close sidebar",
+    "manageServices": "Manage Services",
+    "services": "Services"
   },
   "common": {
     "favorite": "Add to favorites",
@@ -134,5 +136,19 @@
     "signUp": "Sign up here",
     "backToHome": "Back to Home",
     "logout": "Logout"
+  },
+  "footer": {
+    "description": "Secure and verified connections. Your safety is our priority.",
+    "support": "Support",
+    "helpCenter": "Help Center",
+    "contact247": "24/7 Contact",
+    "legal": "Legal",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "services": "Services",
+    "paymentsAndFees": "Payments & Fees",
+    "verification": "Verification",
+    "allRightsReserved": "All rights reserved.",
+    "colombia": "Colombia"
   }
 }

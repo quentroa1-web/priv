@@ -111,12 +111,12 @@ export function Header({
                         hapticFeedback('light');
                         onServicesClick?.();
                       }}
-                      className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
-                      aria-label="Gestionar Servicios"
-                      title="Gestionar Servicios"
+                      className="flex items-center gap-1 p-2 sm:px-2.5 sm:py-1.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 outline-none"
+                      aria-label={t('nav.manageServices')}
+                      title={t('nav.manageServices')}
                     >
                       <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden lg:inline">Servicios</span>
+                      <span className="hidden lg:inline">{t('nav.services')}</span>
                     </button>
                     {/* Publicar — visible en todos los tamaños */}
                     <button

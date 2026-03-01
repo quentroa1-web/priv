@@ -1,10 +1,12 @@
 import { Shield, Copyright, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface FooterProps {
     onNavigate: (view: any) => void;
 }
 
 export function Footer({ onNavigate }: FooterProps) {
+    const { t } = useTranslation();
     const currentYear = new Date().getFullYear();
 
     return (
@@ -22,7 +24,7 @@ export function Footer({ onNavigate }: FooterProps) {
                             </span>
                         </div>
                         <p className="text-gray-500 text-xs leading-relaxed mb-4">
-                            Conexiones seguras y verificadas. Tu seguridad es nuestra prioridad.
+                            {t('footer.description')}
                         </p>
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-100 rounded text-gray-500 font-bold text-[9px] uppercase tracking-wider">
@@ -35,51 +37,81 @@ export function Footer({ onNavigate }: FooterProps) {
                     </div>
 
                     {/* Links Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 md:gap-12">
+                    <nav className="grid grid-cols-2 sm:grid-cols-3 gap-6 md:gap-12" aria-label="Footer Navigation">
                         <div>
-                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">Soporte</h3>
+                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">{t('footer.support')}</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <button onClick={() => onNavigate('support')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Centro de Ayuda</button>
+                                    <button
+                                        onClick={() => onNavigate('support')}
+                                        className="text-xs text-gray-500 hover:text-rose-600 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none rounded"
+                                    >
+                                        {t('footer.helpCenter')}
+                                    </button>
                                 </li>
                                 <li>
-                                    <button onClick={() => onNavigate('support')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Contacto 24/7</button>
+                                    <button
+                                        onClick={() => onNavigate('support')}
+                                        className="text-xs text-gray-500 hover:text-rose-600 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none rounded"
+                                    >
+                                        {t('footer.contact247')}
+                                    </button>
                                 </li>
                             </ul>
                         </div>
 
                         <div>
-                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">Legal</h3>
+                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">{t('footer.legal')}</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <button onClick={() => onNavigate('legal')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Términos</button>
+                                    <button
+                                        onClick={() => onNavigate('legal')}
+                                        className="text-xs text-gray-500 hover:text-rose-600 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none rounded"
+                                    >
+                                        {t('footer.terms')}
+                                    </button>
                                 </li>
                                 <li>
-                                    <button onClick={() => onNavigate('privacy')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Privacidad</button>
+                                    <button
+                                        onClick={() => onNavigate('privacy')}
+                                        className="text-xs text-gray-500 hover:text-rose-600 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none rounded"
+                                    >
+                                        {t('footer.privacy')}
+                                    </button>
                                 </li>
                             </ul>
                         </div>
 
                         <div className="col-span-2 sm:col-span-1">
-                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">Servicios</h3>
+                            <h3 className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-3">{t('footer.services')}</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <button onClick={() => onNavigate('payments')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Pagos y Tarifas</button>
+                                    <button
+                                        onClick={() => onNavigate('payments')}
+                                        className="text-xs text-gray-500 hover:text-rose-600 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none rounded"
+                                    >
+                                        {t('footer.paymentsAndFees')}
+                                    </button>
                                 </li>
                                 <li>
-                                    <button onClick={() => onNavigate('legal')} className="text-xs text-gray-500 hover:text-rose-600 transition-colors">Verificación</button>
+                                    <button
+                                        onClick={() => onNavigate('legal')}
+                                        className="text-xs text-gray-500 hover:text-rose-600 transition-colors focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 outline-none rounded"
+                                    >
+                                        {t('footer.verification')}
+                                    </button>
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </nav>
                 </div>
 
                 <div className="pt-5 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-3">
                     <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                        SafeConnect &copy; {currentYear} • Todos los derechos reservados.
+                        SafeConnect &copy; {currentYear} • {t('footer.allRightsReserved')}
                     </p>
                     <div className="flex gap-4">
-                        <span className="text-[8px] font-bold text-gray-300 uppercase tracking-[0.2em]">Colombia</span>
+                        <span className="text-[8px] font-bold text-gray-300 uppercase tracking-[0.2em]">{t('footer.colombia')}</span>
                         <span className="text-[8px] font-bold text-gray-300 uppercase tracking-[0.2em]">V.2.1-A</span>
                     </div>
                 </div>
