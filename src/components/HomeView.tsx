@@ -55,84 +55,72 @@ export function HomeView({
                 description={`Encuentra los mejores anuncios de acompañantes y escorts en ${searchFilters.ciudad || 'toda Colombia'}. Perfiles 100% verificados, seguridad y discreción total.`}
                 keywords={`escorts ${searchFilters.ciudad || 'colombia'}, acompañantes ${searchFilters.ciudad || 'bogota'}, masajes ${searchFilters.ciudad || 'medellin'}, modelos independientes, clasificados adultos`}
             />
-            {/* Premium Security Hero Banner */}
-            <div className="relative overflow-hidden rounded-2xl md:rounded-[2.5rem] p-4 md:p-6 mb-4 md:mb-6 border border-white/20 shadow-2xl group">
-                {/* Dynamic Background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-rose-600 via-pink-600 to-indigo-900 bg-[length:200%_200%] animate-[gradient_15s_ease_infinite]"></div>
+            {/* Ultra-Compact Premium Security Bar */}
+            <div className="relative overflow-hidden rounded-xl md:rounded-2xl p-2 md:p-3 mb-3 md:mb-4 border border-white/10 shadow-lg group">
+                {/* Dynamic Surface */}
+                <div className="absolute inset-0 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-700 animate-[gradient_10s_ease_infinite]"></div>
 
-                {/* Decorative Elements */}
-                <div className="absolute -top-24 -right-24 w-64 h-64 bg-rose-400/30 rounded-full blur-[80px] group-hover:bg-rose-400/40 transition-colors duration-1000"></div>
-                <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-400/20 rounded-full blur-[80px]"></div>
+                {/* Minimalist Grid Overlay */}
+                <div className="absolute inset-0 bg-[radial-gradient(#ffffff10_1px,transparent_1px)] bg-[size:16px_16px] opacity-40"></div>
 
-                {/* Techy Scanning Effect */}
-                <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
-                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-[scan_3s_linear_infinite]"></div>
-                </div>
-
-                <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4 md:gap-6 min-w-0 w-full sm:w-auto">
+                <div className="relative z-10 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="relative shrink-0">
-                            <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-xl rounded-2xl md:rounded-3xl flex items-center justify-center border border-white/30 shadow-2xl rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                                <Shield className="w-6 h-6 md:w-8 md:h-8 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]" />
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/10 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/20 shadow-xl group-hover:rotate-6 transition-transform">
+                                <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
                             </div>
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-rose-600 animate-ping"></div>
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-rose-600"></div>
                         </div>
 
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                <h1 className="text-lg md:text-2xl font-black text-white tracking-tight leading-tight">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-xs md:text-sm font-black text-white tracking-tight truncate">
                                     {t('hero.safety')}
                                 </h1>
-                                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[8px] md:text-[9px] uppercase tracking-widest font-black flex items-center gap-1.5 backdrop-blur-md">
-                                    <BadgeCheck className="w-3 h-3" />
-                                    Biometric Verifier
+                                <span className="hidden sm:inline-flex bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-md text-[8px] uppercase tracking-tighter font-black backdrop-blur-sm">
+                                    Verified IA
                                 </span>
                             </div>
-                            <p className="text-rose-50/80 text-xs md:text-sm font-medium leading-relaxed max-w-md">
+                            <p className="text-rose-100/70 text-[9px] md:text-[10px] font-medium truncate max-w-[180px] sm:max-w-md">
                                 {t('hero.safety_desc')}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-6 bg-black/20 backdrop-blur-xl px-6 py-4 rounded-2xl border border-white/10 w-full sm:w-auto shadow-xl">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-emerald-400 uppercase tracking-[0.3em] font-black mb-1.5 drop-shadow-sm">Verificado</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl md:text-2xl font-black text-white italic">100%</span>
-                                <div className="p-1 bg-emerald-500/20 rounded-lg">
-                                    <BadgeCheck className="w-4 h-4 text-emerald-400" />
-                                </div>
+                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                        <div className="flex flex-col items-end sm:items-center">
+                            <span className="text-[7px] text-rose-200 uppercase tracking-widest font-black leading-none mb-0.5">Trust</span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[10px] md:text-xs font-black text-white italic">4.9/5</span>
+                                <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
                             </div>
                         </div>
-                        <div className="w-px h-10 bg-white/20"></div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-amber-300 uppercase tracking-[0.3em] font-black mb-1.5 drop-shadow-sm">Confianza</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl md:text-2xl font-black text-white italic">4.9</span>
-                                <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        <div className="hidden min-[400px]:block w-px h-6 bg-white/20"></div>
+                        <div className="hidden min-[400px]:flex flex-col items-end sm:items-center">
+                            <span className="text-[7px] text-rose-200 uppercase tracking-widest font-black leading-none mb-0.5">Safety</span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[10px] md:text-xs font-black text-white italic">100%</span>
+                                <BadgeCheck className="w-2.5 h-2.5 text-emerald-400" />
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Premium Stats Grid - Improved for 500px-700px */}
-            <div className="grid grid-cols-2 min-[500px]:grid-cols-4 md:grid-cols-4 gap-2 md:gap-4 mb-6 transition-all duration-300">
+            {/* Tight Stats Grid - Optimized for all sizes */}
+            <div className="grid grid-cols-2 min-[500px]:grid-cols-4 gap-2 mb-4 md:mb-6">
                 {stats.map((stat, index) => (
                     <div
                         key={index}
-                        className="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-gray-100 flex items-center gap-3 group transition-all hover:border-rose-100 hover:shadow-xl hover:shadow-rose-500/5 active:scale-95 cursor-default"
+                        className="bg-white/60 backdrop-blur-sm rounded-xl p-2 md:p-2.5 border border-gray-100 flex items-center gap-2 md:gap-3 group transition-all hover:bg-white hover:border-rose-100 hover:shadow-sm"
                     >
-                        <div className={`w-9 h-9 md:w-11 md:h-11 ${stat.bg} rounded-xl flex items-center justify-center text-base md:text-xl shrink-0 transition-all group-hover:rotate-6 group-hover:scale-110 shadow-inner`}>
+                        <div className={`w-7 h-7 md:w-8 md:h-8 ${stat.bg} rounded-lg flex items-center justify-center text-xs md:text-sm shrink-0 transition-all group-hover:scale-110 shadow-sm`}>
                             {stat.icon}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className={`text-sm md:text-lg font-black ${stat.color} leading-none mb-0.5`}>
+                            <span className={`text-xs md:text-sm font-black ${stat.color} leading-none mb-0.5`}>
                                 {stat.value}
                             </span>
-                            <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest truncate">
+                            <span className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-wider truncate">
                                 {stat.label}
                             </span>
                         </div>
