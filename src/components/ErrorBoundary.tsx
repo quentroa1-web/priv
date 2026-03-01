@@ -22,6 +22,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error("Uncaught error:", error, errorInfo);
+
+        // Auto-reload on chunk load errors
+        const errorString = error?.toString() || '';
+        if (
+            /loading chunk/i.test(errorString) ||
+            /Failed to fetch dynamically imported module/i.test(errorString) ||
+            /Unexpected token '<'/i.test(errorString) ||
+            /MIME type/i.test(errorString)
+        ) {
+            const hasReloaded = window.sessionStorage.getItem('error-boundary-reloaded');
+            if (!hasReloaded) {
+                window.sessionStorage.setItem('error-boundary-reloaded', 'true');
+                window.location.reload();
+            }
+        }
     }
 
     public render() {

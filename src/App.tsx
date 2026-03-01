@@ -1,4 +1,5 @@
-import { Suspense, lazy, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
+import { lazyRetry } from './utils/lazyRetry';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { apiService, getAds, getMyAds } from './services/api';
 import { Header } from './components/Header';
@@ -26,14 +27,14 @@ import { UserListingView } from './components/UserListingView';
 import { ServicesManager } from './components/ServicesManager';
 
 // Lazy load heavy components
-const Login = lazy(() => import('./components/auth/Login').then(module => ({ default: module.Login })));
-const Register = lazy(() => import('./components/auth/Register').then(module => ({ default: module.Register })));
-const CreateAd = lazy(() => import('./components/CreateAd').then(module => ({ default: module.CreateAd })));
-const UserProfile = lazy(() => import('./components/user/UserProfile').then(module => ({ default: module.UserProfile })));
-const AdminPanel = lazy(() => import('./components/admin/AdminPanel').then(module => ({ default: module.AdminPanel })));
-const Messaging = lazy(() => import('./components/messaging/Messaging').then(module => ({ default: module.Messaging })));
-const Reviews = lazy(() => import('./components/reviews/Reviews').then(module => ({ default: module.Reviews })));
-const WalletView = lazy(() => import('./components/wallet/WalletView').then(module => ({ default: module.WalletView })));
+const Login = lazyRetry(() => import('./components/auth/Login').then(module => module.Login));
+const Register = lazyRetry(() => import('./components/auth/Register').then(module => module.Register));
+const CreateAd = lazyRetry(() => import('./components/CreateAd').then(module => module.CreateAd));
+const UserProfile = lazyRetry(() => import('./components/user/UserProfile').then(module => module.UserProfile));
+const AdminPanel = lazyRetry(() => import('./components/admin/AdminPanel').then(module => module.AdminPanel));
+const Messaging = lazyRetry(() => import('./components/messaging/Messaging').then(module => module.Messaging));
+const Reviews = lazyRetry(() => import('./components/reviews/Reviews').then(module => module.Reviews));
+const WalletView = lazyRetry(() => import('./components/wallet/WalletView').then(module => module.WalletView));
 
 type View = 'home' | 'login' | 'register' | 'createAd' | 'profile' | 'admin' | 'messages' | 'reviews' | 'favorites' | 'wallet' | 'support' | 'legal' | 'privacy' | 'payments' | 'clients' | 'announcers';
 

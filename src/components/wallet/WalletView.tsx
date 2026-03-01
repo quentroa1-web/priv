@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { importRetry } from '../../utils/lazyRetry';
 import { useAuth } from '../../context/AuthContext';
 import { getTransactions, submitWithdrawalRequest } from '../../services/payment';
 import { getMyAds, boostAd } from '../../services/api';
@@ -159,7 +160,7 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
     const handleBuySubscription = async (plan: string) => {
         try {
             setLoading(true);
-            const { buySubscription } = await import('../../services/payment');
+            const { buySubscription } = await importRetry(() => import('../../services/payment'));
             const res = await buySubscription(plan);
             if (res.data.success) {
                 alert('Plan activado exitosamente');
