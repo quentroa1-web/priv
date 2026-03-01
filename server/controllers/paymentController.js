@@ -39,7 +39,7 @@ exports.getWallet = async (req, res, next) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, error: 'Server Error' });
+        res.status(500).json({ success: false, error: 'Error del servidor' });
     }
 };
 
@@ -131,7 +131,7 @@ exports.transferCoins = async (req, res, next) => {
     try {
         const { recipientId, amount, reason, messageId, packId } = req.body;
         coinsToTransfer = parseInt(amount);
-        if (isNaN(coinsToTransfer) || coinsToTransfer <= 0) return res.status(400).json({ success: false, error: 'Invalid amount' });
+        if (isNaN(coinsToTransfer) || coinsToTransfer <= 0) return res.status(400).json({ success: false, error: 'Monto inválido' });
 
         // SECURITY: Block self-transfer
         if (recipientId === req.user.id || recipientId === req.user._id?.toString()) {
@@ -143,6 +143,39 @@ exports.transferCoins = async (req, res, next) => {
             return res.status(400).json({ success: false, error: 'ID de destinatario inválido' });
         }
 
+        const recipient = await User.findById(recipientId).select('+priceList.content');
+        if (!recipient) {
+            return res.status(404).json({ success: false, error: 'Destinatario no encontrado' });
+        }
+
+        // 1. SECURITY: Validate messageId if provided
+        if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
+            const message = await Message.findById(messageId);
+            if (!message) {
+                return res.status(404).json({ success: false, error: 'Mensaje no encontrado' });
+            }
+            // Ensure message belongs to the recipient of the coins
+            if (message.sender.toString() !== recipientId) {
+                return res.status(400).json({ success: false, error: 'El mensaje no pertenece al destinatario' });
+            }
+            // Ensure amount is sufficient
+            if (message.isLocked && coinsToTransfer < message.price) {
+                return res.status(400).json({ success: false, error: 'Monto insuficiente para desbloquear este mensaje' });
+            }
+        }
+
+        // 2. SECURITY: Validate packId if provided
+        if (packId && mongoose.Types.ObjectId.isValid(packId)) {
+            const pack = recipient.priceList.id(packId);
+            if (!pack) {
+                return res.status(404).json({ success: false, error: 'Paquete de contenido no encontrado' });
+            }
+            // Ensure amount is sufficient
+            if (coinsToTransfer < pack.price) {
+                return res.status(400).json({ success: false, error: 'Monto insuficiente para este paquete' });
+            }
+        }
+
         // Atomic update for sender: Decrement coins ONLY if balance is sufficient
         const sender = await User.findOneAndUpdate(
             { _id: req.user.id, 'wallet.coins': { $gte: coinsToTransfer } },
@@ -151,14 +184,7 @@ exports.transferCoins = async (req, res, next) => {
         ).select('+wallet.coins');
 
         if (!sender) {
-            return res.status(400).json({ success: false, error: 'Insufficient funds' });
-        }
-
-        const recipient = await User.findById(recipientId).select('+priceList.content');
-        if (!recipient) {
-            // Refund sender if recipient not found (though this is rare)
-            await User.findByIdAndUpdate(req.user.id, { $inc: { 'wallet.coins': coinsToTransfer } });
-            return res.status(404).json({ success: false, error: 'Recipient not found' });
+            return res.status(400).json({ success: false, error: 'Fondos insuficientes' });
         }
 
         // Increase Recipient (Apply commission if needed)
@@ -170,15 +196,15 @@ exports.transferCoins = async (req, res, next) => {
             $inc: { 'wallet.coins': finalAmount }
         });
 
-        // 1. If messageId provided and it's a valid ObjectId, unlock it
-        if (messageId && mongoose.Types.ObjectId.isValid(messageId)) {
+        // 1. If messageId provided, unlock it
+        if (messageId) {
             await Message.findByIdAndUpdate(messageId, {
                 $addToSet: { unlockedBy: sender._id }
             });
         }
 
         // 2. AUTOMATIC CONTENT DELIVERY (for priceList packs)
-        if (packId && mongoose.Types.ObjectId.isValid(packId)) {
+        if (packId) {
             const pack = recipient.priceList.id(packId);
             if (pack && pack.content && pack.content.length > 0) {
                 for (const url of pack.content) {
@@ -202,7 +228,7 @@ exports.transferCoins = async (req, res, next) => {
                 currency: 'COINS',
                 status: 'completed',
                 recipient: recipient._id,
-                description: reason || 'Transfer to user'
+                description: reason || 'Transferencia a usuario'
             });
 
             await Transaction.create({
@@ -213,7 +239,7 @@ exports.transferCoins = async (req, res, next) => {
                 currency: 'COINS',
                 status: 'completed',
                 recipient: sender._id,
-                description: reason || 'Received from user'
+                description: reason || 'Recibido de usuario'
             });
 
             // Send holographic system notifications
@@ -248,7 +274,7 @@ exports.transferCoins = async (req, res, next) => {
             console.error('CRITICAL: Falla masiva en reembolso de seguridad:', refundError);
         }
 
-        res.status(500).json({ success: false, error: 'Transfer Failed: ' + error.message });
+        res.status(500).json({ success: false, error: 'Error en la transferencia: ' + error.message });
     }
 };
 
@@ -351,7 +377,7 @@ exports.buySubscriptionWithCoins = async (req, res) => {
 
         // 1. Fetch user to check current plan status
         const user = await User.findById(req.user.id).select('+wallet.coins');
-        if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+        if (!user) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
 
         let newExpiryDate = new Date();
         // If already has this plan and it's active, extend it
