@@ -125,6 +125,39 @@ const adminUpdateUserSchema = Joi.object({
 });
 
 /**
+ * PAYMENT SCHEMAS
+ */
+const transferSchema = Joi.object({
+    recipientId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    amount: Joi.number().integer().positive().required(),
+    reason: Joi.string().max(200).allow('', null),
+    messageId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow('', null),
+    packId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).allow('', null)
+});
+
+const withdrawSchema = Joi.object({
+    amount: Joi.number().integer().min(100).required(),
+    targetAccount: Joi.string().min(5).max(100).required(),
+    bankName: Joi.string().max(50).allow('', null)
+});
+
+const submitProofSchema = Joi.object({
+    packageId: Joi.string().required(),
+    proofUrl: Joi.string().uri().required(),
+    bankName: Joi.string().max(50).allow('', null),
+    referenceId: Joi.string().max(100).allow('', null),
+    paymentDate: Joi.date().allow('', null)
+});
+
+const buySubscriptionSchema = Joi.object({
+    planId: Joi.string().valid('gold', 'diamond').required()
+});
+
+const boostAdPaymentSchema = Joi.object({
+    adId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required()
+});
+
+/**
  * MESSAGE SCHEMAS
  */
 const messageSchema = Joi.object({
@@ -180,5 +213,10 @@ module.exports = {
     messageSchema,
     appointmentSchema,
     reviewSchema,
-    reviewResponseSchema
+    reviewResponseSchema,
+    transferSchema,
+    withdrawSchema,
+    submitProofSchema,
+    buySubscriptionSchema,
+    boostAdPaymentSchema
 };

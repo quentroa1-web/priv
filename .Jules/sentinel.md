@@ -12,3 +12,8 @@
 **Vulnerability:** Public exposure of sensitive user data (e.g., wallet balance) through API endpoints that populate user objects.
 **Learning:** Relying on controller-level `select` exclusion is error-prone and doesn't scale as more endpoints are added. Authenticated fields like financial data should be protected at the model level.
 **Prevention:** Use `select: false` in the Mongoose schema for sensitive fields. This makes them hidden by default across the entire application, requiring explicit opt-in via `.select('+field')` only when strictly necessary for specific business logic.
+
+## 2025-05-18 - [Price Bypass and Unauthorized Content Access]
+**Vulnerability:** Price bypass and unauthorized content access in coin transfer logic.
+**Learning:** Unlocking content via external IDs (`messageId`, `packId`) without verifying their relationship to the recipient or their associated price allows attackers to acquire content for less than the set price or from unintended sellers.
+**Prevention:** Always validate the integrity of the item being "purchased" by checking its price and ownership/origin before proceeding with any financial transaction or content unlock.
