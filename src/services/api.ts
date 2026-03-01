@@ -91,6 +91,14 @@ export const uploadImages = (formData: FormData) => {
   });
 };
 
+export const uploadPacks = (formData: FormData) => {
+  return api.post('/upload/packs', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+};
+
 export const getUsers = (filters?: any) =>
   api.get('/users', { params: filters });
 
@@ -187,6 +195,7 @@ export const apiService = {
   uploadAvatar,
   uploadProof,
   uploadImages,
+  uploadPacks,
   getUsers,
   getAds,
   getAd,

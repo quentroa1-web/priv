@@ -47,7 +47,7 @@ router.post('/proof', protect, (req, res) => {
     });
 });
 
-// @desc    Upload multiple images
+// @desc    Upload multiple images (Original, for Ads)
 // @route   POST /api/upload/multiple
 // @access  Private
 router.post('/multiple', protect, (req, res) => {
@@ -58,6 +58,30 @@ router.post('/multiple', protect, (req, res) => {
 
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ success: false, error: 'No se recibieron imágenes.' });
+        }
+
+        const urls = req.files.map(file => file.secure_url || file.url || file.path);
+
+        res.status(200).json({
+            success: true,
+            urls
+        });
+    });
+});
+
+// @desc    Upload pack content (Images & Videos)
+// @route   POST /api/upload/packs
+// @access  Private
+const { uploadPacks } = require('../config/cloudinary');
+router.post('/packs', protect, (req, res) => {
+    uploadPacks.array('files', 50)(req, res, (err) => {
+        if (err) {
+            console.error('Pack upload error:', err);
+            return res.status(400).json({ success: false, error: err.message });
+        }
+
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ success: false, error: 'No se recibieron archivos.' });
         }
 
         const urls = req.files.map(file => file.secure_url || file.url || file.path);

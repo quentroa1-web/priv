@@ -298,18 +298,19 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
 
                 if (filesToUpload.length > 0) {
                     const formData = new FormData();
-                    filesToUpload.forEach(file => formData.append('images', file));
+                    filesToUpload.forEach(file => formData.append('files', file)); // changed field to 'files'
 
                     try {
-                        const uploadRes = await apiService.uploadImages(formData) as any;
+                        const uploadRes = await apiService.uploadPacks(formData) as any;
                         if (uploadRes.data.success && uploadRes.data.urls) {
                             // Merge new uploaded URLs with existing ones that were kept
                             const existingUrls = pack.previewFiles?.filter(f => !f.file).map(f => f.url) || [];
                             contentUrls = [...existingUrls, ...uploadRes.data.urls];
                         }
-                    } catch (uploadErr) {
+                    } catch (uploadErr: any) {
                         console.error("Upload failed for pack:", pack.label, uploadErr);
-                        throw new Error(`Error al subir archivos para el pack "${pack.label}"`);
+                        const msg = uploadErr?.response?.data?.error || uploadErr.message || '';
+                        throw new Error(`Error al subir archivos para el pack "${pack.label}": ${msg}`);
                     }
                 } else {
                     // No new files, just use the filter to keep existing ones that weren't removed

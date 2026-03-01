@@ -21,19 +21,33 @@ const storage = CloudinaryStorage({
 const storageDocs = CloudinaryStorage({
   cloudinary: cloudinaryWrapper,
   folder: 'safeconnect_verifications',
-  allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
-  transformation: [] // No transformation to keep original quality/aspect ratio
+  allowedFormats: ['jpg', 'png', 'jpeg', 'webp', 'pdf'], // added pdf support
+  transformation: []
+});
+
+// Storage for packs (supports both images and videos)
+const storagePacks = CloudinaryStorage({
+  cloudinary: cloudinaryWrapper,
+  params: {
+    folder: 'safeconnect_packs',
+    resource_type: 'auto', // Important for both images and videos
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mov', 'webm', 'mpeg', 'avi'],
+  }
 });
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max
-
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB max (increased from 5MB)
 });
 
 const uploadDocs = multer({
   storage: storageDocs,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB max for docs
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB max
 });
 
-module.exports = { cloudinary, upload, uploadDocs };
+const uploadPacks = multer({
+  storage: storagePacks,
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB max for packs (videos)
+});
+
+module.exports = { cloudinary, upload, uploadDocs, uploadPacks };
