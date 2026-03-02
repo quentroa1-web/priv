@@ -177,6 +177,23 @@ app.use('/api/payment/transfer', sensitiveLimiter);
 app.use('/api/payment/withdraw', sensitiveLimiter);
 app.use('/api/payment/submit-proof', sensitiveLimiter);
 app.use('/api/upload', uploadLimiter);
+
+// High-frequency polling Rate limiting (Heartbeat & Notifications)
+const pollingLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 mins
+  max: 300, // Allow 300 requests per 5 mins (approx 1 req/sec) to support active polling
+  message: {
+    success: false,
+    error: 'Demasiadas solicitudes de actualización, intente más tarde'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false
+});
+
+app.use('/api/auth/heartbeat', pollingLimiter);
+app.use('/api/messages/unread/count', pollingLimiter);
+
 // Mount routers
 app.use('/api/auth', auth);
 app.use('/api/users', users);
