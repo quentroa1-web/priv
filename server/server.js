@@ -158,12 +158,25 @@ const sensitiveLimiter = rateLimit({
   validate: false
 });
 
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 30, // Limit each IP to 30 uploads per hour
+  message: {
+    success: false,
+    error: 'Has alcanzado el límite de subida de archivos, intenta de nuevo en una hora'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: false
+});
+
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/updatepassword', sensitiveLimiter);
 app.use('/api/payment/transfer', sensitiveLimiter);
 app.use('/api/payment/withdraw', sensitiveLimiter);
 app.use('/api/payment/submit-proof', sensitiveLimiter);
+app.use('/api/upload', uploadLimiter);
 // Mount routers
 app.use('/api/auth', auth);
 app.use('/api/users', users);

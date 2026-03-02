@@ -15,14 +15,25 @@ const storage = CloudinaryStorage({
   cloudinary: cloudinaryWrapper,
   folder: 'safeconnect_profiles',
   allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
-  transformation: [{ width: 500, height: 500, crop: 'limit' }]
+  transformation: [
+    { width: 500, height: 500, crop: 'limit' }
+  ],
+  params: {
+    exif: false,
+    image_metadata: false,
+    type: 'upload'
+  }
 });
 
 const storageDocs = CloudinaryStorage({
   cloudinary: cloudinaryWrapper,
   folder: 'safeconnect_verifications',
-  allowedFormats: ['jpg', 'png', 'jpeg', 'webp', 'pdf'], // added pdf support
-  transformation: []
+  allowedFormats: ['jpg', 'png', 'jpeg', 'webp', 'pdf'],
+  params: {
+    exif: false,
+    image_metadata: false,
+    type: 'private' // SECURITY: Verification docs should not be public by URL
+  }
 });
 
 // Storage for packs (supports both images and videos)
@@ -30,8 +41,10 @@ const storagePacks = CloudinaryStorage({
   cloudinary: cloudinaryWrapper,
   params: {
     folder: 'safeconnect_packs',
-    resource_type: 'auto', // Important for both images and videos
+    resource_type: 'auto',
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mov', 'webm', 'mpeg', 'avi'],
+    exif: false,
+    image_metadata: false
   }
 });
 

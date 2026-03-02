@@ -12,7 +12,11 @@ const cloudinary = require('cloudinary').v2;
  */
 const saveBase64Image = async (base64Data, subfolder = 'ads') => {
     if (!base64Data || !base64Data.startsWith('data:image')) {
-        return base64Data;
+        // SECURITY: If it's a string but not base64, ensure it's a valid URL or return empty
+        if (typeof base64Data === 'string' && (base64Data.startsWith('http') || base64Data.startsWith('/uploads'))) {
+            return base64Data;
+        }
+        return ''; // Block potential XSS like javascript:
     }
 
     // Use Cloudinary in production or if credentials are available
@@ -20,6 +24,8 @@ const saveBase64Image = async (base64Data, subfolder = 'ads') => {
         try {
             const result = await cloudinary.uploader.upload(base64Data, {
                 folder: `safeconnect_${subfolder}`,
+                exif: false,
+                image_metadata: false,
                 transformation: [
                     { width: 900, height: 1200, crop: "fill", gravity: "auto", quality: "auto", fetch_format: "auto" }
                 ]
