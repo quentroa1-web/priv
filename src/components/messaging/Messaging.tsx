@@ -629,7 +629,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
   const myPacks = (currentUser as any).priceList || [];
 
   return (
-    <div className="animate-in fade-in duration-300 h-[calc(100vh-80px)] lg:h-[calc(100vh-120px)] min-h-[500px] flex flex-col -mt-4 lg:mt-0">
+    <div className="animate-in fade-in duration-300 w-full h-full flex flex-col pt-0 lg:pt-4">
       {showAnimation && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
           <div className="text-8xl animate-bounce-slow drop-shadow-2xl">
@@ -667,9 +667,9 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
         </div>
       )}
       <div className="w-full flex-1 flex flex-col min-h-0">
-        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6 flex-1 min-h-0 relative`}>
+        <div className={`grid grid-cols-1 lg:grid-cols-3 lg:gap-6 flex-1 min-h-0 relative`}>
           {/* Conversations List */}
-          <div className={`lg:col-span-1 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col ${activeConversation ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`lg:col-span-1 bg-white lg:rounded-2xl lg:shadow-md lg:border lg:border-gray-100 overflow-hidden flex flex-col ${activeConversation ? 'hidden lg:flex' : 'flex'}`}>
             {/* Search */}
             <div className="p-4 border-b border-gray-100">
               <div className="relative">
@@ -770,7 +770,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
           </div>
 
           {/* Chat Area */}
-          <div className={`lg:col-span-2 bg-gray-50 rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${!activeConversation ? 'hidden lg:flex' : 'flex'}`}>
+          <div className={`lg:col-span-2 bg-gray-50 lg:rounded-2xl lg:shadow-md lg:border lg:border-gray-100 overflow-hidden flex flex-col relative ${!activeConversation ? 'hidden lg:flex' : 'flex'}`}>
             {activeConversation ? (
               <>
                 {/* Chat Header */}
@@ -1041,14 +1041,14 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                           </button>
 
                           {showGiftMenu && (
-                            <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-50 ring-1 ring-black/5">
+                            <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[85vw] sm:max-w-[320px] flex flex-col max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-50 ring-1 ring-black/5 min-w-[240px] sm:min-w-[280px]">
                               <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
                                 <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
                                   <Gift className="w-3 h-3" /> Enviar Regalo
                                 </span>
                                 <button onClick={() => setShowGiftMenu(false)}><X className="w-4 h-4 text-gray-400" /></button>
                               </div>
-                              <div className="p-2 grid grid-cols-3 gap-1.5 max-h-[250px] overflow-y-auto scrollbar-hide">
+                              <div className="p-2 grid grid-cols-3 gap-1.5 flex-1 overflow-y-auto scrollbar-hide min-h-0">
                                 {PREDEFINED_GIFTS.map((gift) => (
                                   <button
                                     key={gift.id}
@@ -1083,9 +1083,9 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                           </button>
 
                           {showPriceList && (
-                            <div className="absolute bottom-full left-0 mb-4 w-[300px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-50 ring-1 ring-black/5">
+                            <div className="absolute bottom-full left-0 sm:left-auto sm:right-0 mb-4 w-[320px] max-w-[90vw] sm:max-w-[350px] flex flex-col max-h-[75vh] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-50 ring-1 ring-black/5 min-w-[260px] sm:min-w-[320px]">
                               {/* Panel Header */}
-                              <div className="relative p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
+                              <div className="relative p-5 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden shrink-0">
                                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Ccircle cx='23' cy='23' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
                                 <div className="relative z-10 flex items-center justify-between">
                                   <div>
@@ -1102,7 +1102,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                 </div>
                               </div>
 
-                              <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+                              <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0">
                                 {activeConversation.role === 'announcer' ? (
                                   partnerPacks.length > 0 ? (
                                     <div>
@@ -1117,21 +1117,21 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                               handleBuyPack(item);
                                               setShowPriceList(false);
                                             }}
-                                            className="w-full p-3.5 text-left hover:bg-rose-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
+                                            className="w-full p-4 text-left hover:bg-rose-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
                                           >
-                                            <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-lg">
+                                            <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-xl">
                                               {typeIcon}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                              <div className="text-[11px] font-black text-gray-900 group-hover:text-rose-600 truncate">{item.label}</div>
-                                              <div className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1.5">
-                                                <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
-                                                {qty && <span>{qty}</span>}
+                                              <div className="text-xs font-black text-gray-900 group-hover:text-rose-600 truncate">{item.label}</div>
+                                              <div className="text-[10px] text-gray-500 mt-1 flex items-center gap-2">
+                                                <span className="px-2 py-0.5 bg-gray-100 rounded-full font-bold text-gray-600">{typeLabel}</span>
+                                                {qty && <span className="font-medium">{qty}</span>}
                                               </div>
                                             </div>
                                             <div className="text-rose-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
-                                              <span>{item.price} 🪙</span>
-                                              <span className="text-[9px] text-gray-400 font-medium">Comprar</span>
+                                              <span className="text-base">{item.price} 🪙</span>
+                                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Comprar</span>
                                             </div>
                                           </button>
                                         );
@@ -1159,20 +1159,20 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                                               handleSendMessage(item.label, { isLocked: true, price: item.price });
                                               setShowPriceList(false);
                                             }}
-                                            className="w-full p-3.5 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
+                                            className="w-full p-4 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
                                           >
-                                            <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg">
+                                            <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-xl">
                                               {typeIcon}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                              <div className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 truncate">{item.label}</div>
-                                              <div className="text-[9px] text-gray-400 mt-0.5">
-                                                <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
+                                              <div className="text-xs font-black text-gray-900 group-hover:text-blue-600 truncate">{item.label}</div>
+                                              <div className="text-[10px] text-gray-500 mt-1">
+                                                <span className="px-2 py-0.5 bg-gray-100 rounded-full font-bold text-gray-600">{typeLabel}</span>
                                               </div>
                                             </div>
                                             <div className="text-blue-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
-                                              <span>{item.price} 🪙</span>
-                                              <span className="text-[9px] text-gray-400 font-medium">Enviar oferta</span>
+                                              <span className="text-base">{item.price} 🪙</span>
+                                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Enviar oferta</span>
                                             </div>
                                           </button>
                                         );

@@ -363,7 +363,7 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
             aria-modal="true"
             aria-label="Gestionar Servicios"
         >
-            <div className="bg-white w-full sm:max-w-2xl rounded-t-[2.5rem] sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[95dvh] sm:max-h-[90vh] relative">
+            <div className="bg-white w-full sm:max-w-2xl sm:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[95vh] sm:h-auto sm:max-h-[90vh] relative rounded-t-[2.5rem] sm:rounded-b-[2.5rem]">
 
                 {/* Mobile drag handle */}
                 <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -535,12 +535,12 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="font-black text-gray-900 text-sm truncate">{pack.label}</div>
-                                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                                                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${cfg.badge}`}>
+                                                    <div className="font-black text-gray-900 text-base truncate">{pack.label}</div>
+                                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                        <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${cfg.badge}`}>
                                                             {cfg.emoji} {cfg.label}
                                                         </span>
-                                                        <span className="text-[10px] text-gray-400 font-bold">
+                                                        <span className="text-[11px] text-gray-400 font-bold">
                                                             {pack.type !== 'service' ? `${pack.quantity} ${pack.type === 'photos' ? 'fotos' : 'videos'}` : 'Personalizado'}
                                                         </span>
                                                     </div>
@@ -641,7 +641,7 @@ export function ServicesManager({ isOpen, onClose, user, onSave }: ServicesManag
                     aria-modal="true"
                     aria-label={editingPack ? 'Editar Pack' : 'Crear Pack'}
                 >
-                    <div className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden max-h-[90dvh] flex flex-col">
+                    <div className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden h-[90vh] sm:h-auto sm:max-h-[85vh] flex flex-col">
 
                         <div className="flex justify-center pt-3 pb-1 sm:hidden">
                             <div className="w-10 h-1 bg-gray-200 rounded-full" />
