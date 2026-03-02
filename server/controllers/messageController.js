@@ -74,7 +74,8 @@ exports.getConversations = async (req, res) => {
                 online: '$partner.online',
                 isOnline: '$partner.isOnline',
                 role: '$partner.role',
-                verified: '$partner.verified'
+                verified: '$partner.verified',
+                priceList: '$partner.priceList'
               },
               { _id: '$_id', name: 'Usuario Eliminado', avatar: '' }
             ]

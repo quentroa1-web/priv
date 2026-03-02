@@ -496,11 +496,11 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
       variant: 'success',
       onConfirm: async () => {
         try {
+          setShowGiftMenu(false); // Close menu early
           const res = await transferCoins({
             recipientId: activeConversation?.userId,
             amount: gift.price,
-            reason: `Regalo: ${gift.label}`,
-            messageId: `gift-${Date.now()}`
+            reason: `Regalo: ${gift.label}`
           }) as any;
 
           if (res.data.success) {
@@ -559,6 +559,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
       variant: 'info',
       onConfirm: async () => {
         try {
+          setShowPriceList(false);
           const res = await transferCoins({
             recipientId: activeConversation?.userId,
             amount: pack.price,
@@ -567,7 +568,6 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
           }) as any;
 
           if (res.data.success) {
-            setShowPriceList(false);
             refreshUser();
             if (activeConversation) {
               const msgRes = await apiService.getMessages(activeConversation.userId) as any;
@@ -1041,7 +1041,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                           </button>
 
                           {showGiftMenu && (
-                            <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
+                            <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-50 ring-1 ring-black/5">
                               <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
                                 <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
                                   <Gift className="w-3 h-3" /> Enviar Regalo
@@ -1083,7 +1083,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
                           </button>
 
                           {showPriceList && (
-                            <div className="absolute bottom-full left-0 mb-4 w-[300px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
+                            <div className="absolute bottom-full left-0 mb-4 w-[300px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-50 ring-1 ring-black/5">
                               {/* Panel Header */}
                               <div className="relative p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
                                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Ccircle cx='23' cy='23' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
