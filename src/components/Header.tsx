@@ -113,11 +113,11 @@ export function Header({
                         onServicesClick?.();
                       }}
                       className="flex items-center gap-1 p-2 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-all"
-                      aria-label="Gestionar Servicios"
-                      title="Gestionar Servicios"
+                      aria-label={t('nav.manageServices')}
+                      title={t('nav.manageServices')}
                     >
                       <ShoppingBag className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
-                      <span className="hidden min-[550px]:inline">Servicios</span>
+                      <span className="hidden min-[550px]:inline">{t('nav.services')}</span>
                     </button>
                     {/* Publicar — visible en todos los tamaños */}
                     <button
@@ -210,6 +210,7 @@ export function Header({
                     onLoginClick();
                   }}
                   className="px-2 sm:px-3 py-1.5 text-gray-700 font-bold hover:bg-gray-100 rounded-lg transition-all text-xs sm:text-sm whitespace-nowrap"
+                  aria-label={t('auth.login')}
                 >
                   <span className="min-[450px]:inline hidden">{t('auth.login')}</span>
                   <User className="w-4 h-4 min-[450px]:hidden" />
@@ -220,6 +221,7 @@ export function Header({
                     onRegisterClick();
                   }}
                   className="px-2 sm:px-3 py-1.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-lg font-bold hover:shadow-lg transition-all text-xs sm:text-sm whitespace-nowrap"
+                  aria-label={t('auth.register')}
                 >
                   <span className="min-[450px]:inline hidden">{t('auth.register')}</span>
                   <PlusCircle className="w-4 h-4 min-[450px]:hidden" />

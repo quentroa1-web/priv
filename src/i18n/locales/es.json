@@ -24,7 +24,9 @@
     "tokens": "Tokens",
     "status": "Estado",
     "navigation": "Navegación",
-    "close": "Cerrar menú"
+    "close": "Cerrar menú",
+    "services": "Servicios",
+    "manageServices": "Gestionar Servicios"
   },
   "common": {
     "favorite": "Agregar a favoritos",
