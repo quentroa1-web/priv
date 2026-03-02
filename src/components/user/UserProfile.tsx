@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { SEO } from '../SEO';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 const GENDER_LABELS: Record<string, string> = {
   woman: 'Mujer',
@@ -160,6 +161,20 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
   const [isVerifying, setIsVerifying] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant: 'danger' | 'info' | 'warning' | 'success';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    variant: 'info'
+  });
+
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idProof || !photoProof) {
@@ -237,18 +252,25 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     }
   };
 
-  const handleDeleteAd = async (adId: string) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este anuncio? Esta acción no se puede deshacer.')) {
-      try {
-        const res = await deleteAdApi(adId);
-        if (res.data.success) {
-          setUserAds(userAds.filter(ad => (ad._id || ad.id) !== adId));
+  const handleDeleteAd = (adId: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Anuncio',
+      message: '¿Estás seguro de que deseas eliminar este anuncio? Esta acción no se puede deshacer.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const res = await deleteAdApi(adId);
+          if (res.data.success) {
+            setUserAds(userAds.filter(ad => (ad._id || ad.id) !== adId));
+            toast.success('Anuncio eliminado');
+          }
+        } catch (error) {
+          console.error('Error deleting ad:', error);
+          toast.error('No se pudo eliminar el anuncio');
         }
-      } catch (error) {
-        console.error('Error deleting ad:', error);
-        toast.error('No se pudo eliminar el anuncio');
       }
-    }
+    });
   };
 
   const handleBoostAd = async (adId: string) => {
@@ -260,18 +282,24 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
       return;
     }
 
-    if (window.confirm('¿Quieres impulsar este anuncio por 100 monedas? Subirá al inicio de su categoría por 12 horas.')) {
-      try {
-        const res = await boostAd(adId);
-        if (res.data.success) {
-          toast.success('¡Anuncio impulsado con éxito!');
-          fetchUserAds(); // Refresh list
+    setConfirmModal({
+      isOpen: true,
+      title: 'Impulsar Anuncio',
+      message: '¿Quieres impulsar este anuncio por 100 monedas? Subirá al inicio de su categoría por 12 horas.',
+      variant: 'info',
+      onConfirm: async () => {
+        try {
+          const res = await boostAd(adId);
+          if (res.data.success) {
+            toast.success('¡Anuncio impulsado con éxito!');
+            fetchUserAds();
+          }
+        } catch (error: any) {
+          console.error('Error boosting ad:', error);
+          toast.error(error.response?.data?.error || 'No se pudo impulsar el anuncio. Verifica tu saldo.');
         }
-      } catch (error: any) {
-        console.error('Error boosting ad:', error);
-        toast.error(error.response?.data?.error || 'No se pudo impulsar el anuncio. Verifica tu saldo.');
       }
-    }
+    });
   };
 
   const handleSave = async () => {
@@ -1050,44 +1078,25 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                     Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, está seguro.
                   </p>
                   <button
-                    onClick={() => setShowDeleteConfirm(true)}
+                    onClick={() => setConfirmModal({
+                      isOpen: true,
+                      title: 'Eliminar Cuenta',
+                      message: '¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer y todos tus datos serán eliminados permanentemente.',
+                      variant: 'danger',
+                      onConfirm: async () => {
+                        try {
+                          await deleteAccount();
+                          toast.success('Cuenta eliminada');
+                          window.location.href = '/';
+                        } catch (error) {
+                          toast.error('Error al eliminar la cuenta');
+                        }
+                      }
+                    })}
                     className="px-4 py-2 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all"
                   >
                     Eliminar Mi Cuenta
                   </button>
-
-                  {showDeleteConfirm && (
-                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                      <div className="bg-white rounded-2xl p-6 max-w-md mx-4">
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">¿Estás seguro?</h3>
-                        <p className="text-gray-600 mb-6">
-                          Esta acción no se puede deshacer. Todos tus datos serán eliminados permanentemente.
-                        </p>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => setShowDeleteConfirm(false)}
-                            className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 transition-all"
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            onClick={async () => {
-                              try {
-                                await deleteAccount();
-                                toast.success('Cuenta eliminada');
-                                window.location.href = '/';
-                              } catch (error) {
-                                toast.error('Error al eliminar la cuenta');
-                              }
-                            }}
-                            className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all"
-                          >
-                            Sí, Eliminar
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -1699,6 +1708,15 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant as any}
+      />
     </div>
   );
 }

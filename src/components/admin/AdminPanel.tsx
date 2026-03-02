@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { toast } from 'react-hot-toast';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -32,6 +33,19 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [rejectModal, setRejectModal] = useState<{ id: string, type: 'verification' | 'payment' } | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant: 'danger' | 'info' | 'warning' | 'success';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    variant: 'info'
+  });
 
   // Filters & State
   const [searchTerm, setSearchTerm] = useState('');
@@ -110,14 +124,21 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   };
 
   const handleBanUser = async (userId: string, currentStatus: string) => {
-    if (!window.confirm(`¿Seguro que deseas ${currentStatus === 'active' ? 'banear' : 'activar'} a este usuario?`)) return;
-    try {
-      await apiService.updateUserAdmin(userId, { status: currentStatus === 'active' ? 'banned' : 'active' });
-      toast.success('Estado de usuario actualizado');
-      fetchUsers();
-    } catch (err) {
-      toast.error('Error al actualizar estado');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: currentStatus === 'active' ? 'Banear Usuario' : 'Activar Usuario',
+      message: `¿Seguro que deseas ${currentStatus === 'active' ? 'banear' : 'activar'} a este usuario?`,
+      variant: currentStatus === 'active' ? 'danger' : 'success',
+      onConfirm: async () => {
+        try {
+          await apiService.updateUserAdmin(userId, { status: currentStatus === 'active' ? 'banned' : 'active' });
+          toast.success('Estado de usuario actualizado');
+          fetchUsers();
+        } catch (err) {
+          toast.error('Error al actualizar estado');
+        }
+      }
+    });
   };
 
   const handleVerificationAction = async (userId: string, status: 'approved' | 'rejected', reason?: string) => {
@@ -152,36 +173,57 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
   };
 
   const handleDeleteReview = async (reviewId: string) => {
-    if (!window.confirm('¿Eliminar esta reseña permanentemente?')) return;
-    try {
-      await apiService.deleteReviewAdmin(reviewId);
-      toast.success('Reseña eliminada');
-      fetchReviews();
-    } catch (err) {
-      toast.error('Error al eliminar');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Reseña',
+      message: '¿Eliminar esta reseña permanentemente?',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await apiService.deleteReviewAdmin(reviewId);
+          toast.success('Reseña eliminada');
+          fetchReviews();
+        } catch (err) {
+          toast.error('Error al eliminar');
+        }
+      }
+    });
   };
 
   const handleAdStatus = async (adId: string, currentStatus: boolean) => {
-    if (!window.confirm(`¿Seguro que deseas ${currentStatus ? 'suspender' : 'activar'} este anuncio?`)) return;
-    try {
-      await apiService.updateAdAdmin(adId, { isActive: !currentStatus });
-      toast.success('Estado del anuncio actualizado');
-      fetchAds();
-    } catch (err) {
-      toast.error('Error al actualizar estado del anuncio');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: currentStatus ? 'Suspender Anuncio' : 'Activar Anuncio',
+      message: `¿Seguro que deseas ${currentStatus ? 'suspender' : 'activar'} este anuncio?`,
+      variant: currentStatus ? 'warning' : 'success',
+      onConfirm: async () => {
+        try {
+          await apiService.updateAdAdmin(adId, { isActive: !currentStatus });
+          toast.success('Estado del anuncio actualizado');
+          fetchAds();
+        } catch (err) {
+          toast.error('Error al actualizar estado del anuncio');
+        }
+      }
+    });
   };
 
   const handleDeleteAd = async (adId: string) => {
-    if (!window.confirm('¿ELIMINAR este anuncio permanentemente? Esta acción no se puede deshacer.')) return;
-    try {
-      await apiService.deleteAdAdmin(adId);
-      toast.success('Anuncio eliminado');
-      fetchAds();
-    } catch (err) {
-      toast.error('Error al eliminar el anuncio');
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'ELIMINAR Anuncio',
+      message: '¿ELIMINAR este anuncio permanentemente? Esta acción no se puede deshacer.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          await apiService.deleteAdAdmin(adId);
+          toast.success('Anuncio eliminado');
+          fetchAds();
+        } catch (err) {
+          toast.error('Error al eliminar el anuncio');
+        }
+      }
+    });
   };
 
   const dashboardStats = [
@@ -984,6 +1026,14 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
         </div>
       )}
 
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant as any}
+      />
     </>
   );
 }

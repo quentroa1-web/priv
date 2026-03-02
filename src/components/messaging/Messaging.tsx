@@ -12,6 +12,7 @@ import {
   Bell, Gift, Trash2, Calendar, Clock as ClockIcon, Play, Expand
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 const SYSTEM_USER_ID = '6989549ede1ca80e285692a8';
 
@@ -123,7 +124,20 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
     location: '',
     details: ''
   });
-  const [selectedAdId, setSelectedAdId] = useState<string | null>(null);
+  const [selectedAdId, setSelectedAdId] = useState<string | null>(targetAdId || null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant: 'danger' | 'info' | 'warning' | 'success';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => { },
+    variant: 'info'
+  });
   const [isSubmittingAppointment, setIsSubmittingAppointment] = useState(false);
   const [showAnimation, setShowAnimation] = useState<string | null>(null);
   const [viewingMedia, setViewingMedia] = useState<string | null>(null);
@@ -369,54 +383,61 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
   const handleDeleteConversation = async () => {
     if (!activeConversation) return;
 
-    if (confirm('¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.')) {
-      try {
-        const res = await apiService.deleteConversation(activeConversation.userId) as any;
-        if (res.data.success) {
-          setConversations(prev => prev.filter(c => c.userId !== activeConversation.userId));
-          setActiveConversation(null);
-          setMessages([]);
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Conversación',
+      message: '¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.',
+      variant: 'danger',
+      onConfirm: async () => {
+        try {
+          const res = await apiService.deleteConversation(activeConversation.userId) as any;
+          if (res.data.success) {
+            setConversations(prev => prev.filter(c => c.userId !== activeConversation.userId));
+            setActiveConversation(null);
+            setMessages([]);
+          }
+        } catch (err) {
+          console.error('Error eliminando conversación:', err);
+          toast.error('No se pudo eliminar la conversación.');
         }
-      } catch (err) {
-        console.error('Error eliminando conversación:', err);
-        toast.error('No se pudo eliminar la conversación.');
       }
-    }
+    });
   };
 
   const handleUnlock = async (msgId: string, price: number) => {
-    if (!confirm(`¿Desbloquear este contenido por ${price} monedas?`)) return;
-
-    try {
-      const res = await transferCoins({
-        recipientId: activeConversation?.userId,
-        amount: price,
-        reason: `Unlock content ${msgId}`,
-        messageId: msgId
-      }) as any;
-
-      if (res.data.success) {
-        // Optimistically unlock in UI
-        setMessages(prev => prev.map(m =>
-          m.id === msgId ? { ...m, isLocked: false, isUnlocked: true } : m
-        ));
-
-        // SEND NOTIFICATION TO ADVERTISER FROM SYSTEM
+    setConfirmModal({
+      isOpen: true,
+      title: 'Desbloquear Contenido',
+      message: `¿Desbloquear este contenido por ${price} monedas?`,
+      variant: 'info',
+      onConfirm: async () => {
         try {
-          await apiService.sendMessage(activeConversation?.userId || '',
-            `📢 ¡VENTA! ${currentUser.name} pagó ${price} coins.`,
-            { isLocked: false }
-          );
-          // Note: Ideally the backend would send this from 'system' sender, 
-          // here we are sending it as current user but maybe we can trigger a system API if it existed.
-          // For now, this lets the advertiser know.
-        } catch (e) {
-          console.error("Failed to send notification", e);
+          const res = await transferCoins({
+            recipientId: activeConversation?.userId,
+            amount: price,
+            reason: `Unlock content ${msgId}`,
+            messageId: msgId
+          }) as any;
+
+          if (res.data.success) {
+            setMessages(prev => prev.map(m =>
+              m.id === msgId ? { ...m, isLocked: false, isUnlocked: true } : m
+            ));
+
+            try {
+              await apiService.sendMessage(activeConversation?.userId || '',
+                `📢 ¡VENTA! ${currentUser.name} pagó ${price} coins.`,
+                { isLocked: false }
+              );
+            } catch (e) {
+              console.error("Failed to send notification", e);
+            }
+          }
+        } catch (err) {
+          toast.error('Error al desbloquear. Verifica tu saldo.');
         }
       }
-    } catch (err) {
-      toast.error('Error al desbloquear. Verifica tu saldo.');
-    }
+    });
   };
 
   const handleSendMessage = async (forceContent?: string, forceOptions?: { isLocked?: boolean; price?: number }) => {
@@ -468,37 +489,38 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
   };
 
   const handleSendGift = async (gift: any) => {
-    if (!confirm(`¿Enviar ${gift.label} por ${gift.price} monedas?`)) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Enviar Regalo',
+      message: `¿Enviar ${gift.label} por ${gift.price} monedas?`,
+      variant: 'success',
+      onConfirm: async () => {
+        try {
+          const res = await transferCoins({
+            recipientId: activeConversation?.userId,
+            amount: gift.price,
+            reason: `Regalo: ${gift.label}`,
+            messageId: `gift-${Date.now()}`
+          }) as any;
 
-    try {
-      const res = await transferCoins({
-        recipientId: activeConversation?.userId,
-        amount: gift.price,
-        reason: `Regalo: ${gift.label}`,
-        messageId: `gift-${Date.now()}`
-      }) as any;
-
-      if (res.data.success) {
-        setShowGiftMenu(false);
-        // Trigger Animation
-        setShowAnimation(gift.icon);
-        setTimeout(() => setShowAnimation(null), 3000);
-
-        // Update Wallet Balance
-        refreshUser();
-
-        // Reload messages to show the official holographic receipt from backend
-        if (activeConversation) {
-          const msgRes = await apiService.getMessages(activeConversation.userId) as any;
-          if (msgRes.data.success && msgRes.data.data) {
-            setMessages(msgRes.data.data.map(transformMessage));
+          if (res.data.success) {
+            setShowGiftMenu(false);
+            setShowAnimation(gift.icon);
+            setTimeout(() => setShowAnimation(null), 3000);
+            refreshUser();
+            if (activeConversation) {
+              const msgRes = await apiService.getMessages(activeConversation.userId) as any;
+              if (msgRes.data.success && msgRes.data.data) {
+                setMessages(msgRes.data.data.map(transformMessage));
+              }
+            }
           }
+        } catch (err: any) {
+          const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para enviar este regalo.';
+          toast.error(errorMsg);
         }
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para enviar este regalo.';
-      toast.error(errorMsg);
-    }
+    });
   };
 
 
@@ -530,34 +552,37 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
   };
 
   const handleBuyPack = async (pack: any) => {
-    if (!confirm(`¿Comprar "${pack.label}" por ${pack.price} monedas?`)) return;
+    setConfirmModal({
+      isOpen: true,
+      title: 'Comprar Pack',
+      message: `¿Comprar "${pack.label}" por ${pack.price} monedas?`,
+      variant: 'info',
+      onConfirm: async () => {
+        try {
+          const res = await transferCoins({
+            recipientId: activeConversation?.userId,
+            amount: pack.price,
+            reason: `Compra de pack: ${pack.label}`,
+            packId: pack._id || pack.id
+          }) as any;
 
-    try {
-      const res = await transferCoins({
-        recipientId: activeConversation?.userId,
-        amount: pack.price,
-        reason: `Compra de pack: ${pack.label}`,
-        packId: pack._id || pack.id // Backend ID for automatic delivery
-      }) as any;
-
-      if (res.data.success) {
-        setShowPriceList(false);
-        refreshUser();
-
-        // Reload messages to show the content + holographic receipt from backend
-        if (activeConversation) {
-          const msgRes = await apiService.getMessages(activeConversation.userId) as any;
-          if (msgRes.data.success && msgRes.data.data) {
-            setMessages(msgRes.data.data.map(transformMessage));
+          if (res.data.success) {
+            setShowPriceList(false);
+            refreshUser();
+            if (activeConversation) {
+              const msgRes = await apiService.getMessages(activeConversation.userId) as any;
+              if (msgRes.data.success && msgRes.data.data) {
+                setMessages(msgRes.data.data.map(transformMessage));
+              }
+            }
+            toast.success('¡Éxito! Pack entregado.');
           }
+        } catch (err: any) {
+          const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para comprar este pack.';
+          toast.error(errorMsg);
         }
-
-        toast.success('¡Éxito! Pack entregado.');
       }
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para comprar este pack.';
-      toast.error(errorMsg);
-    }
+    });
   };
 
   const handleCreateAppointment = async () => {
@@ -605,707 +630,723 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
 
   return (
     <div className="animate-in fade-in duration-300 h-[calc(100vh-80px)] lg:h-[calc(100vh-120px)] min-h-[500px] flex flex-col -mt-4 lg:mt-0">
-      {loading ? (
-        <div className="flex items-center justify-center p-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+      {showAnimation && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
+          <div className="text-8xl animate-bounce-slow drop-shadow-2xl">
+            {showAnimation}
+          </div>
         </div>
-      ) : (
-        <>
-          {!activeConversation && (
-            <div className="mb-6 flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm border-b border-gray-100 lg:bg-transparent lg:border-none lg:p-0">
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    hapticFeedback('light');
-                    onBack();
-                  }}
-                  className="p-2 rounded-xl bg-white lg:bg-gray-100 hover:bg-gray-200 transition-all shadow-sm lg:shadow-none"
-                  aria-label={t('nav.back')}
-                >
-                  <ArrowLeft className="w-5 h-5 text-gray-700" />
-                </button>
-                <div>
-                  <h1 className="text-2xl font-black text-gray-900">Mensajes</h1>
-                  <p className="text-sm text-gray-500 font-medium">Chat Seguro</p>
-                </div>
+      )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant as any}
+      />
+      {!activeConversation && (
+        <div className="mb-6 flex items-center justify-between p-4 bg-white/50 backdrop-blur-sm border-b border-gray-100 lg:bg-transparent lg:border-none lg:p-0">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                hapticFeedback('light');
+                onBack();
+              }}
+              className="p-2 rounded-xl bg-white lg:bg-gray-100 hover:bg-gray-200 transition-all shadow-sm lg:shadow-none"
+              aria-label={t('nav.back')}
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-black text-gray-900">Mensajes</h1>
+              <p className="text-sm text-gray-500 font-medium">Chat Seguro</p>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="w-full flex-1 flex flex-col min-h-0">
+        <div className={`grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6 flex-1 min-h-0 relative`}>
+          {/* Conversations List */}
+          <div className={`lg:col-span-1 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col ${activeConversation ? 'hidden lg:flex' : 'flex'}`}>
+            {/* Search */}
+            <div className="p-4 border-b border-gray-100">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar conversaciones..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
             </div>
-          )}
-          <div className="w-full flex-1 flex flex-col min-h-0">
-            <div className={`grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-6 flex-1 min-h-0 relative`}>
-              {/* Conversations List */}
-              <div className={`lg:col-span-1 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col ${activeConversation ? 'hidden lg:flex' : 'flex'}`}>
-                {/* Search */}
-                <div className="p-4 border-b border-gray-100">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Buscar conversaciones..."
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
 
-                {/* Conversations */}
-                <div className="flex-1 overflow-y-auto">
-                  {filteredConversations.length > 0 ? (
-                    <div className="space-y-1 p-2">
-                      {filteredConversations.map(conv => (
-                        <button
-                          key={conv.id}
-                          onClick={() => {
-                            hapticFeedback('light');
-                            setActiveConversation(conv);
-                          }}
-                          className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${activeConversation?.id === conv.id ? 'bg-blue-50 ring-1 ring-blue-100' : 'hover:bg-gray-50'} ${conv.id === SYSTEM_USER_ID && activeConversation?.id !== conv.id ? 'bg-blue-50/30' : ''}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <img
-                                src={conv.userAvatar}
-                                alt={conv.userName}
-                                className="w-12 h-12 rounded-xl object-cover"
-                              />
-                              {conv.online && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                              )}
-                              {conv.id === SYSTEM_USER_ID && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center">
-                                  <Bell className="w-3 h-3" />
-                                </div>
-                              )}
-                              {conv.premium && conv.id !== SYSTEM_USER_ID && (
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 text-white rounded-full flex items-center justify-center">
-                                  <Crown className="w-3 h-3" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className={`font-bold truncate ${conv.id === SYSTEM_USER_ID ? 'text-blue-700' : conv.coins && conv.coins > 0 ? 'text-amber-700 font-bold' : 'text-gray-900'} flex items-center gap-1.5`}>
-                                  {conv.userName}
-                                  {conv.verified && (
-                                    <CheckCheck className="w-3.5 h-3.5 text-blue-500" fill="currentColor" stroke="white" />
-                                  )}
-                                  {(conv.coins && conv.coins > 0) && (
-                                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                                  )}
-                                </h3>
-                                <span className="text-xs text-gray-500">{formatTime(conv.lastMessageTime)}</span>
-                              </div>
-                              <p className="text-sm text-gray-600 truncate mb-1">{conv.lastMessage}</p>
-                              {conv.id !== SYSTEM_USER_ID && (
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    {conv.unreadCount > 0 && (
-                                      <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                        {conv.unreadCount}
-                                      </span>
-                                    )}
-                                    <span className="text-xs text-gray-400">
-                                      {conv.unreadCount > 0 ? 'No leído' : 'Leído'}
-                                    </span>
-                                  </div>
-                                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500">No se encontraron conversaciones</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* New Conversation Button */}
-                <div className="p-4 border-t border-gray-100">
-                  <button className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    Nueva conversación
-                  </button>
-                </div>
-              </div>
-
-              {/* Chat Area */}
-              <div className={`lg:col-span-2 bg-gray-50 rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${!activeConversation ? 'hidden lg:flex' : 'flex'}`}>
-                {activeConversation ? (
-                  <>
-                    {/* Chat Header */}
-                    <div className="p-4 bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center justify-between shadow-sm z-30 shrink-0">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            hapticFeedback('light');
-                            setActiveConversation(null);
-                          }}
-                          className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
-                          aria-label={t('nav.back')}
-                        >
-                          <ArrowLeft className="w-5 h-5 text-gray-700" />
-                        </button>
-                        <div className="flex items-center gap-3">
-                          <div className="relative group cursor-pointer">
-                            <img
-                              src={activeConversation.userAvatar}
-                              alt={activeConversation.userName}
-                              className="w-10 h-10 rounded-xl object-cover ring-2 ring-transparent group-hover:ring-blue-100 transition-all"
-                            />
-                            {activeConversation.online && (
-                              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <h3 className={`font-black text-sm md:text-base flex items-center gap-1.5 ${activeConversation.coins && activeConversation.coins > 0
-                                ? 'text-amber-700'
-                                : 'text-gray-900'
-                                }`}>
-                                {activeConversation.userName}
-                                {activeConversation.verified && (
-                                  <CheckCheck className="w-4 h-4 text-blue-500 shrink-0" fill="currentColor" stroke="white" />
-                                )}
-                                {(activeConversation.coins && activeConversation.coins > 0) && (
-                                  <div className="bg-amber-100 p-0.5 rounded-md shadow-inner">
-                                    <Crown className="w-3 h-3 text-amber-600" />
-                                  </div>
-                                )}
-                              </h3>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <div className={`w-1.5 h-1.5 rounded-full ${activeConversation.online ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
-                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                {activeConversation.online ? 'En línea' : 'Desconectado'}
-                              </span>
-                              {activeConversation.premium && (
-                                <span className="text-xs font-bold text-amber-600 flex items-center gap-0.5">
-                                  <Crown className="w-3 h-3" /> Premium
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {activeConversation.id !== SYSTEM_USER_ID && activeConversation.role === 'announcer' && (
-                          <button
-                            onClick={() => setShowAppointmentModal(true)}
-                            className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-rose-500 text-white rounded-xl text-[10px] font-black hover:bg-rose-600 transition-all shadow-md shadow-rose-200 uppercase tracking-wider"
-                          >
-                            <Calendar className="w-3.5 h-3.5" />
-                            Concretar Cita
-                          </button>
-                        )}
-                        {activeConversation.id !== SYSTEM_USER_ID && (
-                          <button
-                            onClick={() => {
-                              hapticFeedback('medium');
-                              handleDeleteConversation();
-                            }}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                            title={t('nav.delete')}
-                            aria-label={t('nav.delete')}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        )}
-
-                      </div>
-                    </div>
-
-                    {/* GIFT ANIMATION OVERLAY */}
-                    {showAnimation && (
-                      <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden">
-                        <div className="animate-[bounce_1s_infinite] text-9xl drop-shadow-2xl">
-                          {showAnimation}
-                        </div>
-                      </div>
-                    )}
-
-
-
-                    {/* Messages */}
-                    <div
-                      ref={chatContainerRef}
-                      onScroll={handleScroll}
-                      className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 bg-gray-50/50 custom-scrollbar"
+            {/* Conversations */}
+            <div className="flex-1 overflow-y-auto">
+              {filteredConversations.length > 0 ? (
+                <div className="space-y-1 p-2">
+                  {filteredConversations.map(conv => (
+                    <button
+                      key={conv.id}
+                      onClick={() => {
+                        hapticFeedback('light');
+                        setActiveConversation(conv);
+                      }}
+                      className={`w-full p-3 rounded-xl text-left transition-all duration-200 ${activeConversation?.id === conv.id ? 'bg-blue-50 ring-1 ring-blue-100' : 'hover:bg-gray-50'} ${conv.id === SYSTEM_USER_ID && activeConversation?.id !== conv.id ? 'bg-blue-50/30' : ''}`}
                     >
-                      {messages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <MessageCircle className="w-8 h-8" />
-                          </div>
-                          <p className="text-sm font-medium">No hay mensajes en esta conversación</p>
-                          <p className="text-xs">¡Sé el primero en saludar!</p>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <img
+                            src={conv.userAvatar}
+                            alt={conv.userName}
+                            className="w-12 h-12 rounded-xl object-cover"
+                          />
+                          {conv.online && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                          )}
+                          {conv.id === SYSTEM_USER_ID && (
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                              <Bell className="w-3 h-3" />
+                            </div>
+                          )}
+                          {conv.premium && conv.id !== SYSTEM_USER_ID && (
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 text-white rounded-full flex items-center justify-center">
+                              <Crown className="w-3 h-3" />
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        messages.map((msg, index) => {
-                          const isOwn = msg.senderId === currentUser.id || msg.senderId === (currentUser as any)._id;
-                          const isSystemMessage = msg.isSystem;
-
-                          const prevMsg = messages[index - 1];
-                          const showDateSeparator = !prevMsg ||
-                            new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
-
-                          return (
-                            <Fragment key={msg.id}>
-                              {showDateSeparator && (
-                                <div className="flex justify-center my-6">
-                                  <span className="px-3 py-1 bg-white/80 backdrop-blur-sm border border-gray-100 text-gray-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
-                                    {formatDateSeparator(msg.timestamp)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className={`font-bold truncate ${conv.id === SYSTEM_USER_ID ? 'text-blue-700' : conv.coins && conv.coins > 0 ? 'text-amber-700 font-bold' : 'text-gray-900'} flex items-center gap-1.5`}>
+                              {conv.userName}
+                              {conv.verified && (
+                                <CheckCheck className="w-3.5 h-3.5 text-blue-500" fill="currentColor" stroke="white" />
+                              )}
+                              {(conv.coins && conv.coins > 0) && (
+                                <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              )}
+                            </h3>
+                            <span className="text-xs text-gray-500">{formatTime(conv.lastMessageTime)}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 truncate mb-1">{conv.lastMessage}</p>
+                          {conv.id !== SYSTEM_USER_ID && (
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {conv.unreadCount > 0 && (
+                                  <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                    {conv.unreadCount}
                                   </span>
-                                </div>
-                              )}
-                              <div
-                                className={`flex ${isSystemMessage ? 'justify-center w-full my-3' : isOwn ? 'justify-end' : 'justify-start'} mb-1`}
-                              >
-                                <div className={`${isSystemMessage ? 'w-full max-w-md mx-auto' : 'max-w-[85%] md:max-w-[70%]'} rounded-2xl p-3 px-4 shadow-sm relative text-sm overflow-hidden ${isSystemMessage
-                                  ? 'animate-holo border-2 border-white/50 text-indigo-950 shadow-indigo-200/50 mx-4 md:mx-auto'
-                                  : isOwn
-                                    ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-tr-none'
-                                    : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
-                                  }`}>
-
-                                  {isSystemMessage && (
-                                    <>
-                                      <div className="holo-glint-overlay" />
-                                      {/* Security Pattern Background */}
-                                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")` }} />
-
-                                      <div className="flex items-center gap-1 mb-1.5 pb-1.5 border-b border-indigo-200/20 relative z-10 select-none">
-                                        <div className="bg-indigo-600 p-0.5 rounded shadow-inner">
-                                          <Shield className="w-2.5 h-2.5 text-white" />
-                                        </div>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-1">
-                                          SafeConnect Receipt
-                                        </span>
-                                      </div>
-                                    </>
-                                  )}
-
-                                  {msg.isLocked && !msg.isUnlocked && !isOwn ? (
-                                    <div className="flex flex-col items-center gap-3 p-4 min-w-[220px]">
-                                      <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center animate-pulse">
-                                        <Lock className="w-7 h-7" />
-                                      </div>
-                                      <div className="text-center">
-                                        <p className="font-black text-gray-900">Contenido Exclusivo</p>
-                                        <p className="text-[10px] text-gray-500">Desbloquea para ver el contenido</p>
-                                      </div>
-                                      <button
-                                        onClick={() => handleUnlock(msg.id, msg.price || 100)}
-                                        className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-lg shadow-amber-200 transition-all w-full flex items-center justify-center gap-2 active:scale-95"
-                                      >
-                                        <Unlock className="w-4 h-4" />
-                                        {msg.price || 100} Coins
-                                      </button>
-                                    </div>
-                                  ) : msg.type === 'media' ? (
-                                    <div
-                                      className="relative group cursor-pointer overflow-hidden rounded-xl border border-white/20 shadow-inner"
-                                      onClick={() => setViewingMedia(msg.content)}
-                                      onContextMenu={(e) => e.preventDefault()}
-                                    >
-                                      {msg.content.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
-                                        <div className="relative">
-                                          <video
-                                            src={msg.content}
-                                            className="max-h-60 w-auto object-cover rounded-xl"
-                                          />
-                                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
-                                            <div className="w-10 h-10 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40">
-                                              <Play className="w-5 h-5 text-white fill-current" />
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <img
-                                          src={msg.content}
-                                          alt="Media"
-                                          className="max-h-60 w-auto object-cover rounded-xl transition-transform group-hover:scale-105"
-                                          onContextMenu={(e) => e.preventDefault()}
-                                          draggable={false}
-                                        />
-                                      )}
-                                      <div className="absolute top-2 right-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Expand className="w-3.5 h-3.5 text-white" />
-                                      </div>
-                                      {/* Security Overlay to block right-click save as */}
-                                      <div className="absolute inset-0 z-10 select-none pointer-events-none" />
-                                    </div>
-                                  ) : (
-                                    <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic text-[11px]' : ''}`}>
-                                      {msg.content}
-                                    </p>
-                                  )}
-
-                                  <div className={`flex items-center justify-end gap-1 mt-1.5 relative z-10 ${isOwn ? 'text-blue-100' : isSystemMessage ? 'text-indigo-700/60' : 'text-gray-400'}`}>
-                                    <span className="text-[10px] font-medium">
-                                      {formatTime(msg.timestamp)}
-                                    </span>
-                                    {isOwn && (
-                                      <span>
-                                        {msg.read ? (
-                                          <CheckCheck className="w-3.5 h-3.5 text-blue-200" />
-                                        ) : (
-                                          <CheckCheck className="w-3.5 h-3.5 text-blue-200/50" />
-                                        )}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
+                                )}
+                                <span className="text-xs text-gray-400">
+                                  {conv.unreadCount > 0 ? 'No leído' : 'Leído'}
+                                </span>
                               </div>
-                            </Fragment>
-                          );
-                        })
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Message Input */}
-                    <div className="p-4 bg-white border-t border-gray-100 shadow-lg">
-                      {activeConversation.id === SYSTEM_USER_ID ? (
-                        <div className="flex items-center justify-center py-4 bg-blue-50 rounded-2xl border border-dashed border-blue-200">
-                          <p className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                            <Shield className="w-4 h-4" /> Canal de Avisos - Solo Lectura
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors"
-                            aria-label={t('nav.emojis')}
-                          >
-                            <Smile className="w-5 h-5 md:w-6 h-6" />
-                          </button>
-                          <button
-                            className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors"
-                            aria-label={t('nav.attach')}
-                          >
-                            <Paperclip className="w-5 h-5 md:w-6 h-6" />
-                          </button>
-
-                          {/* GIFTS MENU - FOR ANYONE GIFTING TO AN ANNOUNCER */}
-                          {activeConversation.role === 'announcer' && activeConversation.id !== SYSTEM_USER_ID && (
-                            <div className="relative">
-                              <button
-                                className={`p-2 md:p-3 rounded-xl transition-all ${showGiftMenu ? 'bg-amber-500 text-white shadow-lg' : 'text-amber-500 hover:bg-amber-50'}`}
-                                onClick={() => {
-                                  setShowGiftMenu(!showGiftMenu);
-                                  setShowPriceList(false);
-                                }}
-                              >
-                                <Gift className="w-5 h-5 md:w-6 h-6" />
-                              </button>
-
-                              {showGiftMenu && (
-                                <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
-                                  <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
-                                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
-                                      <Gift className="w-3 h-3" /> Enviar Regalo
-                                    </span>
-                                    <button onClick={() => setShowGiftMenu(false)}><X className="w-4 h-4 text-gray-400" /></button>
-                                  </div>
-                                  <div className="p-2 grid grid-cols-3 gap-1.5 max-h-[250px] overflow-y-auto scrollbar-hide">
-                                    {PREDEFINED_GIFTS.map((gift) => (
-                                      <button
-                                        key={gift.id}
-                                        onClick={() => handleSendGift(gift)}
-                                        className="flex-1 flex flex-col items-center justify-center p-3 rounded-xl hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-all group"
-                                      >
-                                        <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">{gift.icon}</div>
-                                        <div className="text-[9px] font-bold text-gray-700 text-center leading-tight">{gift.label}</div>
-                                        <div className="text-[9px] font-black text-amber-600 mt-0.5">{gift.price} 🪙</div>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
+                              <ChevronRight className="w-4 h-4 text-gray-400" />
                             </div>
                           )}
-
-                          {/* SERVICES MENU - FOR ANNOUNCER TO SELL OR PARTNER TO BUY */}
-                          {(activeConversation.role === 'announcer' || currentUser.role === 'announcer') && activeConversation.id !== SYSTEM_USER_ID && (
-                            <div className="relative">
-                              <button
-                                className={`p-2 md:p-3 rounded-xl transition-all ${showPriceList ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'text-rose-500 hover:bg-rose-50'}`}
-                                onClick={() => {
-                                  setShowPriceList(!showPriceList);
-                                  setShowGiftMenu(false);
-                                }}
-                                title="Servicios y Packs"
-                                aria-label="Servicios y Packs"
-                              >
-                                {activeConversation.role === 'announcer' ? <Lock className="w-5 h-5 md:w-6 h-6" /> : <Crown className="w-5 h-5 md:w-6 h-6" />}
-                              </button>
-
-                              {showPriceList && (
-                                <div className="absolute bottom-full left-0 mb-4 w-[300px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
-                                  {/* Panel Header */}
-                                  <div className="relative p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
-                                    <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Ccircle cx='23' cy='23' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
-                                    <div className="relative z-10 flex items-center justify-between">
-                                      <div>
-                                        <div className="text-[10px] font-black uppercase tracking-widest text-white/50 leading-none mb-1">
-                                          {activeConversation.role === 'announcer' ? '🛍️ Tienda del Anunciante' : '💼 Tu Catálogo'}
-                                        </div>
-                                        <div className="font-black text-sm text-white">
-                                          {activeConversation.role === 'announcer' ? activeConversation.userName : 'Mis Servicios'}
-                                        </div>
-                                      </div>
-                                      <button onClick={() => setShowPriceList(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-all">
-                                        <X className="w-4 h-4 text-white/60" />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
-                                    {activeConversation.role === 'announcer' ? (
-                                      partnerPacks.length > 0 ? (
-                                        <div>
-                                          {partnerPacks.map((item: any, idx: number) => {
-                                            const typeIcon = item.type === 'photos' ? '📸' : item.type === 'videos' ? '🎬' : '✨';
-                                            const typeLabel = item.type === 'photos' ? 'Fotos' : item.type === 'videos' ? 'Videos' : 'Servicio';
-                                            const qty = item.quantity && item.type !== 'service' ? `${item.quantity} ${item.type === 'photos' ? 'fotos' : 'videos'}` : null;
-                                            return (
-                                              <button
-                                                key={idx}
-                                                onClick={() => {
-                                                  handleBuyPack(item);
-                                                  setShowPriceList(false);
-                                                }}
-                                                className="w-full p-3.5 text-left hover:bg-rose-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
-                                              >
-                                                <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-lg">
-                                                  {typeIcon}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                  <div className="text-[11px] font-black text-gray-900 group-hover:text-rose-600 truncate">{item.label}</div>
-                                                  <div className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1.5">
-                                                    <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
-                                                    {qty && <span>{qty}</span>}
-                                                  </div>
-                                                </div>
-                                                <div className="text-rose-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
-                                                  <span>{item.price} 🪙</span>
-                                                  <span className="text-[9px] text-gray-400 font-medium">Comprar</span>
-                                                </div>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : (
-                                        <div className="p-8 text-center bg-gray-50/30">
-                                          <div className="text-4xl mb-3">📦</div>
-                                          <p className="text-[11px] text-gray-500 font-bold leading-relaxed px-4">
-                                            Este anunciante aún no ha configurado packs para la venta
-                                          </p>
-                                        </div>
-                                      )
-                                    ) : (
-                                      /* Current user is announcer selling */
-                                      myPacks.length > 0 ? (
-                                        <div>
-                                          {myPacks.map((item: any, idx: number) => {
-                                            const typeIcon = item.type === 'photos' ? '📸' : item.type === 'videos' ? '🎬' : '✨';
-                                            const typeLabel = item.type === 'photos' ? 'Fotos' : item.type === 'videos' ? 'Videos' : 'Servicio';
-                                            return (
-                                              <button
-                                                key={idx}
-                                                onClick={() => {
-                                                  handleSendMessage(item.label, { isLocked: true, price: item.price });
-                                                  setShowPriceList(false);
-                                                }}
-                                                className="w-full p-3.5 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
-                                              >
-                                                <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg">
-                                                  {typeIcon}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                  <div className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 truncate">{item.label}</div>
-                                                  <div className="text-[9px] text-gray-400 mt-0.5">
-                                                    <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
-                                                  </div>
-                                                </div>
-                                                <div className="text-blue-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
-                                                  <span>{item.price} 🪙</span>
-                                                  <span className="text-[9px] text-gray-400 font-medium">Enviar oferta</span>
-                                                </div>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : (
-                                        <div className="p-8 text-center bg-gray-50/30">
-                                          <div className="text-4xl mb-3">🛍️</div>
-                                          <p className="text-[11px] text-gray-500 font-bold leading-relaxed px-4">
-                                            Aún no has creado packs. Usa el botón <strong>"Servicios"</strong> en la barra superior para crearlos.
-                                          </p>
-                                        </div>
-                                      )
-                                    )}
-                                  </div>
-                                  {currentUser.role === 'announcer' && (
-                                    <div className="p-3 border-t border-gray-100 bg-gray-50/50">
-                                      <p className="text-[9px] text-gray-400 text-center font-bold uppercase tracking-widest">
-                                        💡 Gestiona tus packs desde el botón "Servicios" en el menú principal
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-
-                            </div>
-                          )}
-
-                          <div className="flex-1 relative">
-                            <input
-                              type="text"
-                              value={newMessage}
-                              onChange={e => setNewMessage(e.target.value)}
-                              onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                              placeholder="Escribe algo aquí..."
-                              style={{ direction: 'ltr', textAlign: 'left' }}
-                              className="w-full px-4 md:px-5 py-3 md:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 placeholder-gray-400 font-medium text-sm md:text-base"
-                            />
-                          </div>
-
-
-                          <button
-                            onClick={() => {
-                              hapticFeedback('medium');
-                              handleSendMessage();
-                            }}
-                            disabled={!newMessage.trim()}
-                            className="p-3 md:p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:bg-gray-200 disabled:shadow-none active:scale-95 flex items-center justify-center group"
-                            aria-label={t('nav.send')}
-                          >
-                            <Send className={`w-4 h-4 md:w-5 h-5 ${newMessage.trim() ? 'translate-x-0.5 -translate-y-0.5' : ''} transition-transform`} />
-                          </button>
                         </div>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center">
-                    <div className="w-24 h-24 bg-blue-50 rounded-[2.5rem] flex items-center justify-center mb-8 relative">
-                      <MessageCircle className="w-12 h-12 text-blue-600" />
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white"></div>
-                    </div>
-                    <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">SafeConnect Mensajería</h3>
-                    <p className="text-gray-500 max-w-sm mx-auto leading-relaxed">
-                      Selecciona una conversación para empezar a chatear de forma segura y privada.
-                      Todos tus mensajes están encriptados.
-                    </p>
-                    <div className="mt-12 flex items-center gap-6">
-                      <div className="flex flex-col items-center gap-1">
-                        <Shield className="w-6 h-6 text-green-500" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Seguro</span>
                       </div>
-                      <div className="flex flex-col items-center gap-1">
-                        <Lock className="w-6 h-6 text-blue-500" />
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Privado</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No se encontraron conversaciones</p>
+                </div>
+              )}
+            </div>
+
+            {/* New Conversation Button */}
+            <div className="p-4 border-t border-gray-100">
+              <button className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold hover:shadow-lg transition-all flex items-center justify-center gap-2">
+                <MessageCircle className="w-5 h-5" />
+                Nueva conversación
+              </button>
             </div>
           </div>
 
-          {/* Appointment Modal */}
-          {showAppointmentModal && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-              <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative">
-                <button
-                  onClick={() => setShowAppointmentModal(false)}
-                  className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-all text-gray-400"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                <div className="p-8">
-                  <div className="p-4 bg-rose-50 rounded-2xl w-fit mb-6">
-                    <Calendar className="w-8 h-8 text-rose-600" />
-                  </div>
-                  <h3 className="text-2xl font-black text-gray-900 mb-2">Concretar Cita</h3>
-                  <p className="text-gray-500 font-medium text-sm mb-6 leading-relaxed">
-                    Completa los detalles para tu encuentro presencial. Una vez enviada, el anunciante podrá confirmarla.
-                  </p>
-
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fecha</label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <input
-                            type="date"
-                            min={new Date().toISOString().split('T')[0]}
-                            value={appointmentForm.date}
-                            onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Hora</label>
-                        <div className="relative">
-                          <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <input
-                            type="time"
-                            value={appointmentForm.time}
-                            onChange={(e) => setAppointmentForm({ ...appointmentForm, time: e.target.value })}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lugar del encuentro</label>
-                      <input
-                        type="text"
-                        placeholder="Ej: Centro Comercial, Hotel..."
-                        value={appointmentForm.location}
-                        onChange={(e) => setAppointmentForm({ ...appointmentForm, location: e.target.value })}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Detalles adicionales (opcional)</label>
-                      <textarea
-                        placeholder="Alguna nota o instrucción especial..."
-                        value={appointmentForm.details}
-                        onChange={(e) => setAppointmentForm({ ...appointmentForm, details: e.target.value })}
-                        rows={3}
-                        className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm resize-none"
-                      />
-                    </div>
-
+          {/* Chat Area */}
+          <div className={`lg:col-span-2 bg-gray-50 rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col relative ${!activeConversation ? 'hidden lg:flex' : 'flex'}`}>
+            {activeConversation ? (
+              <>
+                {/* Chat Header */}
+                <div className="p-4 bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center justify-between shadow-sm z-30 shrink-0">
+                  <div className="flex items-center gap-3">
                     <button
-                      onClick={handleCreateAppointment}
-                      disabled={isSubmittingAppointment}
-                      className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black shadow-xl shadow-rose-200 hover:bg-rose-700 transition-all active:scale-[0.98] disabled:bg-gray-200 disabled:shadow-none uppercase tracking-widest text-xs"
+                      onClick={() => {
+                        hapticFeedback('light');
+                        setActiveConversation(null);
+                      }}
+                      className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                      aria-label={t('nav.back')}
                     >
-                      {isSubmittingAppointment ? 'Enviando...' : 'Confirmar Solicitud'}
+                      <ArrowLeft className="w-5 h-5 text-gray-700" />
                     </button>
+                    <div className="flex items-center gap-3">
+                      <div className="relative group cursor-pointer">
+                        <img
+                          src={activeConversation.userAvatar}
+                          alt={activeConversation.userName}
+                          className="w-10 h-10 rounded-xl object-cover ring-2 ring-transparent group-hover:ring-blue-100 transition-all"
+                        />
+                        {activeConversation.online && (
+                          <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full shadow-sm"></div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h3 className={`font-black text-sm md:text-base flex items-center gap-1.5 ${activeConversation.coins && activeConversation.coins > 0
+                            ? 'text-amber-700'
+                            : 'text-gray-900'
+                            }`}>
+                            {activeConversation.userName}
+                            {activeConversation.verified && (
+                              <CheckCheck className="w-4 h-4 text-blue-500 shrink-0" fill="currentColor" stroke="white" />
+                            )}
+                            {(activeConversation.coins && activeConversation.coins > 0) && (
+                              <div className="bg-amber-100 p-0.5 rounded-md shadow-inner">
+                                <Crown className="w-3 h-3 text-amber-600" />
+                              </div>
+                            )}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${activeConversation.online ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                            {activeConversation.online ? 'En línea' : 'Desconectado'}
+                          </span>
+                          {activeConversation.premium && (
+                            <span className="text-xs font-bold text-amber-600 flex items-center gap-0.5">
+                              <Crown className="w-3 h-3" /> Premium
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {activeConversation.id !== SYSTEM_USER_ID && activeConversation.role === 'announcer' && (
+                      <button
+                        onClick={() => setShowAppointmentModal(true)}
+                        className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-rose-500 text-white rounded-xl text-[10px] font-black hover:bg-rose-600 transition-all shadow-md shadow-rose-200 uppercase tracking-wider"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        Concretar Cita
+                      </button>
+                    )}
+                    {activeConversation.id !== SYSTEM_USER_ID && (
+                      <button
+                        onClick={() => {
+                          hapticFeedback('medium');
+                          handleDeleteConversation();
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                        title={t('nav.delete')}
+                        aria-label={t('nav.delete')}
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+
+                  </div>
+                </div>
+
+                {/* GIFT ANIMATION OVERLAY */}
+                {showAnimation && (
+                  <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center overflow-hidden">
+                    <div className="animate-[bounce_1s_infinite] text-9xl drop-shadow-2xl">
+                      {showAnimation}
+                    </div>
+                  </div>
+                )}
+
+
+
+                {/* Messages */}
+                <div
+                  ref={chatContainerRef}
+                  onScroll={handleScroll}
+                  className="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 bg-gray-50/50 custom-scrollbar"
+                >
+                  {messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <MessageCircle className="w-8 h-8" />
+                      </div>
+                      <p className="text-sm font-medium">No hay mensajes en esta conversación</p>
+                      <p className="text-xs">¡Sé el primero en saludar!</p>
+                    </div>
+                  ) : (
+                    messages.map((msg, index) => {
+                      const isOwn = msg.senderId === currentUser.id || msg.senderId === (currentUser as any)._id;
+                      const isSystemMessage = msg.isSystem;
+
+                      const prevMsg = messages[index - 1];
+                      const showDateSeparator = !prevMsg ||
+                        new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
+
+                      return (
+                        <Fragment key={msg.id}>
+                          {showDateSeparator && (
+                            <div className="flex justify-center my-6">
+                              <span className="px-3 py-1 bg-white/80 backdrop-blur-sm border border-gray-100 text-gray-500 text-[10px] font-black rounded-full uppercase tracking-widest shadow-sm">
+                                {formatDateSeparator(msg.timestamp)}
+                              </span>
+                            </div>
+                          )}
+                          <div
+                            className={`flex ${isSystemMessage ? 'justify-center w-full my-3' : isOwn ? 'justify-end' : 'justify-start'} mb-1`}
+                          >
+                            <div className={`${isSystemMessage ? 'w-full max-w-md mx-auto' : 'max-w-[85%] md:max-w-[70%]'} rounded-2xl p-3 px-4 shadow-sm relative text-sm overflow-hidden ${isSystemMessage
+                              ? 'animate-holo border-2 border-white/50 text-indigo-950 shadow-indigo-200/50 mx-4 md:mx-auto'
+                              : isOwn
+                                ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-tr-none'
+                                : 'bg-white text-gray-800 border border-gray-100 rounded-tl-none'
+                              }`}>
+
+                              {isSystemMessage && (
+                                <>
+                                  <div className="holo-glint-overlay" />
+                                  {/* Security Pattern Background */}
+                                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none select-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")` }} />
+
+                                  <div className="flex items-center gap-1 mb-1.5 pb-1.5 border-b border-indigo-200/20 relative z-10 select-none">
+                                    <div className="bg-indigo-600 p-0.5 rounded shadow-inner">
+                                      <Shield className="w-2.5 h-2.5 text-white" />
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-indigo-700 flex items-center gap-1">
+                                      SafeConnect Receipt
+                                    </span>
+                                  </div>
+                                </>
+                              )}
+
+                              {msg.isLocked && !msg.isUnlocked && !isOwn ? (
+                                <div className="flex flex-col items-center gap-3 p-4 min-w-[220px]">
+                                  <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center animate-pulse">
+                                    <Lock className="w-7 h-7" />
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="font-black text-gray-900">Contenido Exclusivo</p>
+                                    <p className="text-[10px] text-gray-500">Desbloquea para ver el contenido</p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleUnlock(msg.id, msg.price || 100)}
+                                    className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl shadow-lg shadow-amber-200 transition-all w-full flex items-center justify-center gap-2 active:scale-95"
+                                  >
+                                    <Unlock className="w-4 h-4" />
+                                    {msg.price || 100} Coins
+                                  </button>
+                                </div>
+                              ) : msg.type === 'media' ? (
+                                <div
+                                  className="relative group cursor-pointer overflow-hidden rounded-xl border border-white/20 shadow-inner"
+                                  onClick={() => setViewingMedia(msg.content)}
+                                  onContextMenu={(e) => e.preventDefault()}
+                                >
+                                  {msg.content.match(/\.(mp4|webm|ogg|mov)$|video/i) ? (
+                                    <div className="relative">
+                                      <video
+                                        src={msg.content}
+                                        className="max-h-60 w-auto object-cover rounded-xl"
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors">
+                                        <div className="w-10 h-10 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40">
+                                          <Play className="w-5 h-5 text-white fill-current" />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <img
+                                      src={msg.content}
+                                      alt="Media"
+                                      className="max-h-60 w-auto object-cover rounded-xl transition-transform group-hover:scale-105"
+                                      onContextMenu={(e) => e.preventDefault()}
+                                      draggable={false}
+                                    />
+                                  )}
+                                  <div className="absolute top-2 right-2 p-1.5 bg-black/40 backdrop-blur-md rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Expand className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                  {/* Security Overlay to block right-click save as */}
+                                  <div className="absolute inset-0 z-10 select-none pointer-events-none" />
+                                </div>
+                              ) : (
+                                <p className={`leading-relaxed break-words relative z-10 ${isSystemMessage ? 'font-black italic text-[11px]' : ''}`}>
+                                  {msg.content}
+                                </p>
+                              )}
+
+                              <div className={`flex items-center justify-end gap-1 mt-1.5 relative z-10 ${isOwn ? 'text-blue-100' : isSystemMessage ? 'text-indigo-700/60' : 'text-gray-400'}`}>
+                                <span className="text-[10px] font-medium">
+                                  {formatTime(msg.timestamp)}
+                                </span>
+                                {isOwn && (
+                                  <span>
+                                    {msg.read ? (
+                                      <CheckCheck className="w-3.5 h-3.5 text-blue-200" />
+                                    ) : (
+                                      <CheckCheck className="w-3.5 h-3.5 text-blue-200/50" />
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </Fragment>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Message Input */}
+                <div className="p-4 bg-white border-t border-gray-100 shadow-lg">
+                  {activeConversation.id === SYSTEM_USER_ID ? (
+                    <div className="flex items-center justify-center py-4 bg-blue-50 rounded-2xl border border-dashed border-blue-200">
+                      <p className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                        <Shield className="w-4 h-4" /> Canal de Avisos - Solo Lectura
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors"
+                        aria-label={t('nav.emojis')}
+                      >
+                        <Smile className="w-5 h-5 md:w-6 h-6" />
+                      </button>
+                      <button
+                        className="p-2 md:p-3 text-gray-400 hover:text-blue-600 transition-colors"
+                        aria-label={t('nav.attach')}
+                      >
+                        <Paperclip className="w-5 h-5 md:w-6 h-6" />
+                      </button>
+
+                      {/* GIFTS MENU - FOR ANYONE GIFTING TO AN ANNOUNCER */}
+                      {activeConversation.role === 'announcer' && activeConversation.id !== SYSTEM_USER_ID && (
+                        <div className="relative">
+                          <button
+                            className={`p-2 md:p-3 rounded-xl transition-all ${showGiftMenu ? 'bg-amber-500 text-white shadow-lg' : 'text-amber-500 hover:bg-amber-50'}`}
+                            onClick={() => {
+                              setShowGiftMenu(!showGiftMenu);
+                              setShowPriceList(false);
+                            }}
+                          >
+                            <Gift className="w-5 h-5 md:w-6 h-6" />
+                          </button>
+
+                          {showGiftMenu && (
+                            <div className="absolute bottom-full left-0 mb-4 w-[280px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
+                              <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
+                                <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                                  <Gift className="w-3 h-3" /> Enviar Regalo
+                                </span>
+                                <button onClick={() => setShowGiftMenu(false)}><X className="w-4 h-4 text-gray-400" /></button>
+                              </div>
+                              <div className="p-2 grid grid-cols-3 gap-1.5 max-h-[250px] overflow-y-auto scrollbar-hide">
+                                {PREDEFINED_GIFTS.map((gift) => (
+                                  <button
+                                    key={gift.id}
+                                    onClick={() => handleSendGift(gift)}
+                                    className="flex-1 flex flex-col items-center justify-center p-3 rounded-xl hover:bg-amber-50 border border-transparent hover:border-amber-200 transition-all group"
+                                  >
+                                    <div className="text-2xl mb-1 group-hover:scale-110 transition-transform">{gift.icon}</div>
+                                    <div className="text-[9px] font-bold text-gray-700 text-center leading-tight">{gift.label}</div>
+                                    <div className="text-[9px] font-black text-amber-600 mt-0.5">{gift.price} 🪙</div>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+
+                      {/* SERVICES MENU - FOR ANNOUNCER TO SELL OR PARTNER TO BUY */}
+                      {(activeConversation.role === 'announcer' || currentUser.role === 'announcer') && activeConversation.id !== SYSTEM_USER_ID && (
+                        <div className="relative">
+                          <button
+                            className={`p-2 md:p-3 rounded-xl transition-all ${showPriceList ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'text-rose-500 hover:bg-rose-50'}`}
+                            onClick={() => {
+                              setShowPriceList(!showPriceList);
+                              setShowGiftMenu(false);
+                            }}
+                            title="Servicios y Packs"
+                            aria-label="Servicios y Packs"
+                          >
+                            {activeConversation.role === 'announcer' ? <Lock className="w-5 h-5 md:w-6 h-6" /> : <Crown className="w-5 h-5 md:w-6 h-6" />}
+                          </button>
+
+                          {showPriceList && (
+                            <div className="absolute bottom-full left-0 mb-4 w-[300px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in slide-in-from-bottom-2 duration-200 z-[99999] ring-1 ring-black/5">
+                              {/* Panel Header */}
+                              <div className="relative p-4 bg-gradient-to-br from-gray-900 to-gray-800 text-white overflow-hidden">
+                                <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='30' height='30' viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3Ccircle cx='13' cy='13' r='1'/%3E%3Ccircle cx='23' cy='23' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
+                                <div className="relative z-10 flex items-center justify-between">
+                                  <div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-white/50 leading-none mb-1">
+                                      {activeConversation.role === 'announcer' ? '🛍️ Tienda del Anunciante' : '💼 Tu Catálogo'}
+                                    </div>
+                                    <div className="font-black text-sm text-white">
+                                      {activeConversation.role === 'announcer' ? activeConversation.userName : 'Mis Servicios'}
+                                    </div>
+                                  </div>
+                                  <button onClick={() => setShowPriceList(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-all">
+                                    <X className="w-4 h-4 text-white/60" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+                                {activeConversation.role === 'announcer' ? (
+                                  partnerPacks.length > 0 ? (
+                                    <div>
+                                      {partnerPacks.map((item: any, idx: number) => {
+                                        const typeIcon = item.type === 'photos' ? '📸' : item.type === 'videos' ? '🎬' : '✨';
+                                        const typeLabel = item.type === 'photos' ? 'Fotos' : item.type === 'videos' ? 'Videos' : 'Servicio';
+                                        const qty = item.quantity && item.type !== 'service' ? `${item.quantity} ${item.type === 'photos' ? 'fotos' : 'videos'}` : null;
+                                        return (
+                                          <button
+                                            key={idx}
+                                            onClick={() => {
+                                              handleBuyPack(item);
+                                              setShowPriceList(false);
+                                            }}
+                                            className="w-full p-3.5 text-left hover:bg-rose-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
+                                          >
+                                            <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center text-lg">
+                                              {typeIcon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="text-[11px] font-black text-gray-900 group-hover:text-rose-600 truncate">{item.label}</div>
+                                              <div className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+                                                <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
+                                                {qty && <span>{qty}</span>}
+                                              </div>
+                                            </div>
+                                            <div className="text-rose-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
+                                              <span>{item.price} 🪙</span>
+                                              <span className="text-[9px] text-gray-400 font-medium">Comprar</span>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <div className="p-8 text-center bg-gray-50/30">
+                                      <div className="text-4xl mb-3">📦</div>
+                                      <p className="text-[11px] text-gray-500 font-bold leading-relaxed px-4">
+                                        Este anunciante aún no ha configurado packs para la venta
+                                      </p>
+                                    </div>
+                                  )
+                                ) : (
+                                  /* Current user is announcer selling */
+                                  myPacks.length > 0 ? (
+                                    <div>
+                                      {myPacks.map((item: any, idx: number) => {
+                                        const typeIcon = item.type === 'photos' ? '📸' : item.type === 'videos' ? '🎬' : '✨';
+                                        const typeLabel = item.type === 'photos' ? 'Fotos' : item.type === 'videos' ? 'Videos' : 'Servicio';
+                                        return (
+                                          <button
+                                            key={idx}
+                                            onClick={() => {
+                                              handleSendMessage(item.label, { isLocked: true, price: item.price });
+                                              setShowPriceList(false);
+                                            }}
+                                            className="w-full p-3.5 text-left hover:bg-blue-50 transition-colors border-b border-gray-50 flex items-center gap-3 group"
+                                          >
+                                            <div className="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-lg">
+                                              {typeIcon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="text-[11px] font-black text-gray-900 group-hover:text-blue-600 truncate">{item.label}</div>
+                                              <div className="text-[9px] text-gray-400 mt-0.5">
+                                                <span className="px-1.5 py-0.5 bg-gray-100 rounded-full font-bold">{typeLabel}</span>
+                                              </div>
+                                            </div>
+                                            <div className="text-blue-600 font-black text-sm group-hover:scale-110 transition-transform shrink-0 flex flex-col items-end">
+                                              <span>{item.price} 🪙</span>
+                                              <span className="text-[9px] text-gray-400 font-medium">Enviar oferta</span>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  ) : (
+                                    <div className="p-8 text-center bg-gray-50/30">
+                                      <div className="text-4xl mb-3">🛍️</div>
+                                      <p className="text-[11px] text-gray-500 font-bold leading-relaxed px-4">
+                                        Aún no has creado packs. Usa el botón <strong>"Servicios"</strong> en la barra superior para crearlos.
+                                      </p>
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                              {currentUser.role === 'announcer' && (
+                                <div className="p-3 border-t border-gray-100 bg-gray-50/50">
+                                  <p className="text-[9px] text-gray-400 text-center font-bold uppercase tracking-widest">
+                                    💡 Gestiona tus packs desde el botón "Servicios" en el menú principal
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={e => setNewMessage(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+                          placeholder="Escribe algo aquí..."
+                          style={{ direction: 'ltr', textAlign: 'left' }}
+                          className="w-full px-4 md:px-5 py-3 md:py-3.5 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-gray-900 placeholder-gray-400 font-medium text-sm md:text-base"
+                        />
+                      </div>
+
+
+                      <button
+                        onClick={() => {
+                          hapticFeedback('medium');
+                          handleSendMessage();
+                        }}
+                        disabled={!newMessage.trim()}
+                        className="p-3 md:p-4 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:bg-gray-200 disabled:shadow-none active:scale-95 flex items-center justify-center group"
+                        aria-label={t('nav.send')}
+                      >
+                        <Send className={`w-4 h-4 md:w-5 h-5 ${newMessage.trim() ? 'translate-x-0.5 -translate-y-0.5' : ''} transition-transform`} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center p-12 bg-white text-center">
+                <div className="w-24 h-24 bg-blue-50 rounded-[2.5rem] flex items-center justify-center mb-8 relative">
+                  <MessageCircle className="w-12 h-12 text-blue-600" />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-white"></div>
+                </div>
+                <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">SafeConnect Mensajería</h3>
+                <p className="text-gray-500 max-w-sm mx-auto leading-relaxed">
+                  Selecciona una conversación para empezar a chatear de forma segura y privada.
+                  Todos tus mensajes están encriptados.
+                </p>
+                <div className="mt-12 flex items-center gap-6">
+                  <div className="flex flex-col items-center gap-1">
+                    <Shield className="w-6 h-6 text-green-500" />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Seguro</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <Lock className="w-6 h-6 text-blue-500" />
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Privado</span>
                   </div>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Appointment Modal */}
+      {showAppointmentModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden relative">
+            <button
+              onClick={() => setShowAppointmentModal(false)}
+              className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-all text-gray-400"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-8">
+              <div className="p-4 bg-rose-50 rounded-2xl w-fit mb-6">
+                <Calendar className="w-8 h-8 text-rose-600" />
+              </div>
+              <h3 className="text-2xl font-black text-gray-900 mb-2">Concretar Cita</h3>
+              <p className="text-gray-500 font-medium text-sm mb-6 leading-relaxed">
+                Completa los detalles para tu encuentro presencial. Una vez enviada, el anunciante podrá confirmarla.
+              </p>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Fecha</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={appointmentForm.date}
+                        onChange={(e) => setAppointmentForm({ ...appointmentForm, date: e.target.value })}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Hora</label>
+                    <div className="relative">
+                      <ClockIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="time"
+                        value={appointmentForm.time}
+                        onChange={(e) => setAppointmentForm({ ...appointmentForm, time: e.target.value })}
+                        className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Lugar del encuentro</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Centro Comercial, Hotel..."
+                    value={appointmentForm.location}
+                    onChange={(e) => setAppointmentForm({ ...appointmentForm, location: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Detalles adicionales (opcional)</label>
+                  <textarea
+                    placeholder="Alguna nota o instrucción especial..."
+                    value={appointmentForm.details}
+                    onChange={(e) => setAppointmentForm({ ...appointmentForm, details: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-bold text-sm resize-none"
+                  />
+                </div>
+
+                <button
+                  onClick={handleCreateAppointment}
+                  disabled={isSubmittingAppointment}
+                  className="w-full py-4 bg-rose-600 text-white rounded-2xl font-black shadow-xl shadow-rose-200 hover:bg-rose-700 transition-all active:scale-[0.98] disabled:bg-gray-200 disabled:shadow-none uppercase tracking-widest text-xs"
+                >
+                  {isSubmittingAppointment ? 'Enviando...' : 'Confirmar Solicitud'}
+                </button>
+              </div>
             </div>
-          )}
-        </>
+          </div>
+        </div>
       )}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        variant={confirmModal.variant as any}
+      />
 
       {/* Media Viewer Modal */}
       {viewingMedia && (
