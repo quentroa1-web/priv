@@ -7,6 +7,7 @@ import {
   Award as AwardIcon, Sparkles, Loader2
 } from 'lucide-react';
 import { apiService } from '../../services/api';
+import { toast } from 'react-hot-toast';
 
 interface Review {
   _id: string;
@@ -116,7 +117,7 @@ export function Reviews({ user, onBack }: ReviewsProps) {
         );
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al marcar como útil');
+      toast.error(err.response?.data?.error || 'Error al marcar como útil');
     }
   };
 
@@ -135,10 +136,10 @@ export function Reviews({ user, onBack }: ReviewsProps) {
         );
         setResponseText('');
         setShowResponse(null);
-        alert('Respuesta enviada con éxito');
+        toast.success('Respuesta enviada con éxito');
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al enviar respuesta');
+      toast.error(err.response?.data?.error || 'Error al enviar respuesta');
     }
   };
 

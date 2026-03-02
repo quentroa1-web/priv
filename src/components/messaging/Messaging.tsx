@@ -11,6 +11,7 @@ import {
   ArrowLeft, Shield, ChevronRight, Crown, Lock, Unlock,
   Bell, Gift, Trash2, Calendar, Clock as ClockIcon, Play, Expand
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const SYSTEM_USER_ID = '6989549ede1ca80e285692a8';
 
@@ -378,7 +379,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
         }
       } catch (err) {
         console.error('Error eliminando conversación:', err);
-        alert('No se pudo eliminar la conversación.');
+        toast.error('No se pudo eliminar la conversación.');
       }
     }
   };
@@ -414,7 +415,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
         }
       }
     } catch (err) {
-      alert('Error al desbloquear. Verifica tu saldo.');
+      toast.error('Error al desbloquear. Verifica tu saldo.');
     }
   };
 
@@ -462,7 +463,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
       // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       if (!forceContent) setNewMessage(messageContent); // Restore message text
-      alert('No se pudo enviar el mensaje. Por favor intenta de nuevo.');
+      toast.error('No se pudo enviar el mensaje. Por favor intenta de nuevo.');
     }
   };
 
@@ -496,7 +497,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para enviar este regalo.';
-      alert(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -551,17 +552,17 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
           }
         }
 
-        alert('¡Éxito! Pack entregado.');
+        toast.success('¡Éxito! Pack entregado.');
       }
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'No tienes suficientes monedas para comprar este pack.';
-      alert(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
   const handleCreateAppointment = async () => {
     if (!appointmentForm.date || !appointmentForm.time || !appointmentForm.location) {
-      alert('Por favor completa los campos principales de la cita.');
+      toast.error('Por favor completa los campos principales de la cita.');
       return;
     }
 
@@ -570,7 +571,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
     today.setHours(0, 0, 0, 0);
 
     if (selectedDate < today) {
-      alert('No puedes programar citas para fechas pasadas.');
+      toast.error('No puedes programar citas para fechas pasadas.');
       return;
     }
 
@@ -583,7 +584,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
       }) as any;
 
       if (res.data.success) {
-        alert('¡Solicitud de cita enviada! El anunciante ha sido notificado.');
+        toast.success('¡Solicitud de cita enviada! El anunciante ha sido notificado.');
         setShowAppointmentModal(false);
         setAppointmentForm({ date: '', time: '', location: '', details: '' });
 
@@ -591,7 +592,7 @@ export function Messaging({ currentUser, onBack, targetUserId, targetUser, targe
         handleSendMessage(`📌 SOLICITUD DE CITA: He solicitado una cita para el ${appointmentForm.date} a las ${appointmentForm.time} en ${appointmentForm.location}.`);
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al solicitar cita');
+      toast.error(err.response?.data?.error || 'Error al solicitar cita');
     } finally {
       setIsSubmittingAppointment(false);
     }

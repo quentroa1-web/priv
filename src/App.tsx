@@ -25,6 +25,7 @@ import { AgeVerificationModal } from './components/AgeVerificationModal';
 import { HelpCircle, FileText, CreditCard } from 'lucide-react';
 import { UserListingView } from './components/UserListingView';
 import { ServicesManager } from './components/ServicesManager';
+import { Toaster } from 'react-hot-toast';
 
 // Lazy load heavy components
 const Login = lazyRetry(() => import('./components/auth/Login').then(module => module.Login));
@@ -581,6 +582,7 @@ function AppContent() {
 
       <CookieConsent />
       <AgeVerificationModal />
+      <Toaster position="top-center" reverseOrder={false} />
     </div>
   );
 }

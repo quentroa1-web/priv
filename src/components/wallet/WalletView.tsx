@@ -26,6 +26,7 @@ import {
     ArrowRight,
     User
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface WalletViewProps {
     onBack: () => void;
@@ -163,13 +164,13 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
             const { buySubscription } = await importRetry(() => import('../../services/payment'));
             const res = await buySubscription(plan);
             if (res.data.success) {
-                alert('Plan activado exitosamente');
+                toast.success('Plan activado exitosamente');
                 setShowSuscripcionModal(false);
                 refreshUser();
                 fetchHistory();
             }
         } catch (err: any) {
-            alert(err.response?.data?.error || 'Error al procesar suscripción');
+            toast.error(err.response?.data?.error || 'Error al procesar suscripción');
         } finally {
             setLoading(false);
         }
@@ -178,7 +179,7 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
     const handleBoost = () => {
         // Check if user has ads
         if (userAds.length === 0) {
-            alert('No tienes anuncios creados para aplicar un Boost.');
+            toast.error('No tienes anuncios creados para aplicar un Boost.');
             return;
         }
         setShowBoostModal(true);
@@ -189,14 +190,14 @@ export function WalletView({ onBack, onStoreClick, onAddBillingClick }: WalletVi
             setLoading(true);
             const res = await boostAd(adId);
             if (res.data.success) {
-                alert('¡Boost activado exitosamente!');
+                toast.success('¡Boost activado exitosamente!');
                 setShowBoostModal(false);
                 refreshUser();
                 fetchHistory();
                 fetchUserAds();
             }
         } catch (err: any) {
-            alert(err.response?.data?.error || 'Error al aplicar boost');
+            toast.error(err.response?.data?.error || 'Error al aplicar boost');
         } finally {
             setLoading(false);
         }

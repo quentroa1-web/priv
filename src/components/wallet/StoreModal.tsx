@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { apiService } from '../../services/api';
 import { submitPaymentProof, getTransactions } from '../../services/payment';
 import { Check, X, Sparkles, Coins, Crown, Upload, ArrowLeft, Copy, History, Clock } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 interface StoreModalProps {
     isOpen: boolean;
@@ -13,8 +14,6 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<'coins' | 'premium' | 'history'>('coins');
     const [loading, setLoading] = useState(false);
-    const [successMsg, setSuccessMsg] = useState('');
-    const [errorMsg, setErrorMsg] = useState('');
 
     // Payment Form State
     const [selectedPackage, setSelectedPackage] = useState<any>(null);
@@ -53,14 +52,12 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
     const handleSelectPackage = (pkg: any) => {
         setSelectedPackage(pkg);
         setStep('payment');
-        setErrorMsg('');
     };
 
     const handleBack = () => {
         setStep('selection');
         setSelectedPackage(null);
         setProofFile(null);
-        setErrorMsg('');
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,17 +68,16 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
 
     const handleSubmitProof = async () => {
         if (!proofFile) {
-            setErrorMsg('Por favor sube el comprobante de pago');
+            toast.error('Por favor sube el comprobante de pago');
             return;
         }
         if (!paymentDetails.referenceId) {
-            setErrorMsg('Por favor ingresa el número de referencia');
+            toast.error('Por favor ingresa el número de referencia');
             return;
         }
 
         try {
             setLoading(true);
-            setErrorMsg('');
 
             // 1. Upload Image
             const formData = new FormData();
@@ -101,20 +97,17 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
             });
 
             if (res.data.success) {
-                setSuccessMsg('¡Comprobante enviado! Te notificaremos cuando sea aprobado.');
-                setTimeout(() => {
-                    setSuccessMsg('');
-                    onClose();
-                    // Reset
-                    setStep('selection');
-                    setSelectedPackage(null);
-                    setProofFile(null);
-                }, 3000);
+                toast.success('¡Comprobante enviado! Te notificaremos cuando sea aprobado.');
+                onClose();
+                // Reset
+                setStep('selection');
+                setSelectedPackage(null);
+                setProofFile(null);
             }
 
         } catch (err: any) {
             console.error(err);
-            setErrorMsg(err.message || 'Error al enviar comprobante');
+            toast.error(err.message || 'Error al enviar comprobante');
         } finally {
             setLoading(false);
         }
@@ -187,13 +180,6 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
 
                 {/* Content */}
                 <div className="p-6 overflow-y-auto flex-1 bg-gray-50/30">
-
-                    {successMsg && (
-                        <div className="mb-6 p-4 bg-green-50 border border-green-100 text-green-700 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2">
-                            <div className="p-2 bg-green-100 rounded-full"><Check className="w-5 h-5" /></div>
-                            <span className="font-bold">{successMsg}</span>
-                        </div>
-                    )}
 
                     {step === 'selection' ? (
                         <>
@@ -424,12 +410,6 @@ export function StoreModal({ isOpen, onClose }: StoreModalProps) {
                                         </div>
                                     </div>
 
-                                    {errorMsg && (
-                                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded-2xl flex items-center gap-3">
-                                            <X className="w-5 h-5 shrink-0" />
-                                            <span className="font-bold text-sm">{errorMsg}</span>
-                                        </div>
-                                    )}
 
                                     <button
                                         onClick={handleSubmitProof}

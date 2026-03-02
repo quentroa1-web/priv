@@ -19,6 +19,7 @@ import {
   TrendingUp, CheckCircle, Crown, AlertCircle, Loader2,
   Trash2, PlusCircle, Rocket, Calendar, Star, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { SEO } from '../SEO';
 
 const GENDER_LABELS: Record<string, string> = {
@@ -162,7 +163,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
   const handleVerificationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!idProof || !photoProof) {
-      alert('Por favor sube ambos documentos (Foto sosteniendo hoja con nombre y fecha, y Documento de identidad)');
+      toast.error('Por favor sube ambos documentos (Foto sosteniendo hoja con nombre y fecha, y Documento de identidad)');
       return;
     }
 
@@ -173,11 +174,11 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     try {
       setIsVerifying(true);
       await requestVerification(formData);
-      alert('Solicitud enviada con éxito. Un administrador revisará tus documentos pronto.');
-      window.location.reload(); // Simple reload to refresh user data for now
+      toast.success('Solicitud enviada con éxito. Un administrador revisará tus documentos pronto.');
+      setTimeout(() => window.location.reload(), 2000);
     } catch (error) {
       console.error(error);
-      alert('Error al enviar solicitud de verificación');
+      toast.error('Error al enviar solicitud de verificación');
     } finally {
       setIsVerifying(false);
     }
@@ -245,7 +246,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
         }
       } catch (error) {
         console.error('Error deleting ad:', error);
-        alert('No se pudo eliminar el anuncio');
+        toast.error('No se pudo eliminar el anuncio');
       }
     }
   };
@@ -255,7 +256,7 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     const activeBoost = userAds.find(ad => ad.isBoosted && ad.boostedUntil && new Date(ad.boostedUntil) > new Date());
 
     if (activeBoost) {
-      alert(`Ya tienes un Boost activo en el anuncio: "${activeBoost.title}". Solo puedes tener un Boost activo a la vez.`);
+      toast.error(`Ya tienes un Boost activo en el anuncio: "${activeBoost.title}". Solo puedes tener un Boost activo a la vez.`);
       return;
     }
 
@@ -263,12 +264,12 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
       try {
         const res = await boostAd(adId);
         if (res.data.success) {
-          alert('¡Anuncio impulsado con éxito!');
+          toast.success('¡Anuncio impulsado con éxito!');
           fetchUserAds(); // Refresh list
         }
       } catch (error: any) {
         console.error('Error boosting ad:', error);
-        alert(error.response?.data?.error || 'No se pudo impulsar el anuncio. Verifica tu saldo.');
+        toast.error(error.response?.data?.error || 'No se pudo impulsar el anuncio. Verifica tu saldo.');
       }
     }
   };
@@ -277,9 +278,10 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
     try {
       setIsSaving(true);
       await onUpdateProfile(formData);
+      toast.success('Perfil actualizado correctamente');
       setEditing(false);
     } catch (error) {
-      alert('Error al guardar los cambios');
+      toast.error('Error al guardar los cambios');
     } finally {
       setIsSaving(false);
     }
@@ -298,10 +300,11 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
 
       if (response.data && response.data.success) {
         await onUpdateProfile({ avatar: response.data.url });
+        toast.success('Foto de perfil actualizada');
       }
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      alert('Error al subir la imagen');
+      toast.error('Error al subir la imagen');
     } finally {
       setIsUploading(false);
     }
@@ -349,11 +352,11 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
       setIsUpdatingStatus(id);
       const res = await apiService.updateAppointmentStatus(id, status) as any;
       if (res.data.success) {
-        alert(`Cita marcada como ${status}`);
+        toast.success(`Cita marcada como ${status}`);
         await fetchAppointments();
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al actualizar estado');
+      toast.error(err.response?.data?.error || 'Error al actualizar estado');
     } finally {
       setIsUpdatingStatus(null);
     }
@@ -368,13 +371,13 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
         ...reviewForm
       }) as any;
       if (res.data.success) {
-        alert('¡Calificación enviada con éxito!');
+        toast.success('¡Calificación enviada con éxito!');
         setShowReviewModal(null);
         setReviewForm({ rating: 5, comment: '', categories: {} });
         fetchAppointments();
       }
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al enviar calificación');
+      toast.error(err.response?.data?.error || 'Error al enviar calificación');
     }
   };
 

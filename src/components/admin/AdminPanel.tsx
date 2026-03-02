@@ -9,6 +9,7 @@ import {
   FileText, ExternalLink, CreditCard, Grid3x3, ArrowUpRight
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { toast } from 'react-hot-toast';
 
 interface AdminPanelProps {
   onBack: () => void;
@@ -112,32 +113,41 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
     if (!window.confirm(`¿Seguro que deseas ${currentStatus === 'active' ? 'banear' : 'activar'} a este usuario?`)) return;
     try {
       await apiService.updateUserAdmin(userId, { status: currentStatus === 'active' ? 'banned' : 'active' });
+      toast.success('Estado de usuario actualizado');
       fetchUsers();
     } catch (err) {
-      alert('Error al actualizar estado');
+      toast.error('Error al actualizar estado');
     }
   };
 
   const handleVerificationAction = async (userId: string, status: 'approved' | 'rejected', reason?: string) => {
+    setLoading(true);
     try {
       await apiService.handleVerification(userId, { status, rejectionReason: reason });
+      toast.success(status === 'approved' ? 'Verificación aprobada' : 'Verificación rechazada');
       fetchVerifications();
       setRejectModal(null);
       setRejectionReason('');
       setSelectedVerification(null);
     } catch (err) {
-      alert('Error en verificación');
+      toast.error('Error en verificación');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePaymentAction = async (paymentId: string, status: 'approved' | 'rejected', reason?: string) => {
+    setLoading(true);
     try {
       await apiService.handlePayment(paymentId, { status, rejectionReason: reason });
+      toast.success(status === 'approved' ? 'Pago aprobado exitosamente' : 'Pago rechazado');
       fetchPayments();
       setRejectModal(null);
       setRejectionReason('');
     } catch (err) {
-      alert('Error en pago');
+      toast.error('Error en pago');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -145,9 +155,10 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
     if (!window.confirm('¿Eliminar esta reseña permanentemente?')) return;
     try {
       await apiService.deleteReviewAdmin(reviewId);
+      toast.success('Reseña eliminada');
       fetchReviews();
     } catch (err) {
-      alert('Error al eliminar');
+      toast.error('Error al eliminar');
     }
   };
 
@@ -155,9 +166,10 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
     if (!window.confirm(`¿Seguro que deseas ${currentStatus ? 'suspender' : 'activar'} este anuncio?`)) return;
     try {
       await apiService.updateAdAdmin(adId, { isActive: !currentStatus });
+      toast.success('Estado del anuncio actualizado');
       fetchAds();
     } catch (err) {
-      alert('Error al actualizar estado del anuncio');
+      toast.error('Error al actualizar estado del anuncio');
     }
   };
 
@@ -165,9 +177,10 @@ export function AdminPanel({ onBack }: AdminPanelProps) {
     if (!window.confirm('¿ELIMINAR este anuncio permanentemente? Esta acción no se puede deshacer.')) return;
     try {
       await apiService.deleteAdAdmin(adId);
+      toast.success('Anuncio eliminado');
       fetchAds();
     } catch (err) {
-      alert('Error al eliminar el anuncio');
+      toast.error('Error al eliminar el anuncio');
     }
   };
 
