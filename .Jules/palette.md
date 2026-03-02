@@ -24,3 +24,8 @@
 **Learning:** Hardcoded strings in navigation components like Sidebars break the experience for international users and exclude screen reader users if buttons lack descriptive ARIA labels. Additionally, keyboard navigation is often overlooked in sidebars, requiring explicit focus-visible styles.
 
 **Action:** Always verify that all strings in navigation components are wrapped in `t()` for i18n. Provide `aria-label` for all icon-only or close buttons. Ensure all interactive elements have `focus-visible` ring styles and use haptic feedback for mobile interactions to improve the tactile experience.
+
+## 2026-03-26 - [Responsive Buttons & Accessible Labels]
+**Learning:** Found that buttons using conditional visibility for text (e.g., `hidden sm:inline`) become icon-only for screen readers on mobile. Without an explicit `aria-label`, these buttons lose their semantic meaning when the text node is hidden.
+
+**Action:** For all responsive buttons that hide text on small screens, always provide an `aria-label` (localized via `t()`) that matches the button's intended label. This ensures accessibility remains consistent across all breakpoints.

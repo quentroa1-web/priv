@@ -24,7 +24,9 @@
     "tokens": "Tokens",
     "status": "Status",
     "navigation": "Navigation",
-    "close": "Close sidebar"
+    "close": "Close sidebar",
+    "services": "Services",
+    "manageServices": "Manage Services"
   },
   "common": {
     "favorite": "Add to favorites",
