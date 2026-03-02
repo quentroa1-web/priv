@@ -1074,10 +1074,10 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                             onClick={async () => {
                               try {
                                 await deleteAccount();
-                                alert('Cuenta eliminada');
+                                toast.success('Cuenta eliminada');
                                 window.location.href = '/';
                               } catch (error) {
-                                alert('Error al eliminar la cuenta');
+                                toast.error('Error al eliminar la cuenta');
                               }
                             }}
                             className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-all"
@@ -1215,10 +1215,10 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                             const newMethods = paymentMethods.filter((_, i) => i !== index);
                             setPaymentMethods(newMethods);
                             await onUpdateProfile({ paymentMethods: newMethods });
-                            alert('Método de pago eliminado');
+                            toast.success('Método de pago eliminado');
                           } catch (error) {
                             console.error('Error deleting payment method:', error);
-                            alert('Error al eliminar el método de pago');
+                            toast.error('Error al eliminar el método de pago');
                             // Revert on error
                             setPaymentMethods(paymentMethods);
                           }
@@ -1280,17 +1280,17 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                             await onUpdateProfile({ paymentMethods: updatedMethods });
 
                             setNewPaymentMethod({ type: '', details: '' });
-                            alert('Método de pago agregado exitosamente');
+                            toast.success('Método de pago agregado exitosamente');
                           } catch (error: any) {
                             console.error('Error saving payment method:', error);
-                            alert(error?.response?.data?.message || 'Error al guardar el método de pago');
+                            toast.error(error?.response?.data?.message || 'Error al guardar el método de pago');
                             // Revert on error
                             setPaymentMethods(paymentMethods);
                           } finally {
                             setSavingPayment(false);
                           }
                         } else {
-                          alert('Por favor completa todos los campos');
+                          toast.error('Por favor completa todos los campos');
                         }
                       }}
                       disabled={savingPayment}
@@ -1671,11 +1671,11 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                 <button
                   onClick={async () => {
                     if (passwordData.newPassword !== passwordData.confirmPassword) {
-                      alert('Las contraseñas no coinciden');
+                      toast.error('Las contraseñas no coinciden');
                       return;
                     }
                     if (!passwordData.currentPassword || !passwordData.newPassword) {
-                      alert('Por favor completa todos los campos');
+                      toast.error('Por favor completa todos los campos');
                       return;
                     }
                     try {
@@ -1683,11 +1683,11 @@ export function UserProfile({ user, onUpdateProfile, onBack, onCreateAd, onEditA
                         currentPassword: passwordData.currentPassword,
                         newPassword: passwordData.newPassword
                       });
-                      alert('Contraseña cambiada exitosamente');
+                      toast.success('Contraseña cambiada exitosamente');
                       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
                       setShowPasswordModal(false);
                     } catch (error: any) {
-                      alert(error?.response?.data?.message || 'Error al cambiar la contraseña');
+                      toast.error(error?.response?.data?.message || 'Error al cambiar la contraseña');
                     }
                   }}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition-all"
