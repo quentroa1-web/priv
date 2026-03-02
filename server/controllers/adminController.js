@@ -44,6 +44,10 @@ exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+
+    // Cleanup: Delete ads belonging to this user
+    await Ad.deleteMany({ user: user._id });
+
     await user.deleteOne();
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
@@ -138,19 +142,18 @@ exports.getPayments = async (req, res) => {
 exports.handlePayment = async (req, res) => {
   try {
     const { status, rejectionReason } = req.body;
-    const transaction = await Transaction.findById(req.params.id);
-    if (!transaction) return res.status(404).json({ success: false, error: 'Transaction not found' });
 
-    if (transaction.status !== 'pending') {
-      return res.status(400).json({ success: false, error: 'Transaction already processed' });
-    }
+    // SECURITY: Use findOneAndUpdate to ensure atomic status transition (Anti-Double-Spend)
+    const transaction = await Transaction.findOneAndUpdate(
+      { _id: req.params.id, status: 'pending' },
+      {
+        status: status === 'approved' ? 'completed' : status,
+        rejectionReason: (status === 'rejected' && rejectionReason) ? rejectionReason : undefined
+      },
+      { new: true }
+    );
 
-    transaction.status = status === 'approved' ? 'completed' : status;
-    if (status === 'rejected' && rejectionReason) {
-      transaction.rejectionReason = rejectionReason;
-    }
-
-    await transaction.save();
+    if (!transaction) return res.status(400).json({ success: false, error: 'Transaction not found or already processed' });
 
     const user = await User.findById(transaction.user).select('+wallet.coins');
     if (!user) {

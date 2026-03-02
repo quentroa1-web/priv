@@ -66,7 +66,16 @@ exports.getConversations = async (req, res) => {
         $project: {
           partner: {
             $ifNull: [
-              '$partner',
+              {
+                _id: '$partner._id',
+                name: '$partner.name',
+                avatar: '$partner.avatar',
+                premium: '$partner.premium',
+                online: '$partner.online',
+                isOnline: '$partner.isOnline',
+                role: '$partner.role',
+                verified: '$partner.verified'
+              },
               { _id: '$_id', name: 'Usuario Eliminado', avatar: '' }
             ]
           },

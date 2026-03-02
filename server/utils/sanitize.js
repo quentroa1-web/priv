@@ -40,7 +40,33 @@ const sanitizePriceList = (priceList) => {
     }));
 };
 
+/**
+ * Sanitize payment methods array
+ */
+const sanitizePaymentMethods = (methods) => {
+    if (!Array.isArray(methods)) return [];
+    return methods.slice(0, 10).map(m => ({
+        type: sanitizeString(m.type, 50),
+        details: sanitizeString(m.details, 200)
+    }));
+};
+
+/**
+ * Sanitize location object
+ */
+const sanitizeLocation = (loc) => {
+    if (!loc || typeof loc !== 'object') return {};
+    return {
+        department: sanitizeString(loc.department, 100),
+        city: sanitizeString(loc.city, 100),
+        neighborhood: sanitizeString(loc.neighborhood, 100),
+        specificZone: sanitizeString(loc.specificZone, 100)
+    };
+};
+
 module.exports = {
     sanitizeString,
-    sanitizePriceList
+    sanitizePriceList,
+    sanitizePaymentMethods,
+    sanitizeLocation
 };

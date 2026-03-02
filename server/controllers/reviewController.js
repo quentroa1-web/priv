@@ -2,12 +2,7 @@ const Review = require('../models/Review');
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Ad = require('../models/Ad');
-
-// Simple HTML tag stripper to prevent XSS in user-generated content
-const sanitize = (str) => {
-    if (!str) return '';
-    return str.replace(/<[^>]*>/g, '').trim();
-};
+const { sanitizeString } = require('../utils/sanitize');
 
 // @desc    Calculate and update user rating
 const updateUserRating = async (userId) => {
@@ -67,9 +62,18 @@ exports.createReview = async (req, res) => {
         }
 
         // Sanitize comment to prevent XSS
-        const safeComment = sanitize(comment);
+        const safeComment = sanitizeString(comment, 1000);
         if (safeComment.length < 5) {
             return res.status(400).json({ success: false, error: 'El comentario debe tener al menos 5 caracteres válidos' });
+        }
+
+        // Whitelist categories to avoid extra fields
+        const safeCategories = {};
+        if (categories && typeof categories === 'object') {
+            const keys = ['service', 'hygiene', 'respect', 'tidiness', 'punctuality', 'communication'];
+            keys.forEach(k => {
+                if (categories[k]) safeCategories[k] = Math.min(5, Math.max(1, Number(categories[k]) || 5));
+            });
         }
 
         const review = await Review.create({
@@ -77,11 +81,11 @@ exports.createReview = async (req, res) => {
             appointment: appointmentId,
             reviewer: req.user.id,
             reviewee,
-            rating,
+            rating: Math.min(5, Math.max(1, Number(rating) || 5)),
             comment: safeComment,
-            categories,
+            categories: safeCategories,
             type,
-            isVerified: true // Automatically verified since it's from a completed appointment
+            isVerified: true
         });
 
         await appointment.save();
@@ -122,7 +126,7 @@ exports.respondToReview = async (req, res) => {
         }
 
         review.response = {
-            content: sanitize(content),
+            content: sanitizeString(content, 1000),
             createdAt: Date.now()
         };
 

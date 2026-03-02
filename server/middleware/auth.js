@@ -27,6 +27,14 @@ exports.protect = async (req, res, next) => {
       return res.status(403).json({ success: false, error: 'Your account has been banned' });
     }
 
+    // Check if password was changed after token was issued
+    if (user.passwordChangedAt) {
+      const changedTimestamp = parseInt(user.passwordChangedAt.getTime() / 1000, 10);
+      if (decoded.iat < changedTimestamp) {
+        return res.status(401).json({ success: false, error: 'User recently changed password. Please log in again.' });
+      }
+    }
+
     req.user = user;
     next();
   } catch (error) {

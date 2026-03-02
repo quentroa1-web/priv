@@ -147,7 +147,8 @@ const UserSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  passwordChangedAt: Date
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
@@ -168,7 +169,7 @@ UserSchema.virtual('isOnline').get(function () {
 // Encrypt password using bcrypt
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

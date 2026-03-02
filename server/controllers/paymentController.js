@@ -135,6 +135,7 @@ exports.transferCoins = async (req, res, next) => {
     let coinsToTransfer = 0; // Declared outside try for catch-block access
     try {
         const { recipientId, amount, reason, messageId, packId } = req.body;
+        const safeReason = sanitizeString(reason, 200);
         coinsToTransfer = parseInt(amount);
         if (isNaN(coinsToTransfer) || coinsToTransfer <= 0) return res.status(400).json({ success: false, error: 'Monto inválido' });
 
@@ -233,7 +234,7 @@ exports.transferCoins = async (req, res, next) => {
                 currency: 'COINS',
                 status: 'completed',
                 recipient: recipient._id,
-                description: reason || 'Transferencia a usuario'
+                description: safeReason || 'Transferencia a usuario'
             });
 
             await Transaction.create({
@@ -244,7 +245,7 @@ exports.transferCoins = async (req, res, next) => {
                 currency: 'COINS',
                 status: 'completed',
                 recipient: sender._id,
-                description: reason || 'Recibido de usuario'
+                description: safeReason || 'Recibido de usuario'
             });
 
             // Send holographic system notifications
@@ -326,6 +327,7 @@ exports.withdraw = async (req, res) => {
         // Create Withdrawal Transaction (Pending)
         try {
             const { bankName } = req.body;
+            const safeTarget = sanitizeString(targetAccount, 100);
             const transaction = await Transaction.create({
                 user: user._id,
                 type: 'withdrawal',
@@ -333,8 +335,8 @@ exports.withdraw = async (req, res) => {
                 coinsAmount: coinsToWithdraw,
                 currency: 'COP',
                 status: 'pending',
-                description: `Solicitud de retiro a cuenta: ${targetAccount}`,
-                bankName: bankName || 'Retiro manual'
+                description: `Solicitud de retiro a cuenta: ${safeTarget}`,
+                bankName: sanitizeString(bankName, 50) || 'Retiro manual'
             });
 
             res.status(200).json({

@@ -36,13 +36,15 @@ const AdSchema = new mongoose.Schema({
   },
   services: [String],
   customServices: [String],
-  pricing: {
-    basePrice: Number,
+  pricing: [{
+    label: String,
+    price: Number,
     priceType: {
       type: String,
-      enum: ['hora', 'sesion', 'noche', 'negociable']
+      enum: ['hora', 'sesion', 'noche', 'negociable', 'service'],
+      default: 'hora'
     }
-  },
+  }],
   attendsTo: [{
     type: String,
     enum: ['hombres', 'mujeres', 'parejas', 'todos']

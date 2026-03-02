@@ -1,7 +1,7 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
-const { sanitizeString, sanitizePriceList } = require('../utils/sanitize');
+const { sanitizeString, sanitizePriceList, sanitizePaymentMethods, sanitizeLocation } = require('../utils/sanitize');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -32,10 +32,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 8 caracteres' });
     }
 
+    // Normalize email
+    const cleanEmail = email.toLowerCase().trim();
+
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
-      return res.status(400).json({ success: false, error: 'User already exists' });
+      return res.status(400).json({ success: false, error: 'Este correo electrónico ya está registrado.' });
     }
 
     // SECURITY: Only allow 'user' or 'announcer' roles on registration
@@ -44,7 +47,7 @@ exports.register = async (req, res) => {
     // Create user
     const user = await User.create({
       name: sanitizeString(name, 50),
-      email,
+      email: cleanEmail,
       password,
       role: safeRole,
       phone: sanitizeString(phone, 20),
@@ -80,8 +83,11 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please provide email and password' });
     }
 
+    // Normalize email
+    const cleanEmail = email.toLowerCase().trim();
+
     // Check for user
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
     // Check if password matches (if user exists)
     const isMatch = user ? await user.matchPassword(password) : false;
@@ -132,8 +138,8 @@ exports.getMe = async (req, res) => {
       await user.save();
     }
 
-    // Repair existing users: Initialize diamondBoosts if Diamond and undefined/null/0 (one-time fix for existing users)
-    if (user.premiumPlan === 'diamond' && (user.diamondBoosts === undefined || user.diamondBoosts === null || user.diamondBoosts === 0)) {
+    // Repair existing users: Initialize diamondBoosts if Diamond and UNDEFINED (avoid re-init if 0)
+    if (user.premiumPlan === 'diamond' && (user.diamondBoosts === undefined || user.diamondBoosts === null)) {
       user.diamondBoosts = 5;
       await user.save();
     }
@@ -170,6 +176,10 @@ exports.updateDetails = async (req, res) => {
       if (req.body[field] !== undefined) {
         if (field === 'priceList') {
           user[field] = sanitizePriceList(req.body[field]);
+        } else if (field === 'paymentMethods') {
+          user[field] = sanitizePaymentMethods(req.body[field]);
+        } else if (field === 'location') {
+          user[field] = sanitizeLocation(req.body[field]);
         } else if (typeof req.body[field] === 'string') {
           user[field] = sanitizeString(req.body[field], field === 'bio' ? 1000 : 200);
         } else {
@@ -210,12 +220,14 @@ exports.updatePassword = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Password is incorrect' });
     }
 
-    // Validate new password length
-    if (!req.body.newPassword || req.body.newPassword.length < 8) {
-      return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres' });
+    // Validate new password (consistent with registration policy)
+    const newPass = req.body.newPassword;
+    if (!newPass || newPass.length < 8 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPass)) {
+      return res.status(400).json({ success: false, error: 'La nueva contraseña debe tener al menos 8 caracteres e incluir mayúsculas, minúsculas y números' });
     }
 
     user.password = req.body.newPassword;
+    user.passwordChangedAt = Date.now();
     await user.save();
 
     logger('activity', `Contraseña actualizada por el usuario: ${user.email}`);
